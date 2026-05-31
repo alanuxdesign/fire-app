@@ -11,8 +11,9 @@ import {
   users,
 } from "@/drizzle/schema";
 import { db } from "@/lib/db";
+import { getTodayDateString } from "@/lib/dates";
 import { getInstitutionNamesForUser } from "@/lib/plaid-accounts";
-import { and, asc, eq, gte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 
 export type SnapshotRange = "1M" | "3M" | "6M" | "1Y" | "YTD" | "ALL";
 
@@ -31,7 +32,7 @@ export type SnapshotData = {
     name: string;
     type: string;
     subtype: string | null;
-    group: AccountGroupType;
+    group: string;
     balance: number;
     currency: string;
   }>;
@@ -39,14 +40,12 @@ export type SnapshotData = {
     id: string;
     name: string;
     assetType: string;
-    group: AccountGroupType;
+    group: string;
     value: number;
   }>;
 };
 
-export function getTodayDateString(date = new Date()): string {
-  return date.toISOString().slice(0, 10);
-}
+export { getTodayDateString } from "@/lib/dates";
 
 export function parseSnapshotRange(
   value: string | null,
@@ -140,6 +139,27 @@ export async function getSnapshotForDate(userId: string, date: string) {
       eq(balanceSnapshots.date, date),
     ),
   });
+}
+
+export async function getSnapshotOnOrBefore(userId: string, date: string) {
+  const exact = await getSnapshotForDate(userId, date);
+  if (exact) {
+    return exact;
+  }
+
+  const [row] = await db
+    .select()
+    .from(balanceSnapshots)
+    .where(
+      and(
+        eq(balanceSnapshots.userId, userId),
+        lte(balanceSnapshots.date, date),
+      ),
+    )
+    .orderBy(desc(balanceSnapshots.date))
+    .limit(1);
+
+  return row ?? null;
 }
 
 export async function createBalanceSnapshot(

@@ -1,46 +1,44 @@
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { ChangeLabel } from "@/components/portfolio/ChangeLabel";
 import { AccountRow } from "@/components/portfolio/AccountRow";
-import type { AccountGroupResponse } from "@/lib/account-groups";
+import type {
+  AccountGroupResponse,
+  AccountListItem,
+} from "@/lib/account-groups";
+import { formatCurrency } from "@/lib/format";
 
 type AccountGroupProps = {
   group: AccountGroupResponse;
+  onAccountClick: (account: AccountListItem) => void;
 };
 
-export function AccountGroup({ group }: AccountGroupProps) {
-  const isPositive = group.monthlyChange >= 0;
-
+export function AccountGroup({ group, onAccountClick }: AccountGroupProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm">
-      <div className="border-b border-stone-100 px-4 pt-4 pb-3">
+    <section className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="border-b border-stone-100 px-4 pt-4 pb-3 dark:border-zinc-800">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-bold text-slate-900">{group.type}</h2>
-          <p className="text-lg font-bold tabular-nums text-slate-900">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
+            {group.type}
+          </h2>
+          <p className="text-lg font-bold tabular-nums text-slate-900 dark:text-zinc-100">
             {formatCurrency(group.total)}
           </p>
         </div>
         <p className="mt-1 text-sm">
-          <span
-            className={`font-medium tabular-nums ${
-              isPositive ? "text-emerald-600" : "text-red-600"
-            }`}
-          >
-            {isPositive ? "↗" : "↘"} {formatCurrency(Math.abs(group.monthlyChange))}{" "}
-            ({formatPercent(group.monthlyChangePercent)})
-          </span>{" "}
-          <span className="text-slate-500">This month</span>
+          <ChangeLabel
+            amount={group.monthlyChange}
+            percent={group.monthlyChangePercent}
+            showPercent
+          />{" "}
+          <span className="text-slate-500 dark:text-zinc-400">This month</span>
         </p>
       </div>
 
-      <div className="divide-y divide-stone-100 px-4">
+      <div className="divide-y divide-stone-100 px-4 dark:divide-zinc-800">
         {group.accounts.map((account) => (
           <AccountRow
             key={account.id}
-            name={account.name}
-            subtitle={account.subtitle}
-            balance={account.currentBalance}
-            currency={account.currency}
-            institutionName={account.institutionName}
-            updatedAt={account.updatedAt}
+            account={account}
+            onClick={onAccountClick}
           />
         ))}
       </div>

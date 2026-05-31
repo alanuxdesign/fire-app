@@ -1,93 +1,209 @@
 "use client";
 
 import {
-  buildNetWorthChartData,
-  computeNetWorthChange,
-  type NetWorthChartPoint,
-} from "@/lib/chart-data";
-import { formatCurrency } from "@/lib/format";
-import type { SnapshotRange, SnapshotSummary } from "@/lib/snapshots";
-import { useCallback, useEffect, useMemo, useState } from "react";
+  ChartHoverTooltip,
+  NetWorthChartPlot,
+  type ChartScrubDetail,
+} from "@/components/portfolio/NetWorthChartPlot";
 import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+  buildNetWorthChartData,
+  CHART_MARGIN,
+  computeNetWorthChange,
+  getChangeHorizonLabel,
+  getChartContentWidth,
+  getTodayPointIndex,
+  getViewportIndexRange,
+  getVisibleXAxisTicks,
+  interpolateChartPoint,
+  isTodayInViewport,
+  scrubIndexFromClientX,
+} from "@/lib/chart-data";
+import { getTodayDateString } from "@/lib/dates";
+import type { SnapshotRange, SnapshotSummary } from "@/lib/snapshots";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ResponsiveContainer } from "recharts";
 
 const RANGES: SnapshotRange[] = ["1M", "3M", "6M", "1Y", "YTD", "ALL"];
+const PAN_THRESHOLD_PX = 6;
 
 export type NetWorthDisplay = {
   netWorth: number;
   changePercent: number;
+  changeAmount: number;
+  changeHorizonLabel: string;
+  showBackToToday: boolean;
 };
 
 type NetWorthChartProps = {
   currentNetWorth: number;
   onDisplayChange: (display: NetWorthDisplay) => void;
+  onRegisterBackToToday?: (handler: () => void) => void;
   refreshKey?: number;
 };
-
-type ChartTooltipProps = {
-  active?: boolean;
-  payload?: Array<{ payload: NetWorthChartPoint }>;
-};
-
-function ChartTooltip({ active, payload }: ChartTooltipProps) {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  const point = payload[0].payload;
-
-  return (
-    <div className="rounded-md bg-zinc-800/95 px-2.5 py-1.5 text-xs text-white shadow-lg ring-1 ring-zinc-700">
-      <p className="font-medium text-zinc-300">{point.label}</p>
-      <p className="tabular-nums">{formatCurrency(point.netWorth)}</p>
-    </div>
-  );
-}
 
 export function NetWorthChart({
   currentNetWorth,
   onDisplayChange,
+  onRegisterBackToToday,
   refreshKey = 0,
 }: NetWorthChartProps) {
   const [range, setRange] = useState<SnapshotRange>("YTD");
   const [snapshots, setSnapshots] = useState<SnapshotSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [scrub, setScrub] = useState<ChartScrubDetail | null>(null);
+  const [todayInView, setTodayInView] = useState(true);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [visibleTicks, setVisibleTicks] = useState<number[]>([0]);
+  const [isPanning, setIsPanning] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const chartInnerRef = useRef<HTMLDivElement>(null);
+  const panRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startScrollLeft: number;
+    isPan: boolean;
+  } | null>(null);
 
   const chartData = useMemo(
-    () => buildNetWorthChartData(snapshots, currentNetWorth, range),
+    () =>
+      buildNetWorthChartData(snapshots, currentNetWorth, range, "dollar"),
     [snapshots, currentNetWorth, range],
   );
 
   const baselineNetWorth = chartData[0]?.netWorth ?? currentNetWorth;
+  const latestIndex = Math.max(chartData.length - 1, 0);
   const latestNetWorth =
-    chartData[chartData.length - 1]?.netWorth ?? currentNetWorth;
+    chartData[latestIndex]?.netWorth ?? currentNetWorth;
+  const today = getTodayDateString();
+  const todayIndex = getTodayPointIndex(chartData, today);
+  const chartContentWidth = getChartContentWidth(
+    chartData.length,
+    viewportWidth,
+  );
+  const isScrollable = chartContentWidth > viewportWidth && viewportWidth > 0;
+  const changeHorizonLabel = getChangeHorizonLabel(range);
 
-  const updateDisplay = useCallback(
-    (index: number | null) => {
+  const scrollToToday = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) {
+      return;
+    }
+    el.scrollLeft = el.scrollWidth - el.clientWidth;
+  }, []);
+
+  const readViewport = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) {
+      return {
+        viewStartIndex: 0,
+        viewEndIndex: latestIndex,
+        inView: true,
+      };
+    }
+
+    const maxIndex = Math.max(chartData.length - 1, 0);
+    const { viewStartIndex, viewEndIndex } = getViewportIndexRange(
+      el.scrollLeft,
+      el.clientWidth,
+      el.scrollWidth,
+      maxIndex,
+    );
+    const inView = isTodayInViewport(todayIndex, viewStartIndex, viewEndIndex);
+
+    return { viewStartIndex, viewEndIndex, inView };
+  }, [chartData.length, latestIndex, todayIndex]);
+
+  const syncViewport = useCallback(() => {
+    const { viewStartIndex, viewEndIndex, inView } = readViewport();
+    setTodayInView(inView);
+    setVisibleTicks(
+      getVisibleXAxisTicks(
+        viewStartIndex,
+        viewEndIndex,
+        Math.max(chartData.length - 1, 0),
+      ),
+    );
+  }, [chartData.length, readViewport]);
+
+  const publishDisplay = useCallback(
+    (scrubDetail: ChartScrubDetail | null, inView: boolean) => {
+      const scrubIndex = scrubDetail?.dataIndex ?? null;
       const point =
-        index !== null && chartData[index]
-          ? chartData[index]
-          : { netWorth: latestNetWorth };
+        scrubIndex !== null && chartData[scrubIndex]
+          ? chartData[scrubIndex]
+          : chartData[latestIndex];
+      const displayNetWorth =
+        scrubDetail?.netWorth ?? point?.netWorth ?? latestNetWorth;
 
       const { changePercent } = computeNetWorthChange(
-        point.netWorth,
+        displayNetWorth,
         baselineNetWorth,
       );
 
       onDisplayChange({
-        netWorth: point.netWorth,
+        netWorth: displayNetWorth,
         changePercent,
+        changeAmount: displayNetWorth - baselineNetWorth,
+        changeHorizonLabel,
+        showBackToToday: !inView,
       });
     },
-    [baselineNetWorth, chartData, latestNetWorth, onDisplayChange],
+    [
+      baselineNetWorth,
+      changeHorizonLabel,
+      chartData,
+      latestIndex,
+      latestNetWorth,
+      onDisplayChange,
+    ],
   );
+
+  const updateScrubFromClientX = useCallback(
+    (clientX: number) => {
+      const inner = chartInnerRef.current;
+      if (!inner || chartData.length === 0) {
+        return;
+      }
+
+      const exactIndex = scrubIndexFromClientX(
+        clientX,
+        inner.getBoundingClientRect(),
+        chartData.length,
+      );
+
+      if (exactIndex === null) {
+        return;
+      }
+
+      const interpolated = interpolateChartPoint(chartData, exactIndex);
+      const point = chartData[interpolated.dataIndex] ?? chartData[0]!;
+      const innerRect = inner.getBoundingClientRect();
+      const plotWidth =
+        innerRect.width - CHART_MARGIN.left - CHART_MARGIN.right;
+      const tooltipX =
+        CHART_MARGIN.left +
+        (interpolated.exactIndex / Math.max(chartData.length - 1, 1)) *
+          plotWidth;
+
+      const detail: ChartScrubDetail = {
+        dataIndex: interpolated.dataIndex,
+        exactIndex: interpolated.exactIndex,
+        chartValue: interpolated.chartValue,
+        netWorth: interpolated.netWorth,
+        tooltipX,
+        point,
+      };
+
+      setScrub(detail);
+    },
+    [chartData],
+  );
+
+  const clearScrub = useCallback(() => {
+    setScrub(null);
+  }, []);
 
   const loadSnapshots = useCallback(async (selectedRange: SnapshotRange) => {
     setLoading(true);
@@ -112,108 +228,170 @@ export function NetWorthChart({
   }, [range, loadSnapshots, refreshKey]);
 
   useEffect(() => {
-    setActiveIndex(null);
-    updateDisplay(null);
-  }, [range, chartData, updateDisplay]);
-
-  useEffect(() => {
-    if (activeIndex === null) {
-      updateDisplay(null);
-    }
-  }, [activeIndex, currentNetWorth, snapshots, updateDisplay]);
-
-  const resolveActiveIndex = (
-    index: number | string | null | undefined,
-  ): number | undefined => {
-    if (index === null || index === undefined) {
-      return undefined;
-    }
-    const resolved = typeof index === "number" ? index : Number(index);
-    return Number.isFinite(resolved) ? resolved : undefined;
-  };
-
-  const handleChartInteraction = (index: number | string | null | undefined) => {
-    const resolved = resolveActiveIndex(index);
-    if (resolved === undefined) {
-      setActiveIndex(null);
-      updateDisplay(null);
+    const el = viewportRef.current;
+    if (!el) {
       return;
     }
 
-    setActiveIndex(resolved);
-    updateDisplay(resolved);
-  };
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setViewportWidth(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(el);
+    setViewportWidth(el.clientWidth);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setScrub(null);
+    requestAnimationFrame(() => {
+      scrollToToday();
+      syncViewport();
+      publishDisplay(null, true);
+    });
+  }, [range, chartData, scrollToToday, syncViewport, publishDisplay]);
+
+  useEffect(() => {
+    publishDisplay(scrub, todayInView);
+  }, [scrub, todayInView, currentNetWorth, snapshots, publishDisplay]);
+
+  const handleBackToToday = useCallback(() => {
+    setScrub(null);
+    scrollToToday();
+    syncViewport();
+    publishDisplay(null, true);
+  }, [publishDisplay, scrollToToday, syncViewport]);
+
+  useEffect(() => {
+    onRegisterBackToToday?.(handleBackToToday);
+  }, [handleBackToToday, onRegisterBackToToday]);
+
+  const handleScroll = useCallback(() => {
+    syncViewport();
+  }, [syncViewport]);
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!isScrollable || event.button !== 0) {
+        return;
+      }
+
+      const el = scrollRef.current;
+      if (!el) {
+        return;
+      }
+
+      panRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startScrollLeft: el.scrollLeft,
+        isPan: false,
+      };
+    },
+    [isScrollable],
+  );
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const pan = panRef.current;
+      const el = scrollRef.current;
+
+      if (pan && el && pan.pointerId === event.pointerId) {
+        const deltaX = event.clientX - pan.startX;
+
+        if (!pan.isPan && Math.abs(deltaX) >= PAN_THRESHOLD_PX) {
+          pan.isPan = true;
+          setIsPanning(true);
+          clearScrub();
+          el.setPointerCapture(event.pointerId);
+        }
+
+        if (pan.isPan) {
+          event.preventDefault();
+          el.scrollLeft = pan.startScrollLeft - deltaX;
+          return;
+        }
+      }
+
+      if (!isPanning) {
+        updateScrubFromClientX(event.clientX);
+      }
+    },
+    [clearScrub, isPanning, updateScrubFromClientX],
+  );
+
+  const endPan = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const pan = panRef.current;
+      const el = scrollRef.current;
+
+      if (pan && el && pan.pointerId === event.pointerId && pan.isPan) {
+        if (el.hasPointerCapture(event.pointerId)) {
+          el.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      panRef.current = null;
+      setIsPanning(false);
+      syncViewport();
+    },
+    [syncViewport],
+  );
+
+  const handlePointerLeave = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (panRef.current?.isPan) {
+        return;
+      }
+      clearScrub();
+    },
+    [clearScrub],
+  );
 
   return (
     <div className="px-2 pb-4">
-      <div className="h-40 w-full">
+      <div ref={viewportRef} className="h-40 w-full">
         {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-xs text-zinc-500">Loading chart…</p>
-          </div>
+          <div className="h-full animate-pulse rounded-lg bg-zinc-900" />
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              key={range}
-              data={chartData}
-              margin={{ top: 8, right: 4, left: 4, bottom: 0 }}
-              onMouseMove={(state) =>
-                handleChartInteraction(state?.activeTooltipIndex)
-              }
-              onMouseLeave={() => handleChartInteraction(undefined)}
-              onTouchMove={(state) =>
-                handleChartInteraction(state?.activeTooltipIndex)
-              }
-              onTouchEnd={() => handleChartInteraction(undefined)}
+          <div
+            ref={scrollRef}
+            className={`h-full w-full overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+              isScrollable
+                ? "overflow-x-auto cursor-grab active:cursor-grabbing"
+                : "overflow-x-hidden"
+            }`}
+            onScroll={handleScroll}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={endPan}
+            onPointerCancel={endPan}
+            onPointerLeave={handlePointerLeave}
+          >
+            <div
+              ref={chartInnerRef}
+              className="relative h-full"
+              style={{
+                width: chartContentWidth,
+                minWidth: "100%",
+              }}
             >
-              <defs>
-                <linearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.5} />
-                  <stop offset="95%" stopColor="#2dd4bf" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
+              {scrub ? <ChartHoverTooltip scrub={scrub} /> : null}
 
-              <XAxis
-                dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#71717a", fontSize: 11 }}
-                interval="preserveStartEnd"
-                minTickGap={28}
-                dy={8}
-              />
-
-              <YAxis hide domain={["auto", "auto"]} />
-
-              <Tooltip
-                content={<ChartTooltip />}
-                cursor={{
-                  stroke: "#34d399",
-                  strokeWidth: 1,
-                  strokeDasharray: "4 4",
-                }}
-                isAnimationActive={false}
-              />
-
-              <Area
-                type="monotone"
-                dataKey="netWorth"
-                stroke="#34d399"
-                strokeWidth={2}
-                fill="url(#netWorthFill)"
-                dot={chartData.length === 1 ? { r: 4, fill: "#34d399" } : false}
-                activeDot={{
-                  r: 5,
-                  fill: "#34d399",
-                  stroke: "#ecfdf5",
-                  strokeWidth: 2,
-                }}
-                isAnimationActive
-                animationDuration={500}
-                animationEasing="ease-out"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
+                <NetWorthChartPlot
+                  key={`${range}-${chartContentWidth}`}
+                  chartData={chartData}
+                  scrub={scrub}
+                  xAxisTicks={visibleTicks}
+                />
+              </ResponsiveContainer>
+            </div>
+          </div>
         )}
       </div>
 

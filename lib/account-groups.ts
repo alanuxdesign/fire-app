@@ -11,17 +11,31 @@ export type AccountGroupType =
 export type FinancialAccountRow = typeof financialAccounts.$inferSelect;
 export type ManualAssetRow = typeof manualAssets.$inferSelect;
 
+export type AccountConnectionStatus = "connected" | "manual" | "error";
+
 export type AccountListItem = {
   id: string;
   name: string;
   subtitle: string | null;
   type: string;
+  subtype: string | null;
   group: AccountGroupType;
   currentBalance: number;
   currency: string;
   institutionName: string | null;
+  /** User override; null = use default classification */
+  assetClassOverride: string | null;
+  plaidItemId: string | null;
+  plaidAccountId: string | null;
+  status: AccountConnectionStatus;
+  marketSymbol: string | null;
+  marketQuantity: number | null;
   updatedAt: string;
   isManual: boolean;
+  dailyChange: number;
+  dailyChangePercent: number;
+  monthlyChange: number;
+  monthlyChangePercent: number;
 };
 
 export function getFinancialAccountGroup(
@@ -80,7 +94,7 @@ const GROUP_ORDER: AccountGroupType[] = [
 ];
 
 export type AccountGroupResponse = {
-  type: AccountGroupType;
+  type: string;
   total: number;
   monthlyChange: number;
   monthlyChangePercent: number;
@@ -108,26 +122,50 @@ export function buildAccountsResponse(
       name: row.name,
       subtitle: formatAccountSubtitle(row.type, row.subtype),
       type: row.type,
+      subtype: row.subtype,
       group: getFinancialAccountGroup(row.type, row.subtype),
       currentBalance: parseBalance(row.currentBalance),
       currency: row.currency,
       institutionName: row.plaidItemId
         ? (institutionNames.get(row.plaidItemId) ?? null)
         : null,
+      assetClassOverride: row.assetClass,
+      plaidItemId: row.plaidItemId,
+      plaidAccountId: row.plaidAccountId,
+      status: (row.plaidItemId ? "connected" : "manual") as AccountConnectionStatus,
+      marketSymbol: null,
+      marketQuantity: null,
       updatedAt: row.updatedAt.toISOString(),
       isManual: row.isManual,
+      dailyChange: 0,
+      dailyChangePercent: 0,
+      monthlyChange: 0,
+      monthlyChangePercent: 0,
     })),
     ...manualRows.map((row) => ({
       id: row.id,
       name: row.name,
       subtitle: getManualAssetLabel(row.assetType),
       type: row.assetType,
+      subtype: null,
       group: getManualAssetGroup(row.assetType),
       currentBalance: parseBalance(row.currentValue),
       currency: "USD",
       institutionName: null,
+      assetClassOverride: row.assetClassOverride,
+      plaidItemId: null,
+      plaidAccountId: null,
+      status: "manual" as const,
+      marketSymbol: row.marketSymbol,
+      marketQuantity: row.marketQuantity
+        ? parseBalance(row.marketQuantity)
+        : null,
       updatedAt: row.updatedAt.toISOString(),
       isManual: true,
+      dailyChange: 0,
+      dailyChangePercent: 0,
+      monthlyChange: 0,
+      monthlyChangePercent: 0,
     })),
   ];
 

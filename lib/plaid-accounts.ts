@@ -58,6 +58,7 @@ export async function upsertFinancialAccount(
         currency: values.currency,
         plaidItemId: values.plaidItemId,
         updatedAt: new Date(),
+        // Preserve user asset class override on sync
       })
       .where(eq(financialAccounts.id, existing.id))
       .returning();

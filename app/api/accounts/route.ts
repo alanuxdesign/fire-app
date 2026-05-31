@@ -1,8 +1,17 @@
 import { requireUserId } from "@/lib/api-auth";
+import {
+  balancesFromSnapshotRow,
+  enrichAccountsWithChanges,
+  getMonthStartDateString,
+  getYesterdayDateString,
+} from "@/lib/account-changes";
 import { buildAccountsResponse } from "@/lib/account-groups";
 import { financialAccounts, manualAssets } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { getInstitutionNamesForUser } from "@/lib/plaid-accounts";
+import {
+  getSnapshotOnOrBefore,
+} from "@/lib/snapshots";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -29,7 +38,18 @@ export async function GET() {
       institutionNames,
     );
 
-    return NextResponse.json(response);
+    const [yesterdaySnapshot, monthStartSnapshot] = await Promise.all([
+      getSnapshotOnOrBefore(authResult.userId, getYesterdayDateString()),
+      getSnapshotOnOrBefore(authResult.userId, getMonthStartDateString()),
+    ]);
+
+    const enriched = enrichAccountsWithChanges(
+      response,
+      balancesFromSnapshotRow(yesterdaySnapshot),
+      balancesFromSnapshotRow(monthStartSnapshot),
+    );
+
+    return NextResponse.json(enriched);
   } catch (error) {
     return NextResponse.json(
       {

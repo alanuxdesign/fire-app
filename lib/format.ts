@@ -7,6 +7,11 @@ export function formatCurrency(amount: number, currency = "USD"): string {
   }).format(amount);
 }
 
+export function formatSignedCurrency(amount: number, currency = "USD"): string {
+  const prefix = amount > 0 ? "+" : amount < 0 ? "" : "";
+  return `${prefix}${formatCurrency(amount, currency)}`;
+}
+
 export function formatPercent(value: number, options?: { signed?: boolean }): string {
   const signed = options?.signed ?? true;
   const prefix = signed && value > 0 ? "+" : "";

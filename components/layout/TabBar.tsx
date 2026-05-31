@@ -42,7 +42,7 @@ export function TabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.06)] dark:border-zinc-800 dark:bg-zinc-900"
       aria-label="Main navigation"
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
@@ -55,8 +55,8 @@ export function TabBar() {
               href={href}
               className={`flex flex-col items-center gap-0.5 px-1 py-2 transition-colors ${
                 active
-                  ? "font-semibold text-zinc-900"
-                  : "font-medium text-zinc-400"
+                  ? "font-semibold text-zinc-900 dark:text-zinc-100"
+                  : "font-medium text-zinc-400 dark:text-zinc-500"
               }`}
               aria-current={active ? "page" : undefined}
             >

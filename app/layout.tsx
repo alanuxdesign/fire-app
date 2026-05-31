@@ -1,3 +1,4 @@
+import { Providers } from "@/app/providers";
 import { TabBar } from "@/components/layout/TabBar";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -26,13 +27,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-dvh flex-col bg-stone-100 font-sans">
-        <main className="mx-auto flex w-full max-w-lg flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
-          {children}
-        </main>
-        <TabBar />
+      <body className="flex min-h-dvh flex-col bg-stone-100 font-sans dark:bg-zinc-950">
+        <Providers>
+          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+            {children}
+          </main>
+          <TabBar />
+        </Providers>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import {
   syncPlaidItemAccounts,
 } from "@/lib/plaid-accounts";
 import { getPlaidErrorMessage } from "@/lib/plaid";
+import { refreshMarketTrackedManualAssets } from "@/lib/market-assets";
 import { createSnapshotIfNeeded } from "@/lib/snapshots";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -30,6 +31,12 @@ export async function POST() {
         authResult.userId,
       );
       accounts.push(...synced.map(serializeFinancialAccount));
+    }
+
+    try {
+      await refreshMarketTrackedManualAssets(authResult.userId);
+    } catch (marketError) {
+      console.error("Failed to refresh market-tracked assets:", marketError);
     }
 
     try {

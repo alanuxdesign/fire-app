@@ -130,6 +130,9 @@ export const manualAssets = pgTable("manual_assets", {
   purchaseDate: date("purchase_date"),
   address: text("address"),
   notes: text("notes"),
+  assetClassOverride: text("asset_class_override"),
+  marketSymbol: text("market_symbol"),
+  marketQuantity: numeric("market_quantity", { precision: 19, scale: 4 }),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
     .defaultNow()

@@ -7,6 +7,7 @@ import {
   syncPlaidItemAccounts,
 } from "@/lib/plaid-accounts";
 import { getPlaidErrorMessage, plaidClient } from "@/lib/plaid";
+import { createSnapshotIfNeeded } from "@/lib/snapshots";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -54,6 +55,15 @@ export async function POST(request: Request) {
       accessToken,
       authResult.userId,
     );
+
+    try {
+      await createSnapshotIfNeeded(authResult.userId);
+    } catch (snapshotError) {
+      console.error(
+        "Failed to create balance snapshot after exchange:",
+        snapshotError,
+      );
+    }
 
     return NextResponse.json({
       success: true,

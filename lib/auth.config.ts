@@ -18,7 +18,11 @@ export const authConfig = {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
 
-      if (pathname === "/login" || pathname.startsWith("/api/auth")) {
+      if (
+        pathname === "/login" ||
+        pathname.startsWith("/api/auth") ||
+        pathname.startsWith("/api/cron")
+      ) {
         return true;
       }
 

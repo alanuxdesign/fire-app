@@ -1,4 +1,5 @@
 import { financialAccounts, manualAssets } from "@/drizzle/schema";
+import { getManualAssetLabel } from "@/lib/manual-assets";
 
 export type AccountGroupType =
   | "Cash"
@@ -119,7 +120,7 @@ export function buildAccountsResponse(
     ...manualRows.map((row) => ({
       id: row.id,
       name: row.name,
-      subtitle: row.assetType.replace("_", " "),
+      subtitle: getManualAssetLabel(row.assetType),
       type: row.assetType,
       group: getManualAssetGroup(row.assetType),
       currentBalance: parseBalance(row.currentValue),

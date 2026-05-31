@@ -6,6 +6,7 @@ import {
   syncPlaidItemAccounts,
 } from "@/lib/plaid-accounts";
 import { getPlaidErrorMessage } from "@/lib/plaid";
+import { createSnapshotIfNeeded } from "@/lib/snapshots";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -29,6 +30,12 @@ export async function POST() {
         authResult.userId,
       );
       accounts.push(...synced.map(serializeFinancialAccount));
+    }
+
+    try {
+      await createSnapshotIfNeeded(authResult.userId);
+    } catch (snapshotError) {
+      console.error("Failed to create balance snapshot after sync:", snapshotError);
     }
 
     return NextResponse.json({ accounts });

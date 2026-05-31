@@ -2,6 +2,10 @@
 
 import { AccountGroup } from "@/components/portfolio/AccountGroup";
 import { AddAccountButton } from "@/components/portfolio/AddAccountButton";
+import {
+  NetWorthChart,
+  type NetWorthDisplay,
+} from "@/components/portfolio/NetWorthChart";
 import { NetWorthHeader } from "@/components/portfolio/NetWorthHeader";
 import type { AccountsApiResponse } from "@/lib/account-groups";
 import { formatLastUpdated } from "@/lib/format";
@@ -13,6 +17,11 @@ export function PortfolioView() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [netWorthDisplay, setNetWorthDisplay] = useState<NetWorthDisplay>({
+    netWorth: 0,
+    changePercent: 0,
+  });
+  const [snapshotRefreshKey, setSnapshotRefreshKey] = useState(0);
 
   const loadAccounts = useCallback(async () => {
     const response = await fetch("/api/accounts");
@@ -39,6 +48,7 @@ export function PortfolioView() {
 
       const accounts = await loadAccounts();
       setData(accounts);
+      setSnapshotRefreshKey((key) => key + 1);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to refresh");
     } finally {
@@ -48,7 +58,13 @@ export function PortfolioView() {
 
   useEffect(() => {
     loadAccounts()
-      .then(setData)
+      .then((accounts) => {
+        setData(accounts);
+        setNetWorthDisplay({
+          netWorth: accounts.netWorth,
+          changePercent: accounts.netWorthChangePercent,
+        });
+      })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Failed to load accounts");
       })
@@ -58,7 +74,16 @@ export function PortfolioView() {
   const handleLinked = useCallback(async () => {
     const accounts = await loadAccounts();
     setData(accounts);
+    setNetWorthDisplay({
+      netWorth: accounts.netWorth,
+      changePercent: 0,
+    });
+    setSnapshotRefreshKey((key) => key + 1);
   }, [loadAccounts]);
+
+  const handleNetWorthDisplayChange = useCallback((display: NetWorthDisplay) => {
+    setNetWorthDisplay(display);
+  }, []);
 
   const lastUpdatedLabel = data?.lastUpdated
     ? formatLastUpdated(new Date(data.lastUpdated))
@@ -74,10 +99,17 @@ export function PortfolioView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <NetWorthHeader
-        netWorth={data?.netWorth ?? 0}
-        changePercent={data?.netWorthChangePercent ?? 0}
-      />
+      <section className="shrink-0 bg-zinc-950 text-white">
+        <NetWorthHeader
+          netWorth={netWorthDisplay.netWorth}
+          changePercent={netWorthDisplay.changePercent}
+        />
+        <NetWorthChart
+          currentNetWorth={data?.netWorth ?? 0}
+          onDisplayChange={handleNetWorthDisplayChange}
+          refreshKey={snapshotRefreshKey}
+        />
+      </section>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-stone-100">
         <div className="flex items-center justify-end px-4 pt-3">
@@ -109,7 +141,7 @@ export function PortfolioView() {
           ) : (
             <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-4 py-10 text-center">
               <p className="text-sm text-slate-600">
-                No accounts yet. Link your first institution below.
+                No accounts yet. Connect a bank or add an asset manually below.
               </p>
             </div>
           )}

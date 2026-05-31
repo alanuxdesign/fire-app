@@ -1,4 +1,4 @@
-import { requireUserId } from "@/lib/api-auth";
+import { requireWritableUser } from "@/lib/api-auth";
 import { parseBalance } from "@/lib/account-groups";
 import { parseCurrencyInput } from "@/lib/currency";
 import { parsePurchaseDateInput, toDateString } from "@/lib/purchase-date";
@@ -32,7 +32,7 @@ function isValidAssetClass(value: string): value is AssetClassLabel {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const authResult = await requireUserId();
+  const authResult = await requireWritableUser();
   if ("error" in authResult) {
     return authResult.error;
   }
@@ -215,7 +215,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const authResult = await requireUserId();
+  const authResult = await requireWritableUser();
   if ("error" in authResult) {
     return authResult.error;
   }

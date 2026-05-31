@@ -1,4 +1,4 @@
-import { requireUserId } from "@/lib/api-auth";
+import { requireWritableUser } from "@/lib/api-auth";
 import { plaidItems } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import {
@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const authResult = await requireUserId();
+  const authResult = await requireWritableUser();
   if ("error" in authResult) {
     return authResult.error;
   }

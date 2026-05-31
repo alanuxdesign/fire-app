@@ -23,7 +23,11 @@ const defaultDisplay: NetWorthDisplay = {
   isEstimated: false,
 };
 
-export function PortfolioView() {
+type PortfolioViewProps = {
+  isDemo?: boolean;
+};
+
+export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
   const [data, setData] = useState<AccountsApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -150,20 +154,22 @@ export function PortfolioView() {
       </section>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-stone-100 dark:bg-zinc-950">
-        <div className="flex items-center justify-end px-4 pt-3">
-          <button
-            type="button"
-            onClick={() => refresh()}
-            disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-stone-200/60 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            aria-label="Refresh accounts"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </button>
-        </div>
+        {!isDemo ? (
+          <div className="flex items-center justify-end px-4 pt-3">
+            <button
+              type="button"
+              onClick={() => refresh()}
+              disabled={refreshing}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-stone-200/60 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              aria-label="Refresh accounts"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
+          </div>
+        ) : null}
 
         <div className="space-y-4 px-4 pb-6">
           {error ? (
@@ -178,10 +184,16 @@ export function PortfolioView() {
               <div className="h-40 rounded-2xl bg-stone-200/80 dark:bg-zinc-900" />
             </div>
           ) : data ? (
-            <PortfolioHoldings data={data} onAccountsChange={reloadAccounts} />
+            <PortfolioHoldings
+              data={data}
+              onAccountsChange={reloadAccounts}
+              readOnly={isDemo}
+            />
           ) : null}
 
-          <AddAccountButton onLinked={handleLinked} disabled={refreshing} />
+          {!isDemo ? (
+            <AddAccountButton onLinked={handleLinked} disabled={refreshing} />
+          ) : null}
 
           {lastUpdatedLabel ? (
             <p className="pt-2 text-center text-xs text-slate-500 dark:text-zinc-500">

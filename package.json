@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "npx tsx scripts/seed-snapshots.ts",
+    "seed:demo": "npx tsx scripts/seed-demo.ts",
     "db:migrate-manual": "npx tsx scripts/apply-manual-asset-columns.ts"
   },
   "dependencies": {

@@ -1,10 +1,10 @@
-import { requireUserId } from "@/lib/api-auth";
+import { requireWritableUser } from "@/lib/api-auth";
 import { backfillUserBalanceHistory } from "@/lib/plaid-backfill";
 import { getPlaidErrorMessage } from "@/lib/plaid";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const authResult = await requireUserId();
+  const authResult = await requireWritableUser();
   if ("error" in authResult) {
     return authResult.error;
   }

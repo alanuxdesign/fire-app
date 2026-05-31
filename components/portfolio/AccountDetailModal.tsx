@@ -21,6 +21,7 @@ type AccountDetailModalProps = {
   account: AccountListItem | null;
   onClose: () => void;
   onUpdated: () => void;
+  readOnly?: boolean;
 };
 
 const STATUS_LABELS: Record<AccountListItem["status"], string> = {
@@ -33,6 +34,7 @@ export function AccountDetailModal({
   account,
   onClose,
   onUpdated,
+  readOnly = false,
 }: AccountDetailModalProps) {
   const [assetClassOverride, setAssetClassOverride] = useState<string>("");
   const [marketSymbol, setMarketSymbol] = useState("");
@@ -448,7 +450,8 @@ export function AccountDetailModal({
               id="asset-class-override"
               value={assetClassOverride}
               onChange={(event) => setAssetClassOverride(event.target.value)}
-              className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              disabled={readOnly}
+              className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
             >
               <option value="">Use default ({defaultAssetClass})</option>
               {ASSET_CLASS_OPTIONS.map((option) => (
@@ -457,26 +460,28 @@ export function AccountDetailModal({
                 </option>
               ))}
             </select>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleSaveAssetClass}
-                disabled={saving}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-              >
-                Save class
-              </button>
-              {hasOverride ? (
+            {!readOnly ? (
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={handleClearOverride}
+                  onClick={handleSaveAssetClass}
                   disabled={saving}
-                  className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-slate-700 dark:border-zinc-600 dark:text-zinc-300"
+                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
                 >
-                  Remove override
+                  Save class
                 </button>
-              ) : null}
-            </div>
+                {hasOverride ? (
+                  <button
+                    type="button"
+                    onClick={handleClearOverride}
+                    disabled={saving}
+                    className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-slate-700 dark:border-zinc-600 dark:text-zinc-300"
+                  >
+                    Remove override
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           {account.isManual ? (
@@ -505,7 +510,8 @@ export function AccountDetailModal({
                     value={purchaseDate}
                     onChange={(event) => setPurchaseDate(event.target.value)}
                     placeholder="2/3/2022"
-                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    disabled={readOnly}
+                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
                   />
                 </div>
                 <div>
@@ -522,18 +528,21 @@ export function AccountDetailModal({
                     value={purchaseValue}
                     onChange={(event) => setPurchaseValue(event.target.value)}
                     placeholder="$0"
-                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    disabled={readOnly}
+                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
                   />
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleSaveAcquisition}
-                disabled={saving}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-              >
-                Save acquisition details
-              </button>
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={handleSaveAcquisition}
+                  disabled={saving}
+                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                >
+                  Save acquisition details
+                </button>
+              ) : null}
             </div>
           ) : null}
 
@@ -558,7 +567,8 @@ export function AccountDetailModal({
                     value={marketSymbol}
                     onChange={(event) => setMarketSymbol(event.target.value)}
                     placeholder="VOO"
-                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm uppercase dark:border-zinc-700 dark:bg-zinc-900"
+                    disabled={readOnly}
+                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm uppercase disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
                   />
                 </div>
                 <div>
@@ -578,22 +588,25 @@ export function AccountDetailModal({
                       setMarketQuantity(event.target.value)
                     }
                     placeholder="1"
-                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    disabled={readOnly}
+                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
                   />
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleSaveMarket}
-                disabled={saving}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-              >
-                Save market link
-              </button>
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={handleSaveMarket}
+                  disabled={saving}
+                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                >
+                  Save market link
+                </button>
+              ) : null}
             </div>
           ) : null}
 
-          {account.plaidItemId ? (
+          {account.plaidItemId && !readOnly ? (
             <div className="space-y-2">
               <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Last synced {formatRelativeTime(new Date(account.updatedAt))}
@@ -623,14 +636,16 @@ export function AccountDetailModal({
             </p>
           ) : null}
 
-          <button
-            type="button"
-            onClick={handleRemove}
-            disabled={saving}
-            className="w-full rounded-lg bg-red-600 px-3 py-2.5 text-sm font-medium text-white disabled:opacity-50"
-          >
-            Remove account
-          </button>
+          {!readOnly ? (
+            <button
+              type="button"
+              onClick={handleRemove}
+              disabled={saving}
+              className="w-full rounded-lg bg-red-600 px-3 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            >
+              Remove account
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

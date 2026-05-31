@@ -1,4 +1,4 @@
-import { requireUserId } from "@/lib/api-auth";
+import { requireWritableUser } from "@/lib/api-auth";
 import { financialAccounts, plaidItems } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, eq } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const authResult = await requireUserId();
+  const authResult = await requireWritableUser();
   if ("error" in authResult) {
     return authResult.error;
   }

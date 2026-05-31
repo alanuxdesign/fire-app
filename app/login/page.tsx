@@ -25,6 +25,14 @@ export default function LoginPage() {
             Sign in with Google
           </button>
         </form>
+        <form action="/api/auth/demo" method="POST" className="mt-4">
+          <button
+            type="submit"
+            className="flex h-9 w-full items-center justify-center rounded-lg border border-zinc-700/80 bg-transparent px-4 text-xs font-medium text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
+          >
+            Try Demo
+          </button>
+        </form>
       </div>
     </div>
   );

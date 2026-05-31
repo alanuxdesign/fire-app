@@ -1,4 +1,4 @@
-import { requireUserId } from "@/lib/api-auth";
+import { requireWritableUser } from "@/lib/api-auth";
 import { isManualAssetType } from "@/lib/manual-assets";
 import { manualAssets } from "@/drizzle/schema";
 import { db } from "@/lib/db";
@@ -22,7 +22,7 @@ type ManualAssetBody = {
 };
 
 export async function POST(request: Request) {
-  const authResult = await requireUserId();
+  const authResult = await requireWritableUser();
   if ("error" in authResult) {
     return authResult.error;
   }

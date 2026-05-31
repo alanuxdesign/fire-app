@@ -1,4 +1,4 @@
-import { requireUserId } from "@/lib/api-auth";
+import { requireWritableUser } from "@/lib/api-auth";
 import {
   createSnapshotIfNeeded,
   isCronAuthorized,
@@ -16,7 +16,7 @@ async function handleSnapshot(request: Request) {
       });
     }
 
-    const authResult = await requireUserId();
+    const authResult = await requireWritableUser();
     if ("error" in authResult) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -17,11 +17,13 @@ import { useEffect, useMemo, useState } from "react";
 type PortfolioHoldingsProps = {
   data: AccountsApiResponse;
   onAccountsChange: () => void;
+  readOnly?: boolean;
 };
 
 export function PortfolioHoldings({
   data,
   onAccountsChange,
+  readOnly = false,
 }: PortfolioHoldingsProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [grouping, setGrouping] = useState<GroupingMode>("type");
@@ -104,6 +106,7 @@ export function PortfolioHoldings({
         account={selectedAccount}
         onClose={() => setSelectedAccount(null)}
         onUpdated={handleModalUpdated}
+        readOnly={readOnly}
       />
     </div>
   );

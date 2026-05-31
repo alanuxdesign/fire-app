@@ -14,7 +14,7 @@ export default function LoginPage() {
           className="mt-8"
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: "/" });
+            await signIn("google", { redirectTo: "/portfolio" });
           }}
         >
           <button

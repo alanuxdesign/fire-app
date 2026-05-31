@@ -65,6 +65,19 @@ export function AccountDetailModal({
       return;
     }
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [account]);
+
+  useEffect(() => {
+    if (!account) {
+      return;
+    }
+
     setAssetClassOverride(account.assetClassOverride ?? "");
     setMarketSymbol(account.marketSymbol ?? "");
     setMarketQuantity(
@@ -332,7 +345,7 @@ export function AccountDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-[60] flex flex-col bg-black/50"
       role="presentation"
       onClick={onClose}
     >
@@ -340,10 +353,10 @@ export function AccountDetailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-detail-title"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-zinc-900"
+        className="flex h-[100dvh] w-full flex-col bg-white dark:bg-zinc-900"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-stone-200 px-4 py-4 dark:border-zinc-800">
+        <div className="flex shrink-0 items-start justify-between border-b border-stone-200 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] dark:border-zinc-800">
           <div>
             <h2
               id="account-detail-title"
@@ -366,7 +379,8 @@ export function AccountDetailModal({
           </button>
         </div>
 
-        <div className="space-y-5 px-4 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="space-y-5 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Balance
@@ -646,6 +660,7 @@ export function AccountDetailModal({
               Remove account
             </button>
           ) : null}
+          </div>
         </div>
       </div>
     </div>

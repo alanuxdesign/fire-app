@@ -1,6 +1,7 @@
 "use client";
 
 import { AddAccountButton } from "@/components/portfolio/AddAccountButton";
+import { DemoBanner } from "@/components/portfolio/DemoBanner";
 import { PortfolioHoldings } from "@/components/portfolio/PortfolioHoldings";
 import {
   NetWorthChart,
@@ -133,6 +134,7 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {isDemo ? <DemoBanner /> : null}
       <section className="shrink-0 bg-zinc-950 text-white">
         <NetWorthHeader
           netWorth={netWorthDisplay.netWorth}

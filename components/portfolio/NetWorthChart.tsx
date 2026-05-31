@@ -31,6 +31,9 @@ import { ResponsiveContainer } from "recharts";
 
 const RANGES: SnapshotRange[] = ["1M", "3M", "6M", "1Y", "YTD", "ALL"];
 const PAN_THRESHOLD_PX = 6;
+const SCRUB_HOLD_MS = 250;
+
+type ChartPointerMode = "pending" | "pan" | "scrub";
 
 export type NetWorthDisplay = {
   netWorth: number;
@@ -66,16 +69,18 @@ export function NetWorthChart({
   const [todayInView, setTodayInView] = useState(true);
   const [viewportWidth, setViewportWidth] = useState(0);
   const [visibleTicks, setVisibleTicks] = useState<number[]>([0]);
-  const [isPanning, setIsPanning] = useState(false);
+  const [pointerMode, setPointerMode] = useState<ChartPointerMode | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const chartInnerRef = useRef<HTMLDivElement>(null);
-  const panRef = useRef<{
+  const interactionRef = useRef<{
     pointerId: number;
     startX: number;
     startScrollLeft: number;
-    isPan: boolean;
+    lastClientX: number;
+    mode: ChartPointerMode;
+    holdTimer: ReturnType<typeof setTimeout> | null;
   } | null>(null);
 
   const chartData = useMemo(
@@ -340,9 +345,50 @@ export function NetWorthChart({
     syncViewport();
   }, [syncViewport]);
 
+  const clearHoldTimer = useCallback(() => {
+    const interaction = interactionRef.current;
+    if (interaction?.holdTimer) {
+      clearTimeout(interaction.holdTimer);
+      interaction.holdTimer = null;
+    }
+  }, []);
+
+  const beginScrubMode = useCallback(
+    (clientX: number) => {
+      const interaction = interactionRef.current;
+      const el = scrollRef.current;
+      if (!interaction || !el) {
+        return;
+      }
+
+      interaction.mode = "scrub";
+      setPointerMode("scrub");
+      el.setPointerCapture(interaction.pointerId);
+      updateScrubFromClientX(clientX);
+    },
+    [updateScrubFromClientX],
+  );
+
+  const beginPanMode = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const interaction = interactionRef.current;
+      const el = scrollRef.current;
+      if (!interaction || !el || interaction.pointerId !== event.pointerId) {
+        return;
+      }
+
+      clearHoldTimer();
+      interaction.mode = "pan";
+      setPointerMode("pan");
+      clearScrub();
+      el.setPointerCapture(event.pointerId);
+    },
+    [clearHoldTimer, clearScrub],
+  );
+
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!isScrollable || event.button !== 0) {
+      if (event.button !== 0) {
         return;
       }
 
@@ -351,72 +397,119 @@ export function NetWorthChart({
         return;
       }
 
-      panRef.current = {
+      clearHoldTimer();
+
+      const interaction = {
         pointerId: event.pointerId,
         startX: event.clientX,
         startScrollLeft: el.scrollLeft,
-        isPan: false,
+        lastClientX: event.clientX,
+        mode: "pending" as const,
+        holdTimer: null as ReturnType<typeof setTimeout> | null,
       };
+
+      interactionRef.current = interaction;
+      setPointerMode("pending");
+
+      if (!isScrollable) {
+        beginScrubMode(event.clientX);
+        return;
+      }
+
+      interaction.holdTimer = setTimeout(() => {
+        const current = interactionRef.current;
+        if (!current || current.mode !== "pending") {
+          return;
+        }
+        beginScrubMode(current.lastClientX);
+      }, SCRUB_HOLD_MS);
     },
-    [isScrollable],
+    [beginScrubMode, clearHoldTimer, isScrollable],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      const pan = panRef.current;
+      const interaction = interactionRef.current;
       const el = scrollRef.current;
 
-      if (pan && el && pan.pointerId === event.pointerId) {
-        const deltaX = event.clientX - pan.startX;
-
-        if (!pan.isPan && Math.abs(deltaX) >= PAN_THRESHOLD_PX) {
-          pan.isPan = true;
-          setIsPanning(true);
-          clearScrub();
-          el.setPointerCapture(event.pointerId);
-        }
-
-        if (pan.isPan) {
-          event.preventDefault();
-          el.scrollLeft = pan.startScrollLeft - deltaX;
-          return;
-        }
+      if (!interaction || !el || interaction.pointerId !== event.pointerId) {
+        return;
       }
 
-      if (!isPanning) {
+      interaction.lastClientX = event.clientX;
+      const deltaX = event.clientX - interaction.startX;
+
+      if (interaction.mode === "pending") {
+        if (isScrollable && Math.abs(deltaX) >= PAN_THRESHOLD_PX) {
+          beginPanMode(event);
+        }
+        return;
+      }
+
+      if (interaction.mode === "pan") {
+        event.preventDefault();
+        el.scrollLeft = interaction.startScrollLeft - deltaX;
+        return;
+      }
+
+      if (interaction.mode === "scrub") {
+        event.preventDefault();
         updateScrubFromClientX(event.clientX);
       }
     },
-    [clearScrub, isPanning, updateScrubFromClientX],
+    [beginPanMode, isScrollable, updateScrubFromClientX],
   );
 
-  const endPan = useCallback(
+  const endInteraction = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      const pan = panRef.current;
+      const interaction = interactionRef.current;
       const el = scrollRef.current;
 
-      if (pan && el && pan.pointerId === event.pointerId && pan.isPan) {
+      clearHoldTimer();
+
+      if (interaction && el && interaction.pointerId === event.pointerId) {
         if (el.hasPointerCapture(event.pointerId)) {
           el.releasePointerCapture(event.pointerId);
         }
+
+        if (interaction.mode === "pan") {
+          syncViewport();
+        }
+
+        if (interaction.mode === "scrub") {
+          clearScrub();
+        }
       }
 
-      panRef.current = null;
-      setIsPanning(false);
-      syncViewport();
+      interactionRef.current = null;
+      setPointerMode(null);
     },
-    [syncViewport],
+    [clearHoldTimer, clearScrub, syncViewport],
   );
 
   const handlePointerLeave = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (panRef.current?.isPan) {
+      const interaction = interactionRef.current;
+      if (!interaction || interaction.pointerId !== event.pointerId) {
         return;
       }
-      clearScrub();
+
+      if (interaction.mode === "pan" || interaction.mode === "pending") {
+        return;
+      }
+
+      if (interaction.mode === "scrub") {
+        clearScrub();
+      }
     },
     [clearScrub],
   );
+
+  useEffect(() => {
+    return () => {
+      clearHoldTimer();
+    };
+  }, [clearHoldTimer]);
 
   return (
     <div className="px-2 pb-4">
@@ -439,14 +532,26 @@ export function NetWorthChart({
             ref={scrollRef}
             className={`h-full w-full overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
               isScrollable
-                ? "overflow-x-auto cursor-grab active:cursor-grabbing"
+                ? "overflow-x-auto touch-pan-x"
                 : "overflow-x-hidden"
+            } ${
+              pointerMode === "pan"
+                ? "cursor-grabbing"
+                : pointerMode === "scrub"
+                  ? "cursor-crosshair"
+                  : isScrollable
+                    ? "cursor-grab"
+                    : ""
             }`}
+            style={{
+              touchAction:
+                pointerMode === "scrub" ? "none" : isScrollable ? "pan-x" : "none",
+            }}
             onScroll={handleScroll}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
-            onPointerUp={endPan}
-            onPointerCancel={endPan}
+            onPointerUp={endInteraction}
+            onPointerCancel={endInteraction}
             onPointerLeave={handlePointerLeave}
           >
             <div

@@ -76,12 +76,10 @@ export function buildNetWorthChartData(
   if (basePoints.length > 0) {
     const lastIndex = basePoints.length - 1;
     const lastPoint = basePoints[lastIndex]!;
-    if (lastPoint.date === today) {
-      basePoints = [
-        ...basePoints.slice(0, lastIndex),
-        { ...lastPoint, netWorth: currentNetWorth },
-      ];
-    }
+    basePoints = [
+      ...basePoints.slice(0, lastIndex),
+      { ...lastPoint, netWorth: currentNetWorth },
+    ];
   }
 
   const baseline = basePoints[0]?.netWorth ?? currentNetWorth;

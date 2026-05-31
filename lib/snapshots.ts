@@ -18,6 +18,7 @@ import {
   manualAssetValueFromListItem,
   manualAssetValueFromRow,
   manualAssetsNetWorth,
+  storedSnapshotIncludesManual,
   totalsFromSnapshotFinancials,
 } from "@/lib/manual-asset-history";
 import { toDateString } from "@/lib/purchase-date";
@@ -422,7 +423,10 @@ export async function getSnapshotsForUser(
     const snapshotDate = toDateString(row.date) ?? row.date;
 
     if (manualRows.length > 0) {
-      if (data?.financialAccounts) {
+      const storedNet = parseBalance(row.netWorth);
+      const manualNet = manualAssetsNetWorth(manualRows, snapshotDate, today);
+
+      if (data?.financialAccounts && Array.isArray(data.financialAccounts)) {
         const totals = totalsFromSnapshotFinancials(
           data,
           manualRows,
@@ -430,22 +434,32 @@ export async function getSnapshotsForUser(
           today,
         );
 
+        let netWorth = totals.netWorth;
+        if (
+          storedSnapshotIncludesManual(storedNet, manualNet) &&
+          netWorth < storedNet * 0.95
+        ) {
+          netWorth = storedNet;
+        }
+
         return {
           date: snapshotDate,
           totalAssets: totals.totalAssets,
           totalLiabilities: totals.totalLiabilities,
-          netWorth: totals.netWorth,
+          netWorth,
           source: data.source,
         };
       }
 
-      const manualNet = manualAssetsNetWorth(manualRows, snapshotDate, today);
+      const netWorth = storedSnapshotIncludesManual(storedNet, manualNet)
+        ? storedNet
+        : storedNet + manualNet;
 
       return {
         date: snapshotDate,
         totalAssets: parseBalance(row.totalAssets),
         totalLiabilities: parseBalance(row.totalLiabilities),
-        netWorth: parseBalance(row.netWorth) + manualNet,
+        netWorth,
         source: data?.source,
       };
     }

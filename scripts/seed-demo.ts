@@ -153,6 +153,7 @@ async function main() {
   } = await import("@/drizzle/schema");
   const { db } = await import("@/lib/db");
   const { getTodayDateString } = await import("@/lib/dates");
+  const { manualAssetsNetWorth } = await import("@/lib/manual-asset-history");
   const {
     buildSnapshotData,
     loadUserBalances,
@@ -213,24 +214,39 @@ async function main() {
     purchaseDate: DEMO_MANUAL_ASSET.purchaseDate,
   });
 
+  const manualRows = await db.query.manualAssets.findMany({
+    where: eq(manualAssets.userId, userId),
+  });
+
   const accounts = await loadUserBalances(userId);
   const endNetWorth = accounts.netWorth;
   const endAssets = accounts.totalAssets;
   const endLiabilities = accounts.totalLiabilities;
+  const endManualNet = manualAssetsNetWorth(manualRows, today, today);
+  const endFinancialNet = endNetWorth - endManualNet;
+  const financialAssetShare =
+    endNetWorth > 0 ? endAssets / endNetWorth : 1;
+  const financialLiabilityShare =
+    endNetWorth > 0 ? endLiabilities / endNetWorth : 0;
+  const endFinancialAssets = endFinancialNet * financialAssetShare;
+  const endFinancialLiabilities = endFinancialNet * financialLiabilityShare;
   const todaySnapshotData = buildSnapshotData(accounts, today);
 
   console.log(
     `Live net worth: ${endNetWorth.toLocaleString("en-US", { style: "currency", currency: "USD" })}`,
   );
+  console.log(
+    `Financial-only net worth (historical snapshots): ${endFinancialNet.toLocaleString("en-US", { style: "currency", currency: "USD" })}`,
+  );
 
-  if (endNetWorth === 0) {
+  if (endNetWorth === 0 || endFinancialNet <= 0) {
     console.error("Demo net worth cannot be zero.");
     process.exit(1);
   }
 
   const startFactor = randomInRange(0.72, 0.78);
-  const startNetWorth = endNetWorth * startFactor;
-  const netWorthPath = generateNetWorthPath(startNetWorth, endNetWorth);
+  const startFinancialNet = endFinancialNet * startFactor;
+  const netWorthPath = generateNetWorthPath(startFinancialNet, endFinancialNet);
   const startDate = addDays(today, -(DAY_COUNT - 1));
 
   const rows = netWorthPath.map((netWorth, index) => {
@@ -238,19 +254,21 @@ async function main() {
     const isToday = date === today;
     const { totalAssets, totalLiabilities } = generateBalanceSheet(
       netWorth,
-      endNetWorth,
-      endAssets,
-      endLiabilities,
+      endFinancialNet,
+      endFinancialAssets,
+      endFinancialLiabilities,
     );
 
     return {
       userId,
       date,
-      totalAssets: toNumericString(isToday ? endAssets : totalAssets),
-      totalLiabilities: toNumericString(
-        isToday ? endLiabilities : totalLiabilities,
+      totalAssets: toNumericString(
+        isToday ? endFinancialAssets : totalAssets,
       ),
-      netWorth: toNumericString(isToday ? endNetWorth : netWorth),
+      totalLiabilities: toNumericString(
+        isToday ? endFinancialLiabilities : totalLiabilities,
+      ),
+      netWorth: toNumericString(isToday ? endFinancialNet : netWorth),
       snapshotData: isToday ? todaySnapshotData : null,
     };
   });

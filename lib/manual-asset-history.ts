@@ -199,6 +199,21 @@ export function totalsFromSnapshotFinancials(
   };
 }
 
+/**
+ * True when a stored snapshot net worth already includes manual assets.
+ * Used to avoid adding manualNet on top of aggregate (demo / legacy) rows.
+ */
+export function storedSnapshotIncludesManual(
+  storedNetWorth: number,
+  manualNetWorth: number,
+): boolean {
+  if (manualNetWorth <= 0) {
+    return true;
+  }
+
+  return storedNetWorth >= manualNetWorth * 0.85;
+}
+
 /** Net worth contribution from manual assets only (assets − liabilities). */
 export function manualAssetsNetWorth(
   manualRows: ManualAssetRow[],

@@ -147,7 +147,7 @@ export function NetWorthChart({
           ? chartData[scrubIndex]
           : chartData[latestIndex];
       const displayNetWorth =
-        scrubDetail?.netWorth ?? point?.netWorth ?? latestNetWorth;
+        scrubDetail?.netWorth ?? currentNetWorth;
       const displayDate = scrubDetail?.point.date ?? point?.date ?? today;
       const displaySource = scrubDetail?.point.source ?? point?.source;
       const isEstimated =

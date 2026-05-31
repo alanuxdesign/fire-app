@@ -1,14 +1,20 @@
 "use client";
 
 import {
-  ChartHoverTooltip,
+  ChartScrubDateTooltip,
   NetWorthChartPlot,
   type ChartScrubDetail,
 } from "@/components/portfolio/NetWorthChartPlot";
 import {
+  BACKFILL_MIN_SNAPSHOT_COUNT,
+  clearBackfillPending,
+  isBackfillPending,
+} from "@/lib/backfill-pending";
+import {
   buildNetWorthChartData,
   CHART_MARGIN,
   computeNetWorthChange,
+  hoverDateAtChartIndex,
   getChangeHorizonLabel,
   getChartContentWidth,
   getTodayPointIndex,
@@ -32,6 +38,7 @@ export type NetWorthDisplay = {
   changeAmount: number;
   changeHorizonLabel: string;
   showBackToToday: boolean;
+  isEstimated: boolean;
 };
 
 type NetWorthChartProps = {
@@ -40,6 +47,9 @@ type NetWorthChartProps = {
   onRegisterBackToToday?: (handler: () => void) => void;
   refreshKey?: number;
 };
+
+const POPULATING_MESSAGE_DELAY_MS = 2000;
+const BACKFILL_POLL_INTERVAL_MS = 3000;
 
 export function NetWorthChart({
   currentNetWorth,
@@ -50,6 +60,8 @@ export function NetWorthChart({
   const [range, setRange] = useState<SnapshotRange>("YTD");
   const [snapshots, setSnapshots] = useState<SnapshotSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [backfillPending, setBackfillPending] = useState(false);
+  const [showPopulatingMessage, setShowPopulatingMessage] = useState(false);
   const [scrub, setScrub] = useState<ChartScrubDetail | null>(null);
   const [todayInView, setTodayInView] = useState(true);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -136,6 +148,11 @@ export function NetWorthChart({
           : chartData[latestIndex];
       const displayNetWorth =
         scrubDetail?.netWorth ?? point?.netWorth ?? latestNetWorth;
+      const displayDate = scrubDetail?.point.date ?? point?.date ?? today;
+      const displaySource = scrubDetail?.point.source ?? point?.source;
+      const isEstimated =
+        displaySource === "reconstructed" ||
+        (scrubDetail !== null && displayDate !== today);
 
       const { changePercent } = computeNetWorthChange(
         displayNetWorth,
@@ -148,6 +165,7 @@ export function NetWorthChart({
         changeAmount: displayNetWorth - baselineNetWorth,
         changeHorizonLabel,
         showBackToToday: !inView,
+        isEstimated,
       });
     },
     [
@@ -157,6 +175,7 @@ export function NetWorthChart({
       latestIndex,
       latestNetWorth,
       onDisplayChange,
+      today,
     ],
   );
 
@@ -193,6 +212,10 @@ export function NetWorthChart({
         chartValue: interpolated.chartValue,
         netWorth: interpolated.netWorth,
         tooltipX,
+        hoverDateLabel: hoverDateAtChartIndex(
+          chartData,
+          interpolated.exactIndex,
+        ),
         point,
       };
 
@@ -205,27 +228,70 @@ export function NetWorthChart({
     setScrub(null);
   }, []);
 
-  const loadSnapshots = useCallback(async (selectedRange: SnapshotRange) => {
-    setLoading(true);
-
-    try {
-      const response = await fetch(`/api/snapshots?range=${selectedRange}`);
-      if (!response.ok) {
-        throw new Error("Failed to load snapshots");
+  const loadSnapshots = useCallback(
+    async (selectedRange: SnapshotRange, options?: { silent?: boolean }) => {
+      if (!options?.silent) {
+        setLoading(true);
       }
 
-      const body = (await response.json()) as { snapshots: SnapshotSummary[] };
-      setSnapshots(body.snapshots);
-    } catch {
-      setSnapshots([]);
-    } finally {
-      setLoading(false);
+      try {
+        const response = await fetch(`/api/snapshots?range=${selectedRange}`);
+        if (!response.ok) {
+          throw new Error("Failed to load snapshots");
+        }
+
+        const body = (await response.json()) as {
+          snapshots: SnapshotSummary[];
+        };
+        setSnapshots(body.snapshots);
+
+        if (body.snapshots.length >= BACKFILL_MIN_SNAPSHOT_COUNT) {
+          clearBackfillPending();
+          setBackfillPending(false);
+          setShowPopulatingMessage(false);
+        }
+
+        return body.snapshots;
+      } catch {
+        setSnapshots([]);
+        return [];
+      } finally {
+        if (!options?.silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (isBackfillPending()) {
+      setBackfillPending(true);
     }
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     loadSnapshots(range);
   }, [range, loadSnapshots, refreshKey]);
+
+  useEffect(() => {
+    if (!backfillPending) {
+      return;
+    }
+
+    const delayTimer = window.setTimeout(() => {
+      setShowPopulatingMessage(true);
+    }, POPULATING_MESSAGE_DELAY_MS);
+
+    const pollTimer = window.setInterval(() => {
+      void loadSnapshots(range, { silent: true });
+    }, BACKFILL_POLL_INTERVAL_MS);
+
+    return () => {
+      window.clearTimeout(delayTimer);
+      window.clearInterval(pollTimer);
+    };
+  }, [backfillPending, loadSnapshots, range]);
 
   useEffect(() => {
     const el = viewportRef.current;
@@ -355,8 +421,19 @@ export function NetWorthChart({
   return (
     <div className="px-2 pb-4">
       <div ref={viewportRef} className="h-40 w-full">
-        {loading ? (
-          <div className="h-full animate-pulse rounded-lg bg-zinc-900" />
+        {loading ||
+        (showPopulatingMessage &&
+          backfillPending &&
+          snapshots.length < BACKFILL_MIN_SNAPSHOT_COUNT) ? (
+          showPopulatingMessage ? (
+            <div className="flex h-full items-center justify-center rounded-lg bg-zinc-900/60">
+              <p className="text-sm font-medium text-zinc-400">
+                Populating data…
+              </p>
+            </div>
+          ) : (
+            <div className="h-full animate-pulse rounded-lg bg-zinc-900" />
+          )
         ) : (
           <div
             ref={scrollRef}
@@ -380,7 +457,7 @@ export function NetWorthChart({
                 minWidth: "100%",
               }}
             >
-              {scrub ? <ChartHoverTooltip scrub={scrub} /> : null}
+              {scrub ? <ChartScrubDateTooltip scrub={scrub} /> : null}
 
               <ResponsiveContainer width="100%" height="100%">
                 <NetWorthChartPlot

@@ -3,10 +3,8 @@
 import {
   CHART_MARGIN,
   formatDayLabel,
-  interpolateChartPoint,
   type NetWorthChartPoint,
 } from "@/lib/chart-data";
-import { formatCurrency } from "@/lib/format";
 import {
   Area,
   AreaChart,
@@ -22,6 +20,7 @@ export type ChartScrubDetail = {
   chartValue: number;
   netWorth: number;
   tooltipX: number;
+  hoverDateLabel: string;
   point: NetWorthChartPoint;
 };
 
@@ -110,16 +109,14 @@ export function NetWorthChartPlot({
   );
 }
 
-export function ChartHoverTooltip({ scrub }: { scrub: ChartScrubDetail }) {
+export function ChartScrubDateTooltip({ scrub }: { scrub: ChartScrubDetail }) {
   return (
     <div
-      className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-800/95 px-2.5 py-1.5 text-xs text-white shadow-lg ring-1 ring-zinc-700"
+      className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-800/95 px-2.5 py-1.5 text-xs font-medium text-zinc-100 shadow-lg ring-1 ring-zinc-700"
       style={{ left: scrub.tooltipX, top: 4 }}
     >
-      <p className="font-medium text-zinc-300">
-        {formatDayLabel(scrub.point.date)}
-      </p>
-      <p className="tabular-nums">{formatCurrency(scrub.netWorth)}</p>
+      {scrub.hoverDateLabel}
     </div>
   );
 }
+

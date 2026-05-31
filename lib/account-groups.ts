@@ -1,5 +1,6 @@
 import { financialAccounts, manualAssets } from "@/drizzle/schema";
 import { getManualAssetLabel } from "@/lib/manual-assets";
+import { toDateString } from "@/lib/purchase-date";
 
 export type AccountGroupType =
   | "Cash"
@@ -30,6 +31,9 @@ export type AccountListItem = {
   status: AccountConnectionStatus;
   marketSymbol: string | null;
   marketQuantity: number | null;
+  /** Manual assets only — used as change baseline when no snapshot history */
+  purchaseValue: number | null;
+  purchaseDate: string | null;
   updatedAt: string;
   isManual: boolean;
   dailyChange: number;
@@ -135,6 +139,8 @@ export function buildAccountsResponse(
       status: (row.plaidItemId ? "connected" : "manual") as AccountConnectionStatus,
       marketSymbol: null,
       marketQuantity: null,
+      purchaseValue: null,
+      purchaseDate: null,
       updatedAt: row.updatedAt.toISOString(),
       isManual: row.isManual,
       dailyChange: 0,
@@ -160,6 +166,10 @@ export function buildAccountsResponse(
       marketQuantity: row.marketQuantity
         ? parseBalance(row.marketQuantity)
         : null,
+      purchaseValue: row.purchaseValue
+        ? parseBalance(row.purchaseValue)
+        : null,
+      purchaseDate: toDateString(row.purchaseDate),
       updatedAt: row.updatedAt.toISOString(),
       isManual: true,
       dailyChange: 0,

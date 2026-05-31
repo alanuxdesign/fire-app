@@ -1,6 +1,7 @@
 "use client";
 
 import { ManualAssetSheet } from "@/components/portfolio/ManualAssetSheet";
+import { setBackfillPending } from "@/lib/backfill-pending";
 import { Building2, PenLine } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -55,6 +56,14 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
         if (!exchangeResponse.ok) {
           const body = (await exchangeResponse.json()) as { error?: string };
           throw new Error(body.error ?? "Failed to link account");
+        }
+
+        const exchangeBody = (await exchangeResponse.json()) as {
+          backfillStarted?: boolean;
+        };
+
+        if (exchangeBody.backfillStarted) {
+          setBackfillPending();
         }
 
         const syncResponse = await fetch("/api/plaid/sync-accounts", {

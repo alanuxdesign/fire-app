@@ -1,4 +1,9 @@
-import type { SnapshotRange, SnapshotSummary } from "@/lib/snapshots";
+import { getTodayDateString } from "@/lib/dates";
+import type {
+  SnapshotRange,
+  SnapshotSource,
+  SnapshotSummary,
+} from "@/lib/snapshots";
 
 export type ChartDisplayMode = "dollar" | "percent";
 
@@ -8,6 +13,7 @@ export type NetWorthChartPoint = {
   xIndex: number;
   netWorth: number;
   chartValue: number;
+  source?: SnapshotSource;
 };
 
 export function formatDayLabel(dateStr: string): string {
@@ -15,6 +21,26 @@ export function formatDayLabel(dateStr: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+/** Full date for chart hover (includes year). */
+export function formatChartHoverDate(dateStr: string): string {
+  return new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function hoverDateAtChartIndex(
+  chartData: NetWorthChartPoint[],
+  exactIndex: number,
+): string {
+  const index = Math.round(
+    Math.max(0, Math.min(chartData.length - 1, exactIndex)),
+  );
+  const point = chartData[index];
+  return point ? formatChartHoverDate(point.date) : "";
 }
 
 /** @deprecated Use formatDayLabel for chart points; kept for non-chart uses if needed. */
@@ -31,18 +57,32 @@ export function buildNetWorthChartData(
   range: SnapshotRange,
   displayMode: ChartDisplayMode = "dollar",
 ): NetWorthChartPoint[] {
-  const basePoints =
+  const today = getTodayDateString();
+
+  let basePoints =
     snapshots.length === 0
       ? [
           {
-            date: new Date().toISOString().slice(0, 10),
+            date: today,
             netWorth: currentNetWorth,
           },
         ]
       : snapshots.map((snapshot) => ({
           date: snapshot.date,
           netWorth: snapshot.netWorth,
+          source: snapshot.source,
         }));
+
+  if (basePoints.length > 0) {
+    const lastIndex = basePoints.length - 1;
+    const lastPoint = basePoints[lastIndex]!;
+    if (lastPoint.date === today) {
+      basePoints = [
+        ...basePoints.slice(0, lastIndex),
+        { ...lastPoint, netWorth: currentNetWorth },
+      ];
+    }
+  }
 
   const baseline = basePoints[0]?.netWorth ?? currentNetWorth;
 
@@ -60,6 +100,7 @@ export function buildNetWorthChartData(
       xIndex: index,
       netWorth: point.netWorth,
       chartValue,
+      source: "source" in point ? point.source : undefined,
     };
   });
 }
@@ -243,7 +284,11 @@ export function computeNetWorthChange(
 ): { changeAmount: number; changePercent: number } {
   const changeAmount = value - baseline;
   const changePercent =
-    baseline !== 0 ? (changeAmount / Math.abs(baseline)) * 100 : 0;
+    baseline !== 0
+      ? (changeAmount / Math.abs(baseline)) * 100
+      : changeAmount !== 0
+        ? 100
+        : 0;
 
   return { changeAmount, changePercent };
 }

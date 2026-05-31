@@ -6,8 +6,10 @@ import {
   serializeFinancialAccount,
   syncPlaidItemAccounts,
 } from "@/lib/plaid-accounts";
+import { backfillUserBalanceHistorySafe } from "@/lib/plaid-backfill";
 import { getPlaidErrorMessage, plaidClient } from "@/lib/plaid";
 import { createSnapshotIfNeeded } from "@/lib/snapshots";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -33,6 +35,11 @@ export async function POST(request: Request) {
       body.metadata?.institution?.institution_id ?? "unknown";
     const institutionName =
       body.metadata?.institution?.name ?? "Linked institution";
+
+    const existingItems = await db.query.plaidItems.findMany({
+      where: eq(plaidItems.userId, authResult.userId),
+    });
+    const isFirstPlaidConnection = existingItems.length === 0;
 
     const exchange = await plaidClient.itemPublicTokenExchange({
       public_token: body.public_token,
@@ -65,8 +72,21 @@ export async function POST(request: Request) {
       );
     }
 
+    if (isFirstPlaidConnection) {
+      void backfillUserBalanceHistorySafe(authResult.userId).then((result) => {
+        if ("error" in result) {
+          console.error("Balance history backfill failed:", result.error);
+        } else {
+          console.log(
+            `Backfilled ${result.inserted} snapshots for user ${authResult.userId}`,
+          );
+        }
+      });
+    }
+
     return NextResponse.json({
       success: true,
+      backfillStarted: isFirstPlaidConnection,
       accounts: accounts.map(serializeFinancialAccount),
     });
   } catch (error) {

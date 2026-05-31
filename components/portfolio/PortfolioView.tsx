@@ -20,6 +20,7 @@ const defaultDisplay: NetWorthDisplay = {
   changeAmount: 0,
   changeHorizonLabel: getChangeHorizonLabel("YTD"),
   showBackToToday: false,
+  isEstimated: false,
 };
 
 export function PortfolioView() {
@@ -75,6 +76,7 @@ export function PortfolioView() {
           changeAmount: accounts.netWorthChangeAmount,
           changeHorizonLabel: getChangeHorizonLabel("YTD"),
           showBackToToday: false,
+          isEstimated: false,
         });
       })
       .catch((err: unknown) => {
@@ -83,15 +85,26 @@ export function PortfolioView() {
       .finally(() => setLoading(false));
   }, [loadAccounts]);
 
+  const applyAccountsToDisplay = useCallback((accounts: AccountsApiResponse) => {
+    setData(accounts);
+    setSnapshotRefreshKey((key) => key + 1);
+    setNetWorthDisplay((prev) => ({
+      ...prev,
+      netWorth: accounts.netWorth,
+      changePercent: accounts.netWorthChangePercent,
+      changeAmount: accounts.netWorthChangeAmount,
+      isEstimated: false,
+    }));
+  }, []);
+
   const reloadAccounts = useCallback(async () => {
     try {
       const accounts = await loadAccounts();
-      setData(accounts);
-      setSnapshotRefreshKey((key) => key + 1);
+      applyAccountsToDisplay(accounts);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load accounts");
     }
-  }, [loadAccounts]);
+  }, [applyAccountsToDisplay, loadAccounts]);
 
   const handleLinked = useCallback(async () => {
     setRefreshing(true);
@@ -119,9 +132,11 @@ export function PortfolioView() {
       <section className="shrink-0 bg-zinc-950 text-white">
         <NetWorthHeader
           netWorth={netWorthDisplay.netWorth}
+          changeAmount={netWorthDisplay.changeAmount}
           changePercent={netWorthDisplay.changePercent}
           changeHorizonLabel={netWorthDisplay.changeHorizonLabel}
           showBackToToday={netWorthDisplay.showBackToToday}
+          isEstimated={netWorthDisplay.isEstimated}
           onBackToToday={() => backToTodayRef.current()}
         />
         <NetWorthChart

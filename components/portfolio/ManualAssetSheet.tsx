@@ -1,5 +1,7 @@
 "use client";
 
+import { parseCurrencyInput } from "@/lib/currency";
+import { formatPurchaseDateLabel, parsePurchaseDateInput } from "@/lib/purchase-date";
 import {
   MANUAL_ASSET_TYPES,
   type ManualAssetType,
@@ -62,15 +64,32 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
     setError(null);
 
     try {
+      const parsedCurrent = parseCurrencyInput(currentValue);
+      const parsedPurchase = parseCurrencyInput(purchaseValue);
+      const effectiveCurrent = parsedCurrent ?? parsedPurchase;
+
+      if (effectiveCurrent === null) {
+        throw new Error(
+          "Enter a current value or purchase value (e.g. 450000 or $450,000)",
+        );
+      }
+
+      const parsedPurchaseDate = parsePurchaseDateInput(purchaseDate);
+      if (purchaseDate.trim() && !parsedPurchaseDate) {
+        throw new Error(
+          "Enter a valid purchase date (MM/DD/YYYY, e.g. 2/3/2022).",
+        );
+      }
+
       const response = await fetch("/api/assets/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           assetType,
-          currentValue,
-          purchaseValue: purchaseValue || null,
-          purchaseDate: purchaseDate || null,
+          currentValue: effectiveCurrent,
+          purchaseValue: parsedPurchase,
+          purchaseDate: parsedPurchaseDate,
           address: assetType === "real_estate" ? address || null : null,
           notes: notes || null,
         }),
@@ -163,12 +182,14 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
 
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-slate-700">
-              Current value
+              Current value{" "}
+              <span className="font-normal text-slate-400">
+                (uses purchase value if blank)
+              </span>
             </span>
             <input
               type="text"
               inputMode="decimal"
-              required
               value={currentValue}
               onChange={(e) => setCurrentValue(e.target.value)}
               className={inputClassName}
@@ -196,12 +217,26 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
               Purchase date{" "}
               <span className="font-normal text-slate-400">(optional)</span>
             </span>
+            <p className="text-xs text-slate-500">
+              Your net worth chart excludes this asset before this date and
+              grows from purchase value toward current value over time. Use{" "}
+              <span className="font-medium">MM/DD/YYYY</span> (e.g. 2/3/2022).
+            </p>
             <input
-              type="date"
+              type="text"
+              inputMode="numeric"
               value={purchaseDate}
               onChange={(e) => setPurchaseDate(e.target.value)}
+              placeholder="2/3/2022"
               className={inputClassName}
+              aria-describedby="purchase-date-hint"
             />
+            {parsePurchaseDateInput(purchaseDate) ? (
+              <p id="purchase-date-hint" className="text-xs text-slate-500">
+                Chart starts{" "}
+                {formatPurchaseDateLabel(parsePurchaseDateInput(purchaseDate)!)}
+              </p>
+            ) : null}
           </label>
 
           {assetType === "real_estate" ? (

@@ -4,13 +4,17 @@ import {
   type AccountListItem,
   type AccountsApiResponse,
 } from "@/lib/account-groups";
+import { manualAssetValueFromListItem } from "@/lib/manual-asset-history";
 import type { SnapshotData } from "@/lib/snapshots";
 import { getTodayDateString } from "@/lib/dates";
 
 export function getYesterdayDateString(date = new Date()): string {
   const yesterday = new Date(date);
   yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().slice(0, 10);
+  const year = yesterday.getFullYear();
+  const month = String(yesterday.getMonth() + 1).padStart(2, "0");
+  const day = String(yesterday.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function getMonthStartDateString(date = new Date()): string {
@@ -26,6 +30,44 @@ function computeChange(
   const percent =
     previous !== 0 ? (amount / Math.abs(previous)) * 100 : 0;
   return { amount, percent };
+}
+
+function accountBalanceAtDate(
+  account: AccountListItem,
+  snapshotBalances: Map<string, number>,
+  comparisonDate: string,
+): number {
+  if (account.isManual) {
+    return manualAssetValueFromListItem(account, comparisonDate);
+  }
+
+  return snapshotBalances.get(account.id) ?? 0;
+}
+
+function netWorthAtDate(
+  groups: AccountGroupResponse[],
+  comparisonDate: string,
+  snapshotBalances: Map<string, number>,
+): number {
+  let totalAssets = 0;
+  let totalLiabilities = 0;
+
+  for (const group of groups) {
+    for (const account of group.accounts) {
+      const balance = accountBalanceAtDate(
+        account,
+        snapshotBalances,
+        comparisonDate,
+      );
+      if (group.type === "Liabilities") {
+        totalLiabilities += Math.abs(balance);
+      } else {
+        totalAssets += balance;
+      }
+    }
+  }
+
+  return totalAssets - totalLiabilities;
 }
 
 export function extractBalancesFromSnapshot(
@@ -53,11 +95,22 @@ export function enrichAccountsWithChanges(
   yesterdayBalances: Map<string, number>,
   monthStartBalances: Map<string, number>,
 ): AccountsApiResponse {
+  const yesterdayDate = getYesterdayDateString();
+  const monthStartDate = getMonthStartDateString();
+
   const enrichedGroups: AccountGroupResponse[] = response.groups.map(
     (group) => {
       const accounts: AccountListItem[] = group.accounts.map((account) => {
-        const yesterdayBalance = yesterdayBalances.get(account.id) ?? 0;
-        const monthStartBalance = monthStartBalances.get(account.id) ?? 0;
+        const yesterdayBalance = accountBalanceAtDate(
+          account,
+          yesterdayBalances,
+          yesterdayDate,
+        );
+        const monthStartBalance = accountBalanceAtDate(
+          account,
+          monthStartBalances,
+          monthStartDate,
+        );
 
         const daily = computeChange(account.currentBalance, yesterdayBalance);
         const monthly = computeChange(
@@ -75,7 +128,11 @@ export function enrichAccountsWithChanges(
       });
 
       const groupMonthStartTotal = accounts.reduce((sum, account) => {
-        const monthStartBalance = monthStartBalances.get(account.id) ?? 0;
+        const monthStartBalance = accountBalanceAtDate(
+          account,
+          monthStartBalances,
+          monthStartDate,
+        );
         if (group.type === "Liabilities") {
           return sum + Math.abs(monthStartBalance);
         }
@@ -94,9 +151,10 @@ export function enrichAccountsWithChanges(
   );
 
   const today = getTodayDateString();
-  const monthStartNetWorth = [...monthStartBalances.values()].reduce(
-    (sum, value) => sum + value,
-    0,
+  const monthStartNetWorth = netWorthAtDate(
+    response.groups,
+    monthStartDate,
+    monthStartBalances,
   );
   const netWorthMonthly = computeChange(response.netWorth, monthStartNetWorth);
 

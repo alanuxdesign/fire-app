@@ -1,18 +1,22 @@
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency, formatPercent, formatSignedCurrency } from "@/lib/format";
 
 type NetWorthHeaderProps = {
   netWorth: number;
+  changeAmount: number;
   changePercent: number;
   changeHorizonLabel: string;
   showBackToToday: boolean;
+  isEstimated?: boolean;
   onBackToToday: () => void;
 };
 
 export function NetWorthHeader({
   netWorth,
+  changeAmount,
   changePercent,
   changeHorizonLabel,
   showBackToToday,
+  isEstimated = false,
   onBackToToday,
 }: NetWorthHeaderProps) {
   const isPositive = changePercent >= 0;
@@ -29,7 +33,7 @@ export function NetWorthHeader({
         </button>
       ) : null}
       <p className="text-center text-sm font-medium tracking-wide text-zinc-400">
-        Net Worth
+        {isEstimated ? "Estimated Net Worth" : "Net Worth"}
       </p>
       <p className="mt-2 text-center text-4xl font-semibold tracking-tight tabular-nums text-white transition-all duration-200">
         {formatCurrency(netWorth)}
@@ -39,7 +43,10 @@ export function NetWorthHeader({
           isPositive ? "text-emerald-400" : "text-red-400"
         }`}
       >
-        {formatPercent(changePercent)}
+        {formatSignedCurrency(changeAmount)}
+        {Number.isFinite(changePercent) ? (
+          <> ({formatPercent(changePercent)})</>
+        ) : null}
         <span className="ml-1 text-zinc-500">· {changeHorizonLabel}</span>
       </p>
     </div>

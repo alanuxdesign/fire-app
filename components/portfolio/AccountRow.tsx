@@ -1,6 +1,7 @@
 import { ChangeLabel } from "@/components/portfolio/ChangeLabel";
 import type { AccountListItem } from "@/lib/account-groups";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
+import { formatPurchaseDateLabel } from "@/lib/purchase-date";
 
 type AccountRowProps = {
   account: AccountListItem;
@@ -25,6 +26,10 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
   const label = account.institutionName ?? account.name;
   const initial = label.charAt(0).toUpperCase();
   const updatedDate = new Date(account.updatedAt);
+  const secondaryLabel =
+    account.isManual && account.purchaseDate
+      ? `Purchased ${formatPurchaseDateLabel(account.purchaseDate)}`
+      : `Updated ${formatRelativeTime(updatedDate)}`;
 
   return (
     <button
@@ -65,7 +70,7 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
         <div className="mt-0.5 flex flex-col items-end gap-0.5">
           <ChangeLabel amount={account.dailyChange} size="xs" />
           <p className="text-xs text-slate-400 dark:text-zinc-500">
-            {formatRelativeTime(updatedDate)}
+            {secondaryLabel}
           </p>
         </div>
       </div>

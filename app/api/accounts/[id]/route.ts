@@ -1,7 +1,13 @@
 import { requireUserId } from "@/lib/api-auth";
 import { parseBalance } from "@/lib/account-groups";
+import { parseCurrencyInput } from "@/lib/currency";
+import { parsePurchaseDateInput, toDateString } from "@/lib/purchase-date";
 import { financialAccounts, manualAssets } from "@/drizzle/schema";
 import { db } from "@/lib/db";
+import {
+  refreshSnapshotsForManualAssets,
+  upsertTodaySnapshot,
+} from "@/lib/snapshots";
 import {
   ASSET_CLASS_OPTIONS,
   type AssetClassLabel,
@@ -16,6 +22,9 @@ type PatchBody = {
   marketSymbol?: string | null;
   marketQuantity?: number | string | null;
   name?: string;
+  currentValue?: number | string | null;
+  purchaseValue?: number | string | null;
+  purchaseDate?: string | null;
 };
 
 function isValidAssetClass(value: string): value is AssetClassLabel {
@@ -61,7 +70,12 @@ export async function PATCH(request: Request, context: RouteContext) {
           ...(body.name?.trim() ? { name: body.name.trim() } : {}),
           updatedAt: new Date(),
         })
-        .where(eq(financialAccounts.id, id))
+        .where(
+          and(
+            eq(financialAccounts.id, id),
+            eq(financialAccounts.userId, authResult.userId),
+          ),
+        )
         .returning();
 
       return NextResponse.json({ account: updated });
@@ -91,6 +105,45 @@ export async function PATCH(request: Request, context: RouteContext) {
         ? undefined
         : Number(body.marketQuantity);
 
+    const parsedCurrent =
+      body.currentValue !== undefined
+        ? parseCurrencyInput(body.currentValue)
+        : undefined;
+    const parsedPurchase =
+      body.purchaseValue !== undefined
+        ? parseCurrencyInput(body.purchaseValue)
+        : undefined;
+
+    if (
+      body.purchaseValue !== undefined &&
+      body.purchaseValue !== null &&
+      String(body.purchaseValue).trim() !== "" &&
+      parsedPurchase === null
+    ) {
+      return NextResponse.json(
+        { error: "Invalid purchase price" },
+        { status: 400 },
+      );
+    }
+
+    let purchaseDate: string | null | undefined;
+    if (body.purchaseDate !== undefined) {
+      if (body.purchaseDate === null || body.purchaseDate === "") {
+        purchaseDate = null;
+      } else {
+        const parsed = parsePurchaseDateInput(body.purchaseDate);
+        if (!parsed) {
+          return NextResponse.json(
+            {
+              error: "Invalid purchase date. Use MM/DD/YYYY (e.g. 2/3/2022).",
+            },
+            { status: 400 },
+          );
+        }
+        purchaseDate = parsed;
+      }
+    }
+
     const [updated] = await db
       .update(manualAssets)
       .set({
@@ -105,11 +158,44 @@ export async function PATCH(request: Request, context: RouteContext) {
           : body.marketQuantity === null
             ? { marketQuantity: null }
             : {}),
+        ...(parsedCurrent !== undefined && parsedCurrent !== null
+          ? { currentValue: String(parsedCurrent) }
+          : {}),
+        ...(parsedPurchase !== undefined
+          ? {
+              purchaseValue:
+                parsedPurchase !== null ? String(parsedPurchase) : null,
+            }
+          : {}),
+        ...(purchaseDate !== undefined ? { purchaseDate } : {}),
         ...(body.name?.trim() ? { name: body.name.trim() } : {}),
         updatedAt: new Date(),
       })
-      .where(eq(manualAssets.id, id))
+      .where(
+        and(
+          eq(manualAssets.id, id),
+          eq(manualAssets.userId, authResult.userId),
+        ),
+      )
       .returning();
+
+    const refreshFromDate = toDateString(
+      purchaseDate !== undefined
+        ? purchaseDate
+        : (updated.purchaseDate ?? manual.purchaseDate),
+    );
+
+    try {
+      await upsertTodaySnapshot(authResult.userId);
+      await refreshSnapshotsForManualAssets(authResult.userId, {
+        fromDate: refreshFromDate,
+      });
+    } catch (snapshotError) {
+      console.error(
+        "Failed to refresh snapshots after manual asset update:",
+        snapshotError,
+      );
+    }
 
     return NextResponse.json({
       account: {
@@ -147,7 +233,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
     if (financial) {
       await db
         .delete(financialAccounts)
-        .where(eq(financialAccounts.id, id));
+        .where(
+          and(
+            eq(financialAccounts.id, id),
+            eq(financialAccounts.userId, authResult.userId),
+          ),
+        );
       return NextResponse.json({ success: true });
     }
 
@@ -162,7 +253,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
-    await db.delete(manualAssets).where(eq(manualAssets.id, id));
+    await db.delete(manualAssets).where(
+      and(
+        eq(manualAssets.id, id),
+        eq(manualAssets.userId, authResult.userId),
+      ),
+    );
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(

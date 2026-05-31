@@ -1,6 +1,13 @@
 "use client";
 
+import { AccountHoldingsList } from "@/components/portfolio/AccountHoldingsList";
 import type { AccountListItem } from "@/lib/account-groups";
+import {
+  accountShowsHoldings,
+  type AccountHoldingsResponse,
+} from "@/lib/account-holdings";
+import { parseCurrencyInput } from "@/lib/currency";
+import { formatPurchaseDateLabel, parsePurchaseDateInput } from "@/lib/purchase-date";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import {
   ASSET_CLASS_OPTIONS,
@@ -30,9 +37,18 @@ export function AccountDetailModal({
   const [assetClassOverride, setAssetClassOverride] = useState<string>("");
   const [marketSymbol, setMarketSymbol] = useState("");
   const [marketQuantity, setMarketQuantity] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
+  const [purchaseValue, setPurchaseValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [holdings, setHoldings] = useState<AccountHoldingsResponse | null>(
+    null,
+  );
+  const [holdingsLoading, setHoldingsLoading] = useState(false);
+  const [holdingsError, setHoldingsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const showHoldings = account ? accountShowsHoldings(account) : false;
 
   const defaultAssetClass = account
     ? resolveDefaultAssetClass(account)
@@ -52,8 +68,68 @@ export function AccountDetailModal({
     setMarketQuantity(
       account.marketQuantity != null ? String(account.marketQuantity) : "",
     );
+    if (account.purchaseDate) {
+      const [year, month, day] = account.purchaseDate.split("-");
+      setPurchaseDate(
+        year && month && day
+          ? `${Number(month)}/${Number(day)}/${year}`
+          : account.purchaseDate,
+      );
+    } else {
+      setPurchaseDate("");
+    }
+    setPurchaseValue(
+      account.purchaseValue != null ? String(account.purchaseValue) : "",
+    );
     setError(null);
+    setHoldings(null);
+    setHoldingsError(null);
   }, [account]);
+
+  useEffect(() => {
+    if (!account || !showHoldings) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadHoldings = async () => {
+      setHoldingsLoading(true);
+      setHoldingsError(null);
+
+      try {
+        const response = await fetch(`/api/accounts/${account.id}/holdings`);
+        const body = (await response.json()) as AccountHoldingsResponse & {
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(body.error ?? "Failed to load holdings");
+        }
+
+        if (!cancelled) {
+          setHoldings(body);
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setHoldings(null);
+          setHoldingsError(
+            err instanceof Error ? err.message : "Failed to load holdings",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setHoldingsLoading(false);
+        }
+      }
+    };
+
+    void loadHoldings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [account, showHoldings]);
 
   useEffect(() => {
     if (!account) {
@@ -92,13 +168,24 @@ export function AccountDetailModal({
         }
 
         onUpdated();
+
+        if (showHoldings && account) {
+          const holdingsResponse = await fetch(
+            `/api/accounts/${account.id}/holdings`,
+          );
+          if (holdingsResponse.ok) {
+            setHoldings(
+              (await holdingsResponse.json()) as AccountHoldingsResponse,
+            );
+          }
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to save");
       } finally {
         setSaving(false);
       }
     },
-    [account, onUpdated],
+    [account, onUpdated, showHoldings],
   );
 
   const handleSaveAssetClass = async () => {
@@ -116,6 +203,19 @@ export function AccountDetailModal({
     await patchAccount({
       marketSymbol: marketSymbol.trim() || null,
       marketQuantity: marketQuantity ? Number(marketQuantity) : null,
+    });
+  };
+
+  const handleSaveAcquisition = async () => {
+    const parsedPurchase = parseCurrencyInput(purchaseValue);
+    const parsedPurchaseDate = parsePurchaseDateInput(purchaseDate);
+    if (purchaseDate.trim() && !parsedPurchaseDate) {
+      setError("Enter a valid purchase date (MM/DD/YYYY, e.g. 2/3/2022).");
+      return;
+    }
+    await patchAccount({
+      purchaseDate: parsedPurchaseDate,
+      purchaseValue: parsedPurchase,
     });
   };
 
@@ -139,6 +239,18 @@ export function AccountDetailModal({
       }
 
       onUpdated();
+
+      if (showHoldings) {
+        const holdingsResponse = await fetch(
+          `/api/accounts/${account.id}/holdings`,
+        );
+        if (holdingsResponse.ok) {
+          setHoldings(
+            (await holdingsResponse.json()) as AccountHoldingsResponse,
+          );
+          setHoldingsError(null);
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sync failed");
     } finally {
@@ -260,7 +372,42 @@ export function AccountDetailModal({
             <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
               {formatCurrency(account.currentBalance, account.currency)}
             </p>
+            {account.isManual && account.purchaseDate ? (
+              <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
+                Purchased {formatPurchaseDateLabel(account.purchaseDate)}
+                {account.purchaseValue != null
+                  ? ` for ${formatCurrency(account.purchaseValue, account.currency)}`
+                  : null}
+              </p>
+            ) : null}
           </div>
+
+          {showHoldings ? (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-800 dark:text-zinc-200">
+                Holdings
+              </p>
+              {holdingsLoading ? (
+                <div className="space-y-2 animate-pulse">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-14 rounded-lg bg-stone-100 dark:bg-zinc-800"
+                    />
+                  ))}
+                </div>
+              ) : holdingsError ? (
+                <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                  {holdingsError}
+                </p>
+              ) : holdings ? (
+                <AccountHoldingsList
+                  data={holdings}
+                  currency={account.currency}
+                />
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-between rounded-xl bg-stone-50 px-3 py-2.5 dark:bg-zinc-800/60">
             <span className="text-sm text-slate-600 dark:text-zinc-400">
@@ -331,6 +478,64 @@ export function AccountDetailModal({
               ) : null}
             </div>
           </div>
+
+          {account.isManual ? (
+            <div className="space-y-2 rounded-xl border border-stone-200 p-3 dark:border-zinc-700">
+              <p className="text-sm font-medium text-slate-800 dark:text-zinc-200">
+                Acquisition & history
+              </p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Purchase date controls when this asset appears on your net worth
+                chart. Value grows from purchase price to current value over
+                time. Use <span className="font-medium">MM/DD/YYYY</span> (e.g.
+                2/3/2022).
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label
+                    htmlFor="detail-purchase-date"
+                    className="text-xs text-slate-500"
+                  >
+                    Purchase date
+                  </label>
+                  <input
+                    id="detail-purchase-date"
+                    type="text"
+                    inputMode="numeric"
+                    value={purchaseDate}
+                    onChange={(event) => setPurchaseDate(event.target.value)}
+                    placeholder="2/3/2022"
+                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="detail-purchase-value"
+                    className="text-xs text-slate-500"
+                  >
+                    Purchase price
+                  </label>
+                  <input
+                    id="detail-purchase-value"
+                    type="text"
+                    inputMode="decimal"
+                    value={purchaseValue}
+                    onChange={(event) => setPurchaseValue(event.target.value)}
+                    placeholder="$0"
+                    className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveAcquisition}
+                disabled={saving}
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+              >
+                Save acquisition details
+              </button>
+            </div>
+          ) : null}
 
           {account.isManual ? (
             <div className="space-y-2 rounded-xl border border-stone-200 p-3 dark:border-zinc-700">

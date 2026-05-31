@@ -28,9 +28,16 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     await db
       .delete(financialAccounts)
-      .where(eq(financialAccounts.plaidItemId, id));
+      .where(
+        and(
+          eq(financialAccounts.plaidItemId, id),
+          eq(financialAccounts.userId, authResult.userId),
+        ),
+      );
 
-    await db.delete(plaidItems).where(eq(plaidItems.id, id));
+    await db.delete(plaidItems).where(
+      and(eq(plaidItems.id, id), eq(plaidItems.userId, authResult.userId)),
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,0 +1,53 @@
+This is a Next.js 16 App Router project using TypeScript, Tailwind CSS, 
+
+Drizzle ORM with Postgres (Supabase), and NextAuth.js v5 for authentication.
+
+Architecture rules:
+
+- Use server components by default. Only use "use client" when the component 
+
+  needs interactivity (onClick, hooks, state).
+
+- All API routes go in app/api/ using Route Handlers.
+
+- Use Recharts for all charts and data visualization.
+
+- Use lucide-react for icons.
+
+- Mobile-first responsive design.
+
+- The app uses a bottom tab bar for navigation, NOT a hamburger menu or sidebar.
+
+Tab structure (bottom nav):
+
+- Budget (stub)
+
+- Planner (stub)  
+
+- Home (stub)
+
+- Portfolio (active, primary view)
+
+- Settings (stub)
+
+Design direction:
+
+- Dark theme for chart/hero areas (off-black/charcoal background, teal/green accent for charts with gradient and subtle dot grid tecture)
+
+- Light theme for content cards below (off-white, subtle borders)
+
+- Clean, financial-app aesthetic — not flashy, not generic
+
+- Green for positive values, red for negative
+
+File organization:
+
+- /components/layout/ — TabBar, Header
+
+- /components/portfolio/ — chart, account list, groupings
+
+- /components/ui/ — shared primitives (buttons, cards, inputs)
+
+- /lib/ — utilities, db client, plaid client
+
+- /drizzle/ — schema

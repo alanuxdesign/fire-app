@@ -10,7 +10,9 @@ export async function POST() {
   }
 
   try {
-    const result = await backfillUserBalanceHistory(authResult.userId);
+    const result = await backfillUserBalanceHistory(authResult.userId, {
+      replaceExisting: true,
+    });
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     return NextResponse.json(

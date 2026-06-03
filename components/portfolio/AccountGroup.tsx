@@ -4,7 +4,7 @@ import type {
   AccountGroupResponse,
   AccountListItem,
 } from "@/lib/account-groups";
-import { formatCurrency } from "@/lib/format";
+import { formatGroupTotal, isLiabilityGroupName } from "@/lib/account-display";
 
 type AccountGroupProps = {
   group: AccountGroupResponse;
@@ -19,8 +19,16 @@ export function AccountGroup({ group, onAccountClick }: AccountGroupProps) {
           <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
             {group.type}
           </h2>
-          <p className="text-lg font-bold tabular-nums text-slate-900 dark:text-zinc-100">
-            {formatCurrency(group.total)}
+          <p
+            className={`text-lg font-bold tabular-nums ${
+              isLiabilityGroupName(group.type)
+                ? "text-red-600 dark:text-red-400"
+                : "text-slate-900 dark:text-zinc-100"
+            }`}
+          >
+            {formatGroupTotal(group.total, {
+              isLiabilityGroup: isLiabilityGroupName(group.type),
+            })}
           </p>
         </div>
         <p className="mt-1 text-sm">

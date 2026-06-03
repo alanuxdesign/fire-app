@@ -1,6 +1,8 @@
 import { ChangeLabel } from "@/components/portfolio/ChangeLabel";
+import { InstitutionAvatar } from "@/components/portfolio/InstitutionAvatar";
 import type { AccountListItem } from "@/lib/account-groups";
-import { formatCurrency, formatRelativeTime } from "@/lib/format";
+import { formatAccountBalance } from "@/lib/account-display";
+import { formatRelativeTime } from "@/lib/format";
 import { formatPurchaseDateLabel } from "@/lib/purchase-date";
 
 type AccountRowProps = {
@@ -8,23 +10,7 @@ type AccountRowProps = {
   onClick: (account: AccountListItem) => void;
 };
 
-const INSTITUTION_COLORS = [
-  "bg-sky-600",
-  "bg-emerald-600",
-  "bg-violet-600",
-  "bg-amber-600",
-  "bg-rose-600",
-  "bg-cyan-600",
-];
-
-function getInstitutionColor(name: string) {
-  const code = name.charCodeAt(0) + (name.charCodeAt(1) ?? 0);
-  return INSTITUTION_COLORS[code % INSTITUTION_COLORS.length];
-}
-
 export function AccountRow({ account, onClick }: AccountRowProps) {
-  const label = account.institutionName ?? account.name;
-  const initial = label.charAt(0).toUpperCase();
   const updatedDate = new Date(account.updatedAt);
   const secondaryLabel =
     account.isManual && account.purchaseDate
@@ -37,12 +23,7 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
       onClick={() => onClick(account)}
       className="flex w-full items-start gap-3 py-3.5 text-left transition-colors hover:bg-stone-50/80 dark:hover:bg-zinc-800/40"
     >
-      <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${getInstitutionColor(label)}`}
-        aria-hidden
-      >
-        {initial}
-      </div>
+      <InstitutionAvatar account={account} />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-medium text-slate-900 dark:text-zinc-100">
@@ -64,8 +45,14 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
       </div>
 
       <div className="shrink-0 text-right">
-        <p className="text-[15px] font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
-          {formatCurrency(account.currentBalance, account.currency)}
+        <p
+          className={`text-[15px] font-semibold tabular-nums ${
+            account.group === "Liabilities"
+              ? "text-red-600 dark:text-red-400"
+              : "text-slate-900 dark:text-zinc-100"
+          }`}
+        >
+          {formatAccountBalance(account)}
         </p>
         <div className="mt-0.5 flex flex-col items-end gap-0.5">
           <ChangeLabel amount={account.dailyChange} size="xs" />

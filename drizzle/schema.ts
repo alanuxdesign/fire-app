@@ -103,6 +103,7 @@ export const financialAccounts = pgTable("financial_accounts", {
   }),
   plaidAccountId: text("plaid_account_id"),
   name: text("name").notNull(),
+  displayName: text("display_name"),
   officialName: text("official_name"),
   type: text("type").notNull(),
   subtype: text("subtype"),

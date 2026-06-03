@@ -26,15 +26,23 @@ export function SettingsClient() {
         error?: string;
         inserted?: number;
         skippedExisting?: number;
+        replacedExisting?: number;
         transactionsFetched?: number;
+        investmentTransactionsFetched?: number;
       };
 
       if (!response.ok) {
         throw new Error(body.error ?? "Backfill failed");
       }
 
+      const replaced = body.replacedExisting ?? 0;
+      const banking = body.transactionsFetched ?? 0;
+      const investment = body.investmentTransactionsFetched ?? 0;
+
       setBackfillMessage(
-        `Added ${body.inserted ?? 0} historical snapshots (${body.skippedExisting ?? 0} dates already had data). Fetched ${body.transactionsFetched ?? 0} transactions.`,
+        replaced > 0
+          ? `Rebuilt ${body.inserted ?? 0} daily snapshots (replaced ${replaced} existing). Fetched ${banking} banking and ${investment} investment transactions. Today's snapshot uses live balances.`
+          : `Added ${body.inserted ?? 0} historical snapshots (${body.skippedExisting ?? 0} dates already had data). Fetched ${banking} banking and ${investment} investment transactions.`,
       );
     } catch (err: unknown) {
       setBackfillError(

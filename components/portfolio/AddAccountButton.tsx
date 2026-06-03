@@ -89,6 +89,12 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: onPlaidSuccess,
+    onExit: (err, metadata) => {
+      console.log("Plaid Link exited", { err, metadata });
+      if (err) {
+        setError(`Plaid error: ${err.error_code} - ${err.error_message}`);
+      }
+    },
   });
 
   useEffect(() => {

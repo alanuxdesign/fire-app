@@ -1,6 +1,5 @@
 import {
   getFinancialAccountGroup,
-  getManualAssetGroup,
   parseBalance,
   type FinancialAccountRow,
   type ManualAssetRow,
@@ -10,6 +9,7 @@ import {
   addManualAssetsToTotals,
   manualAssetsForSnapshotDate,
 } from "@/lib/manual-asset-history";
+import { toDateString } from "@/lib/purchase-date";
 import { db } from "@/lib/db";
 import {
   balanceSnapshots,
@@ -18,30 +18,47 @@ import {
   plaidItems,
 } from "@/drizzle/schema";
 import { getPlaidErrorMessage, plaidClient } from "@/lib/plaid";
-import { type SnapshotData } from "@/lib/snapshots";
+import { type SnapshotData, upsertTodaySnapshot } from "@/lib/snapshots";
 import { and, eq, gte, lte } from "drizzle-orm";
-import type { Transaction } from "plaid";
+import type { InvestmentTransaction, Transaction } from "plaid";
 
 const BACKFILL_YEARS = 2;
 const TRANSACTION_PAGE_SIZE = 500;
 const INSERT_BATCH_SIZE = 50;
 
 const RECONSTRUCTION_NOTE =
-  "Reconstructed from Plaid transaction history. Investment balances reflect cash flows only, not market gains or losses.";
+  "Reconstructed from Plaid transaction history. Investment balances follow cash flows (buys, sells, dividends) and do not reflect market price changes between transactions.";
 
 export type BackfillHistoryResult = {
   startDate: string;
   endDate: string;
   transactionsFetched: number;
+  investmentTransactionsFetched: number;
   daysProcessed: number;
   inserted: number;
   skippedExisting: number;
+  replacedExisting: number;
+};
+
+export type BackfillHistoryOptions = {
+  /**
+   * When true, deletes existing snapshots in the 2-year window before inserting
+   * reconstructed rows. Use for manual "Backfill history" (default true there).
+   */
+  replaceExisting?: boolean;
 };
 
 type AccountContext = {
   row: FinancialAccountRow;
   plaidAccountId: string;
   isInvestment: boolean;
+};
+
+/** Normalized txn for balance reconstruction (Plaid sign: + outflow, − inflow). */
+type BackfillTxn = {
+  account_id: string;
+  date: string;
+  amount: number;
 };
 
 function getBackfillStartDate(endDate: string): string {
@@ -69,14 +86,40 @@ function isInvestmentAccount(type: string, subtype: string | null): boolean {
     type === "investment" ||
     type === "brokerage" ||
     subtype?.toLowerCase().includes("investment") === true ||
-    subtype?.toLowerCase().includes("brokerage") === true
+    subtype?.toLowerCase().includes("brokerage") === true ||
+    subtype === "401k" ||
+    subtype === "ira" ||
+    subtype === "roth" ||
+    subtype === "hsa"
   );
+}
+
+function mapPlaidTransaction(txn: Transaction): BackfillTxn {
+  const date =
+    toDateString(txn.authorized_date) ??
+    toDateString(txn.date) ??
+    txn.date;
+  return {
+    account_id: txn.account_id,
+    date,
+    amount: txn.amount,
+  };
+}
+
+function mapInvestmentTransaction(txn: InvestmentTransaction): BackfillTxn {
+  const date = toDateString(txn.date) ?? txn.date;
+  return {
+    account_id: txn.account_id,
+    date,
+    amount: txn.amount,
+  };
 }
 
 async function fetchAllTransactions(
   accessToken: string,
   startDate: string,
   endDate: string,
+  accountIds: string[],
 ): Promise<Transaction[]> {
   const all: Transaction[] = [];
   let offset = 0;
@@ -90,6 +133,7 @@ async function fetchAllTransactions(
       options: {
         offset,
         count: TRANSACTION_PAGE_SIZE,
+        account_ids: accountIds.length > 0 ? accountIds : undefined,
       },
     });
 
@@ -106,7 +150,42 @@ async function fetchAllTransactions(
   return all;
 }
 
-function sumTransactionAmounts(transactions: Transaction[]): number {
+async function fetchAllInvestmentTransactions(
+  accessToken: string,
+  startDate: string,
+  endDate: string,
+  accountIds: string[],
+): Promise<InvestmentTransaction[]> {
+  const all: InvestmentTransaction[] = [];
+  let offset = 0;
+  let total = 0;
+
+  do {
+    const response = await plaidClient.investmentsTransactionsGet({
+      access_token: accessToken,
+      start_date: startDate,
+      end_date: endDate,
+      options: {
+        offset,
+        count: TRANSACTION_PAGE_SIZE,
+        account_ids: accountIds.length > 0 ? accountIds : undefined,
+      },
+    });
+
+    const page = response.data.investment_transactions;
+    total = response.data.total_investment_transactions;
+    all.push(...page);
+    offset += page.length;
+
+    if (page.length === 0) {
+      break;
+    }
+  } while (offset < total);
+
+  return all;
+}
+
+function sumTransactionAmounts(transactions: BackfillTxn[]): number {
   return transactions.reduce((sum, txn) => sum + txn.amount, 0);
 }
 
@@ -117,12 +196,12 @@ function sumTransactionAmounts(transactions: Transaction[]): number {
  */
 function reconstructDailyBalances(
   account: AccountContext,
-  transactions: Transaction[],
+  transactions: BackfillTxn[],
   startDate: string,
   endDate: string,
 ): Map<string, number> {
   const balances = new Map<string, number>();
-  const byDate = new Map<string, Transaction[]>();
+  const byDate = new Map<string, BackfillTxn[]>();
 
   for (const txn of transactions) {
     if (txn.account_id !== account.plaidAccountId) {
@@ -199,7 +278,7 @@ function buildReconstructedSnapshotData(
     groups: [],
     financialAccounts: accountBalances.map(({ row, balance, isInvestment }) => ({
       id: row.id,
-      name: row.name,
+      name: row.displayName?.trim() || row.name,
       type: row.type,
       subtype: row.subtype,
       group: getFinancialAccountGroup(row.type, row.subtype),
@@ -219,34 +298,56 @@ function buildReconstructedSnapshotData(
 
 export async function backfillUserBalanceHistory(
   userId: string,
+  options: BackfillHistoryOptions = {},
 ): Promise<BackfillHistoryResult> {
+  const replaceExisting = options.replaceExisting ?? false;
   const endDate = getTodayDateString();
   const startDate = getBackfillStartDate(endDate);
 
-  const [items, plaidAccountRows, manualRows, existingSnapshots] =
-    await Promise.all([
-      db.query.plaidItems.findMany({
-        where: eq(plaidItems.userId, userId),
-      }),
-      db.query.financialAccounts.findMany({
-        where: eq(financialAccounts.userId, userId),
-      }),
-      db.query.manualAssets.findMany({
-        where: eq(manualAssets.userId, userId),
-      }),
-      db
-        .select({ date: balanceSnapshots.date })
-        .from(balanceSnapshots)
-        .where(
-          and(
-            eq(balanceSnapshots.userId, userId),
-            gte(balanceSnapshots.date, startDate),
-            lte(balanceSnapshots.date, endDate),
-          ),
-        ),
-    ]);
+  const [items, plaidAccountRows, manualRows] = await Promise.all([
+    db.query.plaidItems.findMany({
+      where: eq(plaidItems.userId, userId),
+    }),
+    db.query.financialAccounts.findMany({
+      where: eq(financialAccounts.userId, userId),
+    }),
+    db.query.manualAssets.findMany({
+      where: eq(manualAssets.userId, userId),
+    }),
+  ]);
 
-  const existingDates = new Set(existingSnapshots.map((row) => row.date));
+  let replacedExisting = 0;
+
+  if (replaceExisting) {
+    const deleted = await db
+      .delete(balanceSnapshots)
+      .where(
+        and(
+          eq(balanceSnapshots.userId, userId),
+          gte(balanceSnapshots.date, startDate),
+          lte(balanceSnapshots.date, endDate),
+        ),
+      )
+      .returning({ date: balanceSnapshots.date });
+    replacedExisting = deleted.length;
+  }
+
+  const existingSnapshots = await db
+    .select({ date: balanceSnapshots.date })
+    .from(balanceSnapshots)
+    .where(
+      and(
+        eq(balanceSnapshots.userId, userId),
+        gte(balanceSnapshots.date, startDate),
+        lte(balanceSnapshots.date, endDate),
+      ),
+    );
+
+  const existingDates = new Set(
+    existingSnapshots
+      .map((row) => toDateString(row.date))
+      .filter((date): date is string => Boolean(date)),
+  );
   const dates = listDatesInclusive(startDate, endDate);
   const today = endDate;
 
@@ -262,28 +363,64 @@ export async function backfillUserBalanceHistory(
     (row) => !row.plaidAccountId,
   );
 
-  const allTransactions: Transaction[] = [];
+  const regularTxns: BackfillTxn[] = [];
+  const investmentTxns: BackfillTxn[] = [];
+
+  const accountsByItem = new Map<string, AccountContext[]>();
+  for (const account of accountContexts) {
+    const itemId = account.row.plaidItemId;
+    if (!itemId) {
+      continue;
+    }
+    const list = accountsByItem.get(itemId) ?? [];
+    list.push(account);
+    accountsByItem.set(itemId, list);
+  }
 
   for (const item of items) {
-    const txns = await fetchAllTransactions(
-      item.accessToken,
-      startDate,
-      endDate,
-    );
-    allTransactions.push(...txns);
+    const itemAccounts = accountsByItem.get(item.id) ?? [];
+    const depositoryIds = itemAccounts
+      .filter((account) => !account.isInvestment)
+      .map((account) => account.plaidAccountId);
+    const investmentIds = itemAccounts
+      .filter((account) => account.isInvestment)
+      .map((account) => account.plaidAccountId);
+
+    if (depositoryIds.length > 0) {
+      const txns = await fetchAllTransactions(
+        item.accessToken,
+        startDate,
+        endDate,
+        depositoryIds,
+      );
+      regularTxns.push(...txns.map(mapPlaidTransaction));
+    }
+
+    if (investmentIds.length > 0) {
+      try {
+        const invTxns = await fetchAllInvestmentTransactions(
+          item.accessToken,
+          startDate,
+          endDate,
+          investmentIds,
+        );
+        investmentTxns.push(...invTxns.map(mapInvestmentTransaction));
+      } catch (error) {
+        console.warn(
+          `Investment transactions unavailable for item ${item.id}:`,
+          getPlaidErrorMessage(error),
+        );
+      }
+    }
   }
 
   const balanceByAccountAndDate = new Map<string, Map<string, number>>();
 
   for (const account of accountContexts) {
+    const txns = account.isInvestment ? investmentTxns : regularTxns;
     balanceByAccountAndDate.set(
       account.row.id,
-      reconstructDailyBalances(
-        account,
-        allTransactions,
-        startDate,
-        endDate,
-      ),
+      reconstructDailyBalances(account, txns, startDate, endDate),
     );
   }
 
@@ -352,21 +489,26 @@ export async function backfillUserBalanceHistory(
     }
   }
 
+  await upsertTodaySnapshot(userId);
+
   return {
     startDate,
     endDate,
-    transactionsFetched: allTransactions.length,
+    transactionsFetched: regularTxns.length,
+    investmentTransactionsFetched: investmentTxns.length,
     daysProcessed: dates.length,
     inserted: rowsToInsert.length,
     skippedExisting,
+    replacedExisting,
   };
 }
 
 export async function backfillUserBalanceHistorySafe(
   userId: string,
+  options: BackfillHistoryOptions = {},
 ): Promise<BackfillHistoryResult | { error: string }> {
   try {
-    return await backfillUserBalanceHistory(userId);
+    return await backfillUserBalanceHistory(userId, options);
   } catch (error) {
     return { error: getPlaidErrorMessage(error) };
   }

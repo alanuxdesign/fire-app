@@ -8,7 +8,7 @@ import {
 import { buildAccountsResponse } from "@/lib/account-groups";
 import { financialAccounts, manualAssets } from "@/drizzle/schema";
 import { db } from "@/lib/db";
-import { getInstitutionNamesForUser } from "@/lib/plaid-accounts";
+import { getPlaidInstitutionsForUser } from "@/lib/plaid-accounts";
 import {
   getSnapshotOnOrBefore,
 } from "@/lib/snapshots";
@@ -22,20 +22,20 @@ export async function GET() {
   }
 
   try {
-    const [financialRows, manualRows, institutionNames] = await Promise.all([
+    const [financialRows, manualRows, institutions] = await Promise.all([
       db.query.financialAccounts.findMany({
         where: eq(financialAccounts.userId, authResult.userId),
       }),
       db.query.manualAssets.findMany({
         where: eq(manualAssets.userId, authResult.userId),
       }),
-      getInstitutionNamesForUser(authResult.userId),
+      getPlaidInstitutionsForUser(authResult.userId),
     ]);
 
     const response = buildAccountsResponse(
       financialRows,
       manualRows,
-      institutionNames,
+      institutions,
     );
 
     const [yesterdaySnapshot, monthStartSnapshot] = await Promise.all([

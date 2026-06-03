@@ -123,6 +123,51 @@ export function getEffectiveAssetClass(account: AccountListItem): AssetClassLabe
   return resolveDefaultAssetClass(account);
 }
 
+/** Map effective asset class to portfolio type bucket when override is set. */
+export function assetClassToTypeGroup(
+  assetClass: AssetClassLabel,
+  account: AccountListItem,
+): AccountGroupType {
+  if (account.group === "Liabilities") {
+    return "Liabilities";
+  }
+
+  switch (assetClass) {
+    case "Cash":
+    case "T-Bills":
+      return "Cash";
+    case "Real Estate":
+      return "Real Estate";
+    case "Domestic Equity":
+    case "Int'l Equity":
+    case "Bonds":
+    case "REITs":
+      return "Investments";
+    default:
+      return "Other";
+  }
+}
+
+export function getGroupingBucket(
+  account: AccountListItem,
+  mode: GroupingMode,
+): string {
+  switch (mode) {
+    case "asset_class":
+      return getEffectiveAssetClass(account);
+    case "institution":
+      return getInstitutionLabel(account);
+    case "type":
+      if (account.assetClassOverride) {
+        return assetClassToTypeGroup(getEffectiveAssetClass(account), account);
+      }
+      return account.group;
+    case "ungrouped":
+    default:
+      return account.group;
+  }
+}
+
 /** @deprecated Use resolveDefaultAssetClass */
 export function resolveAssetClass(account: AccountListItem): AssetClassLabel {
   return getEffectiveAssetClass(account);
@@ -134,7 +179,7 @@ export function getInstitutionLabel(account: AccountListItem): string {
 
 function sumGroupTotal(accounts: AccountListItem[], groupName: string) {
   return accounts.reduce((sum, account) => {
-    if (groupName === "Liabilities") {
+    if (groupName === "Liabilities" || account.group === "Liabilities") {
       return sum + Math.abs(account.currentBalance);
     }
     return sum + account.currentBalance;
@@ -196,20 +241,7 @@ export function groupAccounts(
   const buckets = new Map<string, AccountListItem[]>();
 
   for (const account of accounts) {
-    let key: string;
-
-    switch (mode) {
-      case "asset_class":
-        key = getEffectiveAssetClass(account);
-        break;
-      case "institution":
-        key = getInstitutionLabel(account);
-        break;
-      case "type":
-      default:
-        key = account.group;
-        break;
-    }
+    const key = getGroupingBucket(account, mode);
 
     const existing = buckets.get(key) ?? [];
     existing.push(account);

@@ -19,6 +19,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 type PatchBody = {
   assetClassOverride?: string | null;
+  displayName?: string | null;
   marketSymbol?: string | null;
   marketQuantity?: number | string | null;
   name?: string;
@@ -61,13 +62,20 @@ export async function PATCH(request: Request, context: RouteContext) {
         );
       }
 
+      const displayName =
+        body.displayName !== undefined
+          ? body.displayName?.trim() || null
+          : body.name !== undefined
+            ? body.name.trim() || null
+            : undefined;
+
       const [updated] = await db
         .update(financialAccounts)
         .set({
           ...(body.assetClassOverride !== undefined
             ? { assetClass: body.assetClassOverride ?? null }
             : {}),
-          ...(body.name?.trim() ? { name: body.name.trim() } : {}),
+          ...(displayName !== undefined ? { displayName } : {}),
           updatedAt: new Date(),
         })
         .where(

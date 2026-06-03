@@ -14,6 +14,11 @@ export type ManualAssetRow = typeof manualAssets.$inferSelect;
 
 export type AccountConnectionStatus = "connected" | "manual" | "error";
 
+export type PlaidInstitutionMeta = {
+  name: string;
+  institutionId: string;
+};
+
 export type AccountListItem = {
   id: string;
   name: string;
@@ -24,6 +29,8 @@ export type AccountListItem = {
   currentBalance: number;
   currency: string;
   institutionName: string | null;
+  /** Plaid institution_id for logo CDN */
+  plaidInstitutionId: string | null;
   /** User override; null = use default classification */
   assetClassOverride: string | null;
   plaidItemId: string | null;
@@ -118,21 +125,25 @@ export type AccountsApiResponse = {
 export function buildAccountsResponse(
   financialRows: FinancialAccountRow[],
   manualRows: ManualAssetRow[],
-  institutionNames: Map<string, string>,
+  institutions: Map<string, PlaidInstitutionMeta>,
 ): AccountsApiResponse {
   const items: AccountListItem[] = [
-    ...financialRows.map((row) => ({
+    ...financialRows.map((row) => {
+      const institution = row.plaidItemId
+        ? institutions.get(row.plaidItemId)
+        : undefined;
+
+      return {
       id: row.id,
-      name: row.name,
+      name: row.displayName?.trim() || row.name,
       subtitle: formatAccountSubtitle(row.type, row.subtype),
       type: row.type,
       subtype: row.subtype,
       group: getFinancialAccountGroup(row.type, row.subtype),
       currentBalance: parseBalance(row.currentBalance),
       currency: row.currency,
-      institutionName: row.plaidItemId
-        ? (institutionNames.get(row.plaidItemId) ?? null)
-        : null,
+      institutionName: institution?.name ?? null,
+      plaidInstitutionId: institution?.institutionId ?? null,
       assetClassOverride: row.assetClass,
       plaidItemId: row.plaidItemId,
       plaidAccountId: row.plaidAccountId,
@@ -147,7 +158,8 @@ export function buildAccountsResponse(
       dailyChangePercent: 0,
       monthlyChange: 0,
       monthlyChangePercent: 0,
-    })),
+    };
+    }),
     ...manualRows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -158,6 +170,7 @@ export function buildAccountsResponse(
       currentBalance: parseBalance(row.currentValue),
       currency: "USD",
       institutionName: null,
+      plaidInstitutionId: null,
       assetClassOverride: row.assetClassOverride,
       plaidItemId: null,
       plaidAccountId: null,

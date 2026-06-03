@@ -1,19 +1,18 @@
 import type { NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
 
+/**
+ * Edge-safe Auth.js config (no DB adapter). Used by middleware and extended in lib/auth.ts.
+ */
 export const authConfig = {
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
-  ],
+  providers: [],
   pages: {
     signIn: "/login",
   },
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
+  trustHost: true,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   callbacks: {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
@@ -28,7 +27,23 @@ export const authConfig = {
 
       return !!auth?.user;
     },
+    jwt({ token, user }) {
+      if (user?.id) {
+        token.sub = user.id;
+      }
+      if (user?.email) {
+        token.email = user.email;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+      }
+      if (session.user && typeof token.email === "string") {
+        session.user.email = token.email;
+      }
+      return session;
+    },
   },
-  trustHost: true,
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
 } satisfies NextAuthConfig;

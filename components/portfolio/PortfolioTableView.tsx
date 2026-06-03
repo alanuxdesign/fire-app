@@ -1,7 +1,8 @@
 import { Fragment } from "react";
 import { ChangeLabel } from "@/components/portfolio/ChangeLabel";
 import type { AccountGroupResponse, AccountListItem } from "@/lib/account-groups";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatAccountBalance, formatGroupTotal, isLiabilityGroupName } from "@/lib/account-display";
+import { formatPercent } from "@/lib/format";
 import {
   buildTableRows,
   type GroupingMode,
@@ -56,8 +57,14 @@ function TableAccountRow({
       <td className="px-3 py-2.5 text-slate-600 dark:text-zinc-400">
         {row.assetClass}
       </td>
-      <td className="px-3 py-2.5 text-right font-medium tabular-nums">
-        {formatCurrency(row.currentBalance, row.currency)}
+      <td
+        className={`px-3 py-2.5 text-right font-medium tabular-nums ${
+          row.group === "Liabilities"
+            ? "text-red-600 dark:text-red-400"
+            : ""
+        }`}
+      >
+        {formatAccountBalance(row)}
       </td>
       <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">
         {formatPercent(row.percentOfPortfolio, { signed: false })}
@@ -134,9 +141,19 @@ export function PortfolioTableView({
                     >
                       {section.label}
                     </td>
-                    <td className="px-3 py-2 text-right text-xs font-semibold tabular-nums text-slate-700 dark:text-zinc-200">
+                    <td
+                      className={`px-3 py-2 text-right text-xs font-semibold tabular-nums ${
+                        section.label && isLiabilityGroupName(section.label)
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-slate-700 dark:text-zinc-200"
+                      }`}
+                    >
                       {section.total !== null
-                        ? formatCurrency(section.total)
+                        ? formatGroupTotal(section.total, {
+                            isLiabilityGroup: section.label
+                              ? isLiabilityGroupName(section.label)
+                              : false,
+                          })
                         : null}
                     </td>
                   </tr>

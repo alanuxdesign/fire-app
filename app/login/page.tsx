@@ -1,6 +1,27 @@
 import { signIn } from "@/lib/auth";
 
-export default function LoginPage() {
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  Configuration:
+    "Sign-in is not configured correctly. Check server environment variables.",
+  AccessDenied: "Access was denied. You may have cancelled sign-in.",
+  Verification: "The sign-in link expired or was already used.",
+  OAuthSignin: "Could not start Google sign-in. Try again.",
+  OAuthCallback: "Google sign-in failed during callback. Check redirect URIs.",
+  OAuthAccountNotLinked:
+    "This email is already linked to another sign-in method. Try the other option.",
+  Default: "Sign-in failed. Please try again.",
+};
+
+type LoginPageProps = {
+  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { error } = await searchParams;
+  const errorMessage = error
+    ? (AUTH_ERROR_MESSAGES[error] ?? AUTH_ERROR_MESSAGES.Default)
+    : null;
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-950 px-6">
       <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
@@ -10,6 +31,14 @@ export default function LoginPage() {
         <p className="mt-2 text-center text-sm text-zinc-400">
           Connect your account to view your portfolio.
         </p>
+        {errorMessage ? (
+          <p
+            className="mt-4 rounded-lg border border-red-900/50 bg-red-950/40 px-3 py-2 text-center text-sm text-red-300"
+            role="alert"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
         <form
           className="mt-8"
           action={async () => {

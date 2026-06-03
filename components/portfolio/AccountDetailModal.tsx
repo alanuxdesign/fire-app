@@ -8,6 +8,8 @@ import {
 } from "@/lib/account-holdings";
 import { parseCurrencyInput } from "@/lib/currency";
 import { formatPurchaseDateLabel, parsePurchaseDateInput } from "@/lib/purchase-date";
+import { formatAccountBalance } from "@/lib/account-display";
+import { InstitutionAvatar } from "@/components/portfolio/InstitutionAvatar";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import {
   ASSET_CLASS_OPTIONS,
@@ -36,6 +38,7 @@ export function AccountDetailModal({
   onUpdated,
   readOnly = false,
 }: AccountDetailModalProps) {
+  const [displayName, setDisplayName] = useState("");
   const [assetClassOverride, setAssetClassOverride] = useState<string>("");
   const [marketSymbol, setMarketSymbol] = useState("");
   const [marketQuantity, setMarketQuantity] = useState("");
@@ -78,6 +81,7 @@ export function AccountDetailModal({
       return;
     }
 
+    setDisplayName(account.name);
     setAssetClassOverride(account.assetClassOverride ?? "");
     setMarketSymbol(account.marketSymbol ?? "");
     setMarketQuantity(
@@ -202,6 +206,19 @@ export function AccountDetailModal({
     },
     [account, onUpdated, showHoldings],
   );
+
+  const handleSaveDisplayName = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      setError("Name cannot be empty");
+      return;
+    }
+    await patchAccount(
+      account?.isManual
+        ? { name: trimmed }
+        : { displayName: trimmed },
+    );
+  };
 
   const handleSaveAssetClass = async () => {
     await patchAccount({
@@ -356,14 +373,9 @@ export function AccountDetailModal({
         className="flex h-[100dvh] w-full flex-col bg-white dark:bg-zinc-900"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex shrink-0 items-start justify-between border-b border-stone-200 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] dark:border-zinc-800">
-          <div>
-            <h2
-              id="account-detail-title"
-              className="text-lg font-semibold text-slate-900 dark:text-zinc-100"
-            >
-              {account.name}
-            </h2>
+        <div className="flex shrink-0 items-start gap-3 border-b border-stone-200 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] dark:border-zinc-800">
+          <InstitutionAvatar account={account} />
+          <div className="min-w-0 flex-1">
             <p className="mt-0.5 text-sm text-slate-500 dark:text-zinc-400">
               {account.institutionName ?? "Manual entry"}
               {account.subtitle ? ` · ${account.subtitle}` : ""}
@@ -381,12 +393,49 @@ export function AccountDetailModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="space-y-5 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="space-y-2">
+            <label
+              id="account-detail-title"
+              htmlFor="account-display-name"
+              className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-zinc-400"
+            >
+              Display name
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="account-display-name"
+                type="text"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                disabled={readOnly}
+                aria-labelledby="account-detail-title"
+                className="min-w-0 flex-1 rounded-lg border border-stone-300 px-3 py-2 text-base font-semibold text-slate-900 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              />
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={handleSaveDisplayName}
+                  disabled={saving}
+                  className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                >
+                  Save
+                </button>
+              ) : null}
+            </div>
+          </div>
+
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Balance
             </p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
-              {formatCurrency(account.currentBalance, account.currency)}
+            <p
+              className={`mt-1 text-2xl font-semibold tabular-nums ${
+                account.group === "Liabilities"
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-slate-900 dark:text-zinc-100"
+              }`}
+            >
+              {formatAccountBalance(account)}
             </p>
             {account.isManual && account.purchaseDate ? (
               <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">

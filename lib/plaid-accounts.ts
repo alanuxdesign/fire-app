@@ -50,6 +50,7 @@ export async function upsertFinancialAccount(
       .update(financialAccounts)
       .set({
         name: values.name,
+        // Preserve user display name and asset class on sync
         officialName: values.officialName,
         type: values.type,
         subtype: values.subtype,
@@ -117,9 +118,21 @@ export type PlaidLinkMetadata = {
 };
 
 export async function getInstitutionNamesForUser(userId: string) {
+  const institutions = await getPlaidInstitutionsForUser(userId);
+  return new Map(
+    [...institutions.entries()].map(([id, meta]) => [id, meta.name]),
+  );
+}
+
+export async function getPlaidInstitutionsForUser(userId: string) {
   const items = await db.query.plaidItems.findMany({
     where: eq(plaidItems.userId, userId),
   });
 
-  return new Map(items.map((item) => [item.id, item.institutionName]));
+  return new Map(
+    items.map((item) => [
+      item.id,
+      { name: item.institutionName, institutionId: item.institutionId },
+    ]),
+  );
 }

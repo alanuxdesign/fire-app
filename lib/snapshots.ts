@@ -22,7 +22,7 @@ import {
   totalsFromSnapshotFinancials,
 } from "@/lib/manual-asset-history";
 import { toDateString } from "@/lib/purchase-date";
-import { getInstitutionNamesForUser } from "@/lib/plaid-accounts";
+import { getPlaidInstitutionsForUser } from "@/lib/plaid-accounts";
 import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 
 export type SnapshotRange = "1M" | "3M" | "6M" | "1Y" | "YTD" | "ALL";
@@ -100,17 +100,17 @@ export function getRangeStartDate(
 }
 
 export async function loadUserBalances(userId: string) {
-  const [financialRows, manualRows, institutionNames] = await Promise.all([
+  const [financialRows, manualRows, institutions] = await Promise.all([
     db.query.financialAccounts.findMany({
       where: eq(financialAccounts.userId, userId),
     }),
     db.query.manualAssets.findMany({
       where: eq(manualAssets.userId, userId),
     }),
-    getInstitutionNamesForUser(userId),
+    getPlaidInstitutionsForUser(userId),
   ]);
 
-  return buildAccountsResponse(financialRows, manualRows, institutionNames);
+  return buildAccountsResponse(financialRows, manualRows, institutions);
 }
 
 export function buildSnapshotData(

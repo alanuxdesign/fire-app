@@ -10,7 +10,11 @@
     "seed": "npx tsx scripts/seed-snapshots.ts",
     "seed:demo": "npx tsx scripts/seed-demo.ts",
     "db:migrate-manual": "npx tsx scripts/apply-manual-asset-columns.ts",
-    "db:migrate-display-name": "npx tsx scripts/apply-display-name-column.ts"
+    "db:migrate-display-name": "npx tsx scripts/apply-display-name-column.ts",
+    "db:migrate-budget": "npx tsx scripts/apply-budget-migration.ts",
+    "db:migrate-subscriptions": "npx tsx scripts/apply-subscription-dismissed-column.ts",
+    "db:migrate-subscription-unique": "npx tsx scripts/apply-subscription-unique-index.ts",
+    "recategorize": "npx tsx scripts/recategorize-transactions.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

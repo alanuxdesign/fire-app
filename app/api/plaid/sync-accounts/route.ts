@@ -7,6 +7,7 @@ import {
 } from "@/lib/plaid-accounts";
 import { getPlaidErrorMessage } from "@/lib/plaid";
 import { refreshMarketTrackedManualAssets } from "@/lib/market-assets";
+import { syncUserTransactions } from "@/lib/plaid-transactions";
 import { createSnapshotIfNeeded } from "@/lib/snapshots";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -45,7 +46,15 @@ export async function POST() {
       console.error("Failed to create balance snapshot after sync:", snapshotError);
     }
 
-    return NextResponse.json({ accounts });
+    let transactionSync: Awaited<ReturnType<typeof syncUserTransactions>> | null =
+      null;
+    try {
+      transactionSync = await syncUserTransactions(authResult.userId);
+    } catch (txnError) {
+      console.error("Transaction sync failed after account sync:", txnError);
+    }
+
+    return NextResponse.json({ accounts, transactionSync });
   } catch (error) {
     return NextResponse.json(
       { error: getPlaidErrorMessage(error) },

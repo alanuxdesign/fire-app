@@ -26,6 +26,8 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
   const fetchLinkToken = useCallback(async () => {
     const response = await fetch("/api/plaid/create-link-token", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
     });
 
     if (!response.ok) {
@@ -39,11 +41,24 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
   }, []);
 
   const onPlaidSuccess = useCallback(
-    async (publicToken: string, metadata: PlaidLinkOnSuccessMetadata) => {
+    async (publicToken: string | null, metadata: PlaidLinkOnSuccessMetadata) => {
       setPlaidLoading(true);
       setError(null);
 
       try {
+        if (!publicToken) {
+          const syncResponse = await fetch("/api/plaid/sync-transactions", {
+            method: "POST",
+          });
+          if (!syncResponse.ok) {
+            const body = (await syncResponse.json()) as { error?: string };
+            throw new Error(body.error ?? "Failed to sync transactions");
+          }
+          await onLinked();
+          setLinkToken(null);
+          return;
+        }
+
         const exchangeResponse = await fetch("/api/plaid/exchange-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

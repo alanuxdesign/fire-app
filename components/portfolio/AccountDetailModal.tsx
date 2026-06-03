@@ -669,6 +669,31 @@ export function AccountDetailModal({
             </div>
           ) : null}
 
+          {!account.isManual &&
+          (account.type === "depository" || account.type === "credit") &&
+          !readOnly ? (
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200 p-3 dark:border-zinc-700">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={!account.excludeFromBudget}
+                disabled={saving}
+                onChange={(event) =>
+                  void patchAccount({ excludeFromBudget: !event.target.checked })
+                }
+              />
+              <span>
+                <span className="text-sm font-medium text-slate-800 dark:text-zinc-200">
+                  Include in budget
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-500 dark:text-zinc-400">
+                  When off, transactions still sync but are hidden from budget
+                  totals and lists.
+                </span>
+              </span>
+            </label>
+          ) : null}
+
           {account.plaidItemId && !readOnly ? (
             <div className="space-y-2">
               <p className="text-xs text-slate-500 dark:text-zinc-400">

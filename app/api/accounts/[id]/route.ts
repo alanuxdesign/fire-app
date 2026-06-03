@@ -20,6 +20,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 type PatchBody = {
   assetClassOverride?: string | null;
   displayName?: string | null;
+  excludeFromBudget?: boolean;
   marketSymbol?: string | null;
   marketQuantity?: number | string | null;
   name?: string;
@@ -76,6 +77,9 @@ export async function PATCH(request: Request, context: RouteContext) {
             ? { assetClass: body.assetClassOverride ?? null }
             : {}),
           ...(displayName !== undefined ? { displayName } : {}),
+          ...(body.excludeFromBudget !== undefined
+            ? { excludeFromBudget: body.excludeFromBudget }
+            : {}),
           updatedAt: new Date(),
         })
         .where(

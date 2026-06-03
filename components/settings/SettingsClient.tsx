@@ -11,6 +11,36 @@ export function SettingsClient() {
   const [backfillLoading, setBackfillLoading] = useState(false);
   const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
   const [backfillError, setBackfillError] = useState<string | null>(null);
+  const [txnSyncLoading, setTxnSyncLoading] = useState(false);
+  const [txnSyncMessage, setTxnSyncMessage] = useState<string | null>(null);
+  const [txnSyncError, setTxnSyncError] = useState<string | null>(null);
+
+  const handleSyncTransactions = async () => {
+    setTxnSyncLoading(true);
+    setTxnSyncMessage(null);
+    setTxnSyncError(null);
+    try {
+      const response = await fetch("/api/plaid/sync-transactions", {
+        method: "POST",
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        added?: number;
+        modified?: number;
+        removed?: number;
+      };
+      if (!response.ok) {
+        throw new Error(body.error ?? "Sync failed");
+      }
+      setTxnSyncMessage(
+        `Synced: ${body.added ?? 0} added, ${body.modified ?? 0} updated, ${body.removed ?? 0} removed.`,
+      );
+    } catch (err: unknown) {
+      setTxnSyncError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setTxnSyncLoading(false);
+    }
+  };
 
   const handleBackfillHistory = async () => {
     setBackfillLoading(true);
@@ -60,6 +90,36 @@ export function SettingsClient() {
       </h1>
 
       <div className="mt-6 space-y-3">
+        <div className="rounded-2xl border border-stone-200/80 bg-white px-4 py-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="font-medium text-slate-900 dark:text-zinc-100">
+            Sync transactions
+          </p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
+            Pull the latest transactions from linked accounts into your budget.
+            New links request up to 2 years of history; sync also backfills older
+            dates when Plaid has them. If you only see a few months, reconnect
+            the bank from Portfolio (Add account) so Plaid can extend history.
+          </p>
+          <button
+            type="button"
+            onClick={handleSyncTransactions}
+            disabled={txnSyncLoading}
+            className="mt-3 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            {txnSyncLoading ? "Syncing…" : "Sync transactions"}
+          </button>
+          {txnSyncMessage ? (
+            <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400">
+              {txnSyncMessage}
+            </p>
+          ) : null}
+          {txnSyncError ? (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              {txnSyncError}
+            </p>
+          ) : null}
+        </div>
+
         <div className="rounded-2xl border border-stone-200/80 bg-white px-4 py-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <p className="font-medium text-slate-900 dark:text-zinc-100">
             Backfill history

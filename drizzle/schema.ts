@@ -86,6 +86,10 @@ export const plaidItems = pgTable("plaid_items", {
   accessToken: text("access_token").notNull(),
   institutionId: text("institution_id").notNull(),
   institutionName: text("institution_name").notNull(),
+  transactionsCursor: text("transactions_cursor"),
+  lastTransactionsSyncAt: timestamp("last_transactions_sync_at", {
+    mode: "date",
+  }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
@@ -112,6 +116,7 @@ export const financialAccounts = pgTable("financial_accounts", {
   availableBalance: numeric("available_balance", { precision: 19, scale: 4 }),
   currency: text("currency").notNull().default("USD"),
   isManual: boolean("is_manual").notNull().default(false),
+  excludeFromBudget: boolean("exclude_from_budget").notNull().default(false),
   assetClass: text("asset_class"),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
@@ -140,6 +145,150 @@ export const manualAssets = pgTable("manual_assets", {
     .$onUpdateFn(() => new Date()),
 });
 
+export const budgetCategories = pgTable("budget_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull(),
+  label: text("label").notNull(),
+  icon: text("icon").notNull().default("CircleDollarSign"),
+  isSystem: boolean("is_system").notNull().default(false),
+  isIncome: boolean("is_income").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  rolloverEnabled: boolean("rollover_enabled").notNull().default(false),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const budgetTags = pgTable("budget_tags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  color: text("color"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const budgetTargets = pgTable(
+  "budget_targets",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => budgetCategories.id, { onDelete: "cascade" }),
+    month: text("month").notNull(),
+    amount: numeric("amount", { precision: 19, scale: 4 }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.categoryId, t.month] })],
+);
+
+export const merchantRules = pgTable("merchant_rules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  merchantKey: text("merchant_key").notNull(),
+  displayName: text("display_name"),
+  defaultCategoryId: uuid("default_category_id").references(
+    () => budgetCategories.id,
+    { onDelete: "set null" },
+  ),
+  defaultTagIds: jsonb("default_tag_ids").$type<string[]>().default([]),
+  requiresReview: boolean("requires_review").notNull().default(false),
+  applyToFuture: boolean("apply_to_future").notNull().default(true),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const transactions = pgTable("transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  financialAccountId: uuid("financial_account_id")
+    .notNull()
+    .references(() => financialAccounts.id, { onDelete: "cascade" }),
+  plaidTransactionId: text("plaid_transaction_id").notNull().unique(),
+  plaidAccountId: text("plaid_account_id").notNull(),
+  date: date("date").notNull(),
+  authorizedDate: date("authorized_date"),
+  amount: numeric("amount", { precision: 19, scale: 4 }).notNull(),
+  name: text("name").notNull(),
+  merchantName: text("merchant_name"),
+  pending: boolean("pending").notNull().default(false),
+  paymentChannel: text("payment_channel"),
+  plaidCategory: jsonb("plaid_category"),
+  primaryCategory: text("primary_category"),
+  detailedCategory: text("detailed_category"),
+  userCategoryId: uuid("user_category_id").references(() => budgetCategories.id, {
+    onDelete: "set null",
+  }),
+  includeInBudget: boolean("include_in_budget").notNull().default(true),
+  note: text("note"),
+  isTransfer: boolean("is_transfer").notNull().default(false),
+  reviewStatus: text("review_status"),
+  reviewedAt: timestamp("reviewed_at", { mode: "date" }),
+  subscriptionGroupId: uuid("subscription_group_id"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const transactionTags = pgTable(
+  "transaction_tags",
+  {
+    transactionId: uuid("transaction_id")
+      .notNull()
+      .references(() => transactions.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => budgetTags.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.transactionId, t.tagId] })],
+);
+
+export const budgetUserSettings = pgTable("budget_user_settings", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  includePendingInBudget: boolean("include_pending_in_budget")
+    .notNull()
+    .default(false),
+  monthlyBudgetTotal: numeric("monthly_budget_total", {
+    precision: 19,
+    scale: 4,
+  }),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const subscriptionGroups = pgTable("subscription_groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  merchantKey: text("merchant_key").notNull(),
+  displayName: text("display_name").notNull(),
+  expectedAmount: numeric("expected_amount", { precision: 19, scale: 4 }).notNull(),
+  cadence: text("cadence").notNull(),
+  nextExpectedDate: date("next_expected_date"),
+  categoryId: uuid("category_id").references(() => budgetCategories.id, {
+    onDelete: "set null",
+  }),
+  isConfirmed: boolean("is_confirmed").notNull().default(false),
+  isDismissed: boolean("is_dismissed").notNull().default(false),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const balanceSnapshots = pgTable("balance_snapshots", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
@@ -155,13 +304,18 @@ export const balanceSnapshots = pgTable("balance_snapshots", {
   snapshotData: jsonb("snapshot_data"),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   plaidItems: many(plaidItems),
   financialAccounts: many(financialAccounts),
   manualAssets: many(manualAssets),
   balanceSnapshots: many(balanceSnapshots),
+  budgetCategories: many(budgetCategories),
+  budgetTags: many(budgetTags),
+  transactions: many(transactions),
+  merchantRules: many(merchantRules),
+  budgetSettings: one(budgetUserSettings),
 }));
 
 export const plaidItemsRelations = relations(plaidItems, ({ one, many }) => ({
@@ -174,7 +328,7 @@ export const plaidItemsRelations = relations(plaidItems, ({ one, many }) => ({
 
 export const financialAccountsRelations = relations(
   financialAccounts,
-  ({ one }) => ({
+  ({ one, many }) => ({
     user: one(users, {
       fields: [financialAccounts.userId],
       references: [users.id],
@@ -183,5 +337,34 @@ export const financialAccountsRelations = relations(
       fields: [financialAccounts.plaidItemId],
       references: [plaidItems.id],
     }),
+    transactions: many(transactions),
   }),
 );
+
+export const budgetCategoriesRelations = relations(
+  budgetCategories,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [budgetCategories.userId],
+      references: [users.id],
+    }),
+    transactions: many(transactions),
+    targets: many(budgetTargets),
+  }),
+);
+
+export const transactionsRelations = relations(transactions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [transactions.userId],
+    references: [users.id],
+  }),
+  financialAccount: one(financialAccounts, {
+    fields: [transactions.financialAccountId],
+    references: [financialAccounts.id],
+  }),
+  userCategory: one(budgetCategories, {
+    fields: [transactions.userCategoryId],
+    references: [budgetCategories.id],
+  }),
+  transactionTags: many(transactionTags),
+}));

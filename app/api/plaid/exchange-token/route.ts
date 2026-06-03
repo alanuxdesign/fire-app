@@ -7,6 +7,7 @@ import {
   syncPlaidItemAccounts,
 } from "@/lib/plaid-accounts";
 import { backfillUserBalanceHistorySafe } from "@/lib/plaid-backfill";
+import { syncUserTransactions } from "@/lib/plaid-transactions";
 import { getPlaidErrorMessage, plaidClient } from "@/lib/plaid";
 import { createSnapshotIfNeeded } from "@/lib/snapshots";
 import { eq } from "drizzle-orm";
@@ -72,6 +73,12 @@ export async function POST(request: Request) {
       );
     }
 
+    void syncUserTransactions(authResult.userId).then((txnResult) => {
+      if ("error" in txnResult) {
+        console.error("Transaction sync failed:", txnResult.error);
+      }
+    });
+
     if (isFirstPlaidConnection) {
       void backfillUserBalanceHistorySafe(authResult.userId).then((result) => {
         if ("error" in result) {
@@ -87,6 +94,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       backfillStarted: isFirstPlaidConnection,
+      transactionSyncStarted: true,
       accounts: accounts.map(serializeFinancialAccount),
     });
   } catch (error) {

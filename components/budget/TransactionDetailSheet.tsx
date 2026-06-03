@@ -1,0 +1,239 @@
+"use client";
+
+import { BudgetIcon } from "@/components/budget/BudgetIcon";
+import type {
+  BudgetCategoryOption,
+  SerializedTransaction,
+} from "@/lib/budget-types";
+import { formatCurrency } from "@/lib/format";
+import { X } from "lucide-react";
+import { useState } from "react";
+
+export type BudgetTag = {
+  id: string;
+  name: string;
+  color: string | null;
+};
+
+type TransactionDetailSheetProps = {
+  transaction: SerializedTransaction;
+  categories: BudgetCategoryOption[];
+  tags: BudgetTag[];
+  isDemo?: boolean;
+  onClose: () => void;
+  onSave: (options: {
+    transaction: SerializedTransaction;
+    vendorApplyFuture: boolean;
+    vendorApplyRetro: boolean;
+    vendorRequiresReview: boolean;
+  }) => Promise<void>;
+  onCreateTag: (name: string) => Promise<BudgetTag | null>;
+};
+
+export function TransactionDetailSheet({
+  transaction,
+  categories,
+  tags,
+  isDemo = false,
+  onClose,
+  onSave,
+  onCreateTag,
+}: TransactionDetailSheetProps) {
+  const [txn, setTxn] = useState(transaction);
+  const [vendorApplyFuture, setVendorApplyFuture] = useState(false);
+  const [vendorApplyRetro, setVendorApplyRetro] = useState(false);
+  const [vendorRequiresReview, setVendorRequiresReview] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+
+  const toggleTag = (tagId: string) => {
+    const has = txn.tagIds.includes(tagId);
+    setTxn({
+      ...txn,
+      tagIds: has
+        ? txn.tagIds.filter((id) => id !== tagId)
+        : [...txn.tagIds, tagId],
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave({
+        transaction: txn,
+        vendorApplyFuture,
+        vendorApplyRetro,
+        vendorRequiresReview,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col bg-stone-100 dark:bg-zinc-950">
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-y-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Transaction</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="mt-2 text-xl font-semibold tabular-nums">
+          {formatCurrency(txn.amount)}
+        </p>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          {txn.merchantName ?? txn.name}
+        </p>
+        <p className="text-sm text-zinc-500">
+          {txn.date}
+          {txn.pending ? " · Pending" : ""}
+        </p>
+        {txn.categoryLabel ? (
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+            {txn.categoryIcon ? (
+              <BudgetIcon name={txn.categoryIcon} className="h-4 w-4" />
+            ) : null}
+            {txn.categoryLabel}
+          </p>
+        ) : null}
+
+        <label className="mt-6 block text-sm font-medium">Bucket</label>
+        <select
+          value={txn.userCategoryId ?? ""}
+          disabled={isDemo}
+          onChange={(e) =>
+            setTxn({
+              ...txn,
+              userCategoryId: e.target.value || null,
+              reviewStatus: e.target.value ? "reviewed" : txn.reviewStatus,
+            })
+          }
+          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+        >
+          <option value="">Uncategorized</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+
+        <p className="mt-4 text-sm font-medium">Tags</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {tags.map((tag) => {
+            const active = txn.tagIds.includes(tag.id);
+            return (
+              <button
+                key={tag.id}
+                type="button"
+                disabled={isDemo}
+                onClick={() => toggleTag(tag.id)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                }`}
+              >
+                {tag.name}
+              </button>
+            );
+          })}
+        </div>
+        {!isDemo ? (
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              placeholder="New tag"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            />
+            <button
+              type="button"
+              onClick={async () => {
+                const name = newTagName.trim();
+                if (!name) return;
+                const created = await onCreateTag(name);
+                if (created) {
+                  setTxn({ ...txn, tagIds: [...txn.tagIds, created.id] });
+                  setNewTagName("");
+                }
+              }}
+              className="rounded-xl border border-zinc-200 px-3 py-2 text-sm font-medium dark:border-zinc-700"
+            >
+              Add
+            </button>
+          </div>
+        ) : null}
+
+        <label className="mt-4 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={txn.includeInBudget}
+            disabled={isDemo}
+            onChange={(e) =>
+              setTxn({ ...txn, includeInBudget: e.target.checked })
+            }
+          />
+          Include in budget
+        </label>
+
+        <label className="mt-4 block text-sm font-medium">Note</label>
+        <textarea
+          value={txn.note ?? ""}
+          disabled={isDemo}
+          onChange={(e) => setTxn({ ...txn, note: e.target.value })}
+          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          rows={2}
+        />
+
+        {!isDemo && txn.merchantKey ? (
+          <div className="mt-4 space-y-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
+            <p className="text-sm font-medium">Apply to vendor</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={vendorApplyFuture}
+                onChange={(e) => setVendorApplyFuture(e.target.checked)}
+              />
+              Future transactions
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={vendorApplyRetro}
+                onChange={(e) => setVendorApplyRetro(e.target.checked)}
+                disabled={!txn.userCategoryId}
+              />
+              Past transactions (24 mo)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={vendorRequiresReview}
+                onChange={(e) => setVendorRequiresReview(e.target.checked)}
+              />
+              Always require review
+            </label>
+          </div>
+        ) : null}
+
+        {!isDemo ? (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void handleSave()}
+            className="mt-6 w-full rounded-2xl bg-zinc-900 py-3 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}

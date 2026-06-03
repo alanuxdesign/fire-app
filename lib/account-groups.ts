@@ -43,6 +43,8 @@ export type AccountListItem = {
   purchaseDate: string | null;
   updatedAt: string;
   isManual: boolean;
+  /** When true, transactions sync but are excluded from budget rollups/lists */
+  excludeFromBudget: boolean;
   dailyChange: number;
   dailyChangePercent: number;
   monthlyChange: number;
@@ -154,6 +156,7 @@ export function buildAccountsResponse(
       purchaseDate: null,
       updatedAt: row.updatedAt.toISOString(),
       isManual: row.isManual,
+      excludeFromBudget: row.excludeFromBudget,
       dailyChange: 0,
       dailyChangePercent: 0,
       monthlyChange: 0,
@@ -185,6 +188,7 @@ export function buildAccountsResponse(
       purchaseDate: toDateString(row.purchaseDate),
       updatedAt: row.updatedAt.toISOString(),
       isManual: true,
+      excludeFromBudget: false,
       dailyChange: 0,
       dailyChangePercent: 0,
       monthlyChange: 0,

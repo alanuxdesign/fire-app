@@ -148,6 +148,59 @@ export async function listSpendCategoriesForPicker(
   return categories.filter((c) => !c.isIncome && c.slug !== "transfer");
 }
 
+/**
+ * Maps any category row id (including soft-deleted duplicates) to the active id for that slug.
+ */
+export async function buildCategoryIdRemap(
+  userId: string,
+  activeCategories: BudgetCategoryRow[],
+): Promise<Map<string, string>> {
+  const canonicalBySlug = new Map(
+    activeCategories.map((c) => [c.slug, c.id]),
+  );
+  const remap = new Map<string, string>();
+
+  const allRows = await db.query.budgetCategories.findMany({
+    where: or(
+      isNull(budgetCategories.userId),
+      eq(budgetCategories.userId, userId),
+    ),
+  });
+
+  for (const row of allRows) {
+    const canonicalId = canonicalBySlug.get(row.slug);
+    if (canonicalId) {
+      remap.set(row.id, canonicalId);
+    }
+  }
+
+  return remap;
+}
+
+export function resolveCanonicalCategoryId(
+  userCategoryId: string | null,
+  categoryById: Map<string, BudgetCategoryRow>,
+  idRemap: Map<string, string>,
+): string | null {
+  if (!userCategoryId) return null;
+  if (categoryById.has(userCategoryId)) return userCategoryId;
+  const mapped = idRemap.get(userCategoryId);
+  if (mapped && categoryById.has(mapped)) return mapped;
+  return null;
+}
+
+/** All category row ids that roll up to the canonical bucket id (includes legacy duplicates). */
+export function categoryIdsForCanonical(
+  canonicalId: string,
+  idRemap: Map<string, string>,
+): string[] {
+  const ids = new Set<string>([canonicalId]);
+  for (const [oldId, mapped] of idRemap) {
+    if (mapped === canonicalId) ids.add(oldId);
+  }
+  return [...ids];
+}
+
 export function isTransferCategory(
   primary: string | null | undefined,
   detailed: string | null | undefined,

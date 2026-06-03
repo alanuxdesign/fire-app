@@ -1,6 +1,7 @@
 "use client";
 
 import { BudgetIcon } from "@/components/budget/BudgetIcon";
+import { TransactionSplitEditor } from "@/components/budget/TransactionSplitEditor";
 import type {
   BudgetCategoryOption,
   SerializedTransaction,
@@ -28,6 +29,7 @@ type TransactionDetailSheetProps = {
     vendorRequiresReview: boolean;
   }) => Promise<void>;
   onCreateTag: (name: string) => Promise<BudgetTag | null>;
+  onSplitsSaved?: () => void;
 };
 
 export function TransactionDetailSheet({
@@ -38,6 +40,7 @@ export function TransactionDetailSheet({
   onClose,
   onSave,
   onCreateTag,
+  onSplitsSaved,
 }: TransactionDetailSheetProps) {
   const [txn, setTxn] = useState(transaction);
   const [vendorApplyFuture, setVendorApplyFuture] = useState(false);
@@ -182,6 +185,14 @@ export function TransactionDetailSheet({
           />
           Include in budget
         </label>
+
+        <TransactionSplitEditor
+          transactionId={txn.id}
+          parentAmount={txn.amount}
+          categories={categories}
+          isDemo={isDemo}
+          onSaved={() => onSplitsSaved?.()}
+        />
 
         <label className="mt-4 block text-sm font-medium">Note</label>
         <textarea

@@ -9,6 +9,7 @@ export type BudgetSummaryBucket = {
   target: number;
   progress: number;
   alertLevel?: BudgetAlertLevel;
+  rolloverEnabled?: boolean;
   isVirtual?: boolean;
   isSystem?: boolean;
 };
@@ -20,10 +21,44 @@ export type BudgetSummary = {
   effectiveBudgetTotal?: number;
   leftToSpend: number;
   income: number;
+  savingsRate?: number | null;
+  billsCommitted?: number;
   unreviewedCount: number;
   notCountedTotal: number;
   includePendingInBudget?: boolean;
   buckets: BudgetSummaryBucket[];
+};
+
+export type CashFlowPoint = {
+  month: string;
+  income: number;
+  expense: number;
+  net: number;
+};
+
+export type TransactionSplitLine = {
+  id?: string;
+  categoryId: string;
+  amount: number;
+};
+
+export type RecurringBill = {
+  id: string;
+  name: string;
+  merchantKey: string | null;
+  expectedAmount: number;
+  cadence: string;
+  nextDueDate: string;
+  categoryId: string | null;
+  isActive: boolean;
+};
+
+export type DuplicateGroup = {
+  ids: string[];
+  amount: number;
+  merchantLabel: string;
+  dates: string[];
+  reason: string;
 };
 
 export type SerializedTransaction = {
@@ -45,6 +80,8 @@ export type SerializedTransaction = {
   isTransfer: boolean;
   reviewStatus: string | null;
   tagIds: string[];
+  hasSplits?: boolean;
+  duplicateOfTransactionId?: string | null;
 };
 
 export type BudgetCategoryOption = {
@@ -54,6 +91,7 @@ export type BudgetCategoryOption = {
   icon: string;
   isSystem: boolean;
   isIncome: boolean;
+  rolloverEnabled?: boolean;
 };
 
 export type BudgetSettings = {

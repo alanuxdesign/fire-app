@@ -1,10 +1,22 @@
 import { parseBalance } from "@/lib/account-groups";
-import { isIncomeCategory, listBudgetCategoriesForUser } from "@/lib/budget-categories";
+import {
+  buildCategoryIdRemap,
+  categoryIdsForCanonical,
+  isIncomeCategory,
+  listBudgetCategoriesForUser,
+  resolveCanonicalCategoryId,
+} from "@/lib/budget-categories";
 import {
   getCurrentBudgetMonth,
   getMonthBounds,
   shiftBudgetMonth,
 } from "@/lib/budget-month";
+import { getCommittedBillsTotal } from "@/lib/recurring-bills";
+import {
+  getSplitsByTransactionIds,
+  remapSplitLines,
+  type TransactionSplitRow,
+} from "@/lib/transaction-splits";
 import {
   budgetCategories,
   budgetTargets,
@@ -13,7 +25,7 @@ import {
   transactions,
 } from "@/drizzle/schema";
 import { db } from "@/lib/db";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 export type BudgetAlertLevel = "none" | "warning" | "over";
 
@@ -26,6 +38,7 @@ export type BudgetSummaryBucket = {
   target: number;
   progress: number;
   alertLevel: BudgetAlertLevel;
+  rolloverEnabled?: boolean;
   isVirtual?: boolean;
   isSystem?: boolean;
 };
@@ -37,10 +50,19 @@ export type BudgetSummary = {
   effectiveBudgetTotal: number;
   leftToSpend: number;
   income: number;
+  savingsRate: number | null;
+  billsCommitted: number;
   unreviewedCount: number;
   notCountedTotal: number;
   includePendingInBudget: boolean;
   buckets: BudgetSummaryBucket[];
+};
+
+export type CashFlowPoint = {
+  month: string;
+  income: number;
+  expense: number;
+  net: number;
 };
 
 type TransactionRow = typeof transactions.$inferSelect;
@@ -67,11 +89,13 @@ export async function getExcludedBudgetAccountIds(
     accounts.filter((a) => a.excludeFromBudget).map((a) => a.id),
   );
 }
+
 function txnCountsForBudget(
   row: TransactionRow,
   categoryIsIncome: boolean,
   includePending: boolean,
 ): boolean {
+  if (row.duplicateOfTransactionId) return false;
   if (!row.includeInBudget) return false;
   if (row.isTransfer) return false;
   if (row.reviewStatus === "pending") return false;
@@ -129,28 +153,26 @@ async function loadMonthTransactions(
   return rows.filter((r) => !excludedAccountIds.has(r.financialAccountId));
 }
 
-export async function getBudgetSummary(
+type MonthRollup = {
+  totalSpent: number;
+  income: number;
+  notCountedTotal: number;
+  spentByCategory: Map<string, number>;
+  uncategorizedSpent: number;
+};
+
+async function aggregateMonth(
   userId: string,
   month: string,
-): Promise<BudgetSummary> {
-  const settings = await getBudgetUserSettings(userId);
-  const includePending = settings.includePendingInBudget;
-
+  includePending: boolean,
+): Promise<MonthRollup> {
   const categories = await listBudgetCategoriesForUser(userId);
-
   const categoryById = new Map(categories.map((c) => [c.id, c]));
-
-  const targets = await db.query.budgetTargets.findMany({
-    where: and(
-      eq(budgetTargets.userId, userId),
-      eq(budgetTargets.month, month),
-    ),
-  });
-  const targetByCategory = new Map(
-    targets.map((t) => [t.categoryId, parseBalance(t.amount)]),
-  );
+  const categoryIdRemap = await buildCategoryIdRemap(userId, categories);
 
   const monthTxns = await loadMonthTransactions(userId, month);
+  const splitTxnIds = monthTxns.filter((t) => t.hasSplits).map((t) => t.id);
+  const splitsByTxn = await getSplitsByTransactionIds(splitTxnIds);
 
   let totalSpent = 0;
   let income = 0;
@@ -158,20 +180,53 @@ export async function getBudgetSummary(
   const spentByCategory = new Map<string, number>();
   let uncategorizedSpent = 0;
 
+  const addToCategory = (categoryId: string | null, amount: number) => {
+    totalSpent += amount;
+    if (categoryId) {
+      spentByCategory.set(
+        categoryId,
+        (spentByCategory.get(categoryId) ?? 0) + amount,
+      );
+    } else {
+      uncategorizedSpent += amount;
+    }
+  };
+
   for (const txn of monthTxns) {
     const amount = parseBalance(txn.amount);
-    const category = txn.userCategoryId
-      ? categoryById.get(txn.userCategoryId)
-      : null;
-    const incomeCat = isIncomeCategory(
-      txn.primaryCategory,
-      category ?? null,
-    );
 
     if (!txn.includeInBudget) {
       if (amount > 0) notCountedTotal += amount;
       continue;
     }
+
+    const splits: TransactionSplitRow[] | undefined = splitsByTxn.get(txn.id);
+    if (txn.hasSplits && splits && splits.length > 0) {
+      const remapped = remapSplitLines(splits, categoryById, categoryIdRemap);
+      if (!txnCountsForBudget(txn, false, includePending)) continue;
+      for (const line of remapped) {
+        const cat = categoryById.get(line.categoryId);
+        if (isIncomeCategory(txn.primaryCategory, cat ?? null)) {
+          income += Math.abs(line.amount);
+          continue;
+        }
+        addToCategory(line.categoryId, line.amount);
+      }
+      continue;
+    }
+
+    const canonicalCategoryId = resolveCanonicalCategoryId(
+      txn.userCategoryId,
+      categoryById,
+      categoryIdRemap,
+    );
+    const category = canonicalCategoryId
+      ? categoryById.get(canonicalCategoryId)
+      : null;
+    const incomeCat = isIncomeCategory(
+      txn.primaryCategory,
+      category ?? null,
+    );
 
     if (incomeCat) {
       income += Math.abs(amount);
@@ -182,17 +237,55 @@ export async function getBudgetSummary(
       continue;
     }
 
-    totalSpent += amount;
-
-    if (txn.userCategoryId) {
-      spentByCategory.set(
-        txn.userCategoryId,
-        (spentByCategory.get(txn.userCategoryId) ?? 0) + amount,
-      );
-    } else {
-      uncategorizedSpent += amount;
-    }
+    addToCategory(canonicalCategoryId, amount);
   }
+
+  return {
+    totalSpent,
+    income,
+    notCountedTotal,
+    spentByCategory,
+    uncategorizedSpent,
+  };
+}
+
+function effectiveTargetForCategory(
+  baseTarget: number,
+  rolloverEnabled: boolean,
+  prevBaseTarget: number,
+  prevSpent: number,
+): number {
+  if (!rolloverEnabled || baseTarget <= 0) return baseTarget;
+  const carry = Math.max(0, prevBaseTarget - prevSpent);
+  return baseTarget + carry;
+}
+
+export async function getBudgetSummary(
+  userId: string,
+  month: string,
+): Promise<BudgetSummary> {
+  const settings = await getBudgetUserSettings(userId);
+  const includePending = settings.includePendingInBudget;
+
+  const categories = await listBudgetCategoriesForUser(userId);
+  const prevMonth = shiftBudgetMonth(month, -1);
+
+  const targets = await db.query.budgetTargets.findMany({
+    where: and(
+      eq(budgetTargets.userId, userId),
+      inArray(budgetTargets.month, [month, prevMonth]),
+    ),
+  });
+  const targetByCategoryMonth = new Map<string, number>();
+  for (const t of targets) {
+    targetByCategoryMonth.set(
+      `${t.categoryId}:${t.month}`,
+      parseBalance(t.amount),
+    );
+  }
+
+  const rollup = await aggregateMonth(userId, month, includePending);
+  const prevRollup = await aggregateMonth(userId, prevMonth, includePending);
 
   const spendBuckets: BudgetSummaryBucket[] = categories
     .filter(
@@ -202,8 +295,16 @@ export async function getBudgetSummary(
         c.slug !== "income",
     )
     .map((c) => {
-      const spent = spentByCategory.get(c.id) ?? 0;
-      const target = targetByCategory.get(c.id) ?? 0;
+      const spent = rollup.spentByCategory.get(c.id) ?? 0;
+      const baseTarget = targetByCategoryMonth.get(`${c.id}:${month}`) ?? 0;
+      const prevBase = targetByCategoryMonth.get(`${c.id}:${prevMonth}`) ?? 0;
+      const prevSpent = prevRollup.spentByCategory.get(c.id) ?? 0;
+      const target = effectiveTargetForCategory(
+        baseTarget,
+        c.rolloverEnabled,
+        prevBase,
+        prevSpent,
+      );
       return {
         id: c.id,
         slug: c.slug,
@@ -213,20 +314,22 @@ export async function getBudgetSummary(
         target,
         progress: bucketProgress(spent, target),
         alertLevel: computeAlertLevel(spent, target),
+        rolloverEnabled: c.rolloverEnabled,
         isSystem: c.isSystem,
       };
     })
-    .filter((b) => b.spent !== 0 || b.target > 0);
+    .filter((b) => Math.abs(b.spent) > 0.005 || b.target > 0)
+    .sort((a, b) => Math.abs(b.spent) - Math.abs(a.spent));
 
   const virtualBuckets: BudgetSummaryBucket[] = [];
 
-  if (uncategorizedSpent !== 0) {
+  if (rollup.uncategorizedSpent !== 0) {
     virtualBuckets.push({
       id: null,
       slug: "uncategorized",
       label: "Uncategorized",
       icon: "HelpCircle",
-      spent: uncategorizedSpent,
+      spent: rollup.uncategorizedSpent,
       target: 0,
       progress: 0,
       alertLevel: "none",
@@ -249,13 +352,13 @@ export async function getBudgetSummary(
     });
   }
 
-  if (notCountedTotal > 0) {
+  if (rollup.notCountedTotal > 0) {
     virtualBuckets.push({
       id: null,
       slug: "not-counted",
       label: "Not counted",
       icon: "Ban",
-      spent: notCountedTotal,
+      spent: rollup.notCountedTotal,
       target: 0,
       progress: 0,
       alertLevel: "none",
@@ -263,27 +366,73 @@ export async function getBudgetSummary(
     });
   }
 
-  const totalTarget = [...targetByCategory.values()].reduce(
-    (sum, t) => sum + t,
-    0,
-  );
+  const totalTarget = categories
+    .filter((c) => !c.isIncome && c.slug !== "transfer" && c.slug !== "income")
+    .reduce((sum, c) => {
+      const base = targetByCategoryMonth.get(`${c.id}:${month}`) ?? 0;
+      const prevBase = targetByCategoryMonth.get(`${c.id}:${prevMonth}`) ?? 0;
+      const prevSpent = prevRollup.spentByCategory.get(c.id) ?? 0;
+      return (
+        sum +
+        effectiveTargetForCategory(
+          base,
+          c.rolloverEnabled,
+          prevBase,
+          prevSpent,
+        )
+      );
+    }, 0);
 
   const effectiveBudgetTotal = settings.monthlyBudgetTotal
     ? parseBalance(settings.monthlyBudgetTotal)
     : totalTarget;
 
+  const billsCommitted = await getCommittedBillsTotal(userId, month);
+  const savingsRate =
+    rollup.income > 0
+      ? (rollup.income - rollup.totalSpent) / rollup.income
+      : null;
+
   return {
     month,
-    totalSpent,
+    totalSpent: rollup.totalSpent,
     totalTarget,
     effectiveBudgetTotal,
-    leftToSpend: Math.max(0, effectiveBudgetTotal - totalSpent),
-    income,
+    leftToSpend: Math.max(
+      0,
+      effectiveBudgetTotal - rollup.totalSpent - billsCommitted,
+    ),
+    income: rollup.income,
+    savingsRate,
+    billsCommitted,
     unreviewedCount,
-    notCountedTotal,
+    notCountedTotal: rollup.notCountedTotal,
     includePendingInBudget: includePending,
     buckets: [...spendBuckets, ...virtualBuckets],
   };
+}
+
+export async function getCashFlowSeries(
+  userId: string,
+  months: number,
+): Promise<CashFlowPoint[]> {
+  const results: CashFlowPoint[] = [];
+  let month = getCurrentBudgetMonth();
+  const settings = await getBudgetUserSettings(userId);
+  const includePending = settings.includePendingInBudget;
+
+  for (let i = 0; i < months; i++) {
+    const rollup = await aggregateMonth(userId, month, includePending);
+    results.unshift({
+      month,
+      income: rollup.income,
+      expense: rollup.totalSpent,
+      net: rollup.income - rollup.totalSpent,
+    });
+    month = shiftBudgetMonth(month, -1);
+  }
+
+  return results;
 }
 
 export async function getBucketMonthlyTrends(
@@ -298,42 +447,86 @@ export async function getBucketMonthlyTrends(
   });
   if (!category) return [];
 
+  const categories = await listBudgetCategoriesForUser(userId);
+  const categoryIdRemap = await buildCategoryIdRemap(userId, categories);
+  const categoryIds = categoryIdsForCanonical(categoryId, categoryIdRemap);
+
   const excludedAccountIds = await getExcludedBudgetAccountIds(userId);
   const results: { month: string; spent: number; target: number }[] = [];
   let month = getCurrentBudgetMonth();
 
+  const monthKeys: string[] = [];
   for (let i = 0; i < months; i++) {
-    const { start, end } = getMonthBounds(month);
+    monthKeys.unshift(month);
+    month = shiftBudgetMonth(month, -1);
+  }
+
+  const allTargets = await db.query.budgetTargets.findMany({
+    where: and(
+      eq(budgetTargets.userId, userId),
+      eq(budgetTargets.categoryId, categoryId),
+      inArray(budgetTargets.month, monthKeys),
+    ),
+  });
+  const targetByMonth = new Map(
+    allTargets.map((t) => [t.month, parseBalance(t.amount)]),
+  );
+
+  for (const m of monthKeys) {
+    const { start, end } = getMonthBounds(m);
     const rows = await db.query.transactions.findMany({
       where: and(
         eq(transactions.userId, userId),
-        eq(transactions.userCategoryId, categoryId),
+        inArray(transactions.userCategoryId, categoryIds),
         gte(transactions.date, start),
         lte(transactions.date, end),
       ),
     });
 
+    const splitTxnIds = rows.filter((t) => t.hasSplits).map((t) => t.id);
+    const splitsByTxn = await getSplitsByTransactionIds(splitTxnIds);
+    const categoryById = new Map(categories.map((c) => [c.id, c]));
+
     let spent = 0;
     for (const txn of rows) {
       if (excludedAccountIds.has(txn.financialAccountId)) continue;
+
+      const splits = splitsByTxn.get(txn.id);
+      if (txn.hasSplits && splits?.length) {
+        if (!txnCountsForBudget(txn, category.isIncome, includePending)) continue;
+        for (const line of remapSplitLines(splits, categoryById, categoryIdRemap)) {
+          if (line.categoryId === categoryId) spent += line.amount;
+        }
+        continue;
+      }
+
       if (!txnCountsForBudget(txn, category.isIncome, includePending)) continue;
-      spent += parseBalance(txn.amount);
+      const canonical = resolveCanonicalCategoryId(
+        txn.userCategoryId,
+        categoryById,
+        categoryIdRemap,
+      );
+      if (canonical === categoryId) spent += parseBalance(txn.amount);
     }
 
-    const targetRow = await db.query.budgetTargets.findFirst({
-      where: and(
-        eq(budgetTargets.userId, userId),
-        eq(budgetTargets.categoryId, categoryId),
-        eq(budgetTargets.month, month),
-      ),
-    });
+    const prevMonth = shiftBudgetMonth(m, -1);
+    const baseTarget = targetByMonth.get(m) ?? 0;
+    const prevBase = targetByMonth.get(prevMonth) ?? 0;
 
-    results.unshift({
-      month,
-      spent,
-      target: targetRow ? parseBalance(targetRow.amount) : 0,
-    });
-    month = shiftBudgetMonth(month, -1);
+    let prevSpent = 0;
+    if (category.rolloverEnabled) {
+      const prevRollup = await aggregateMonth(userId, prevMonth, includePending);
+      prevSpent = prevRollup.spentByCategory.get(categoryId) ?? 0;
+    }
+
+    const target = effectiveTargetForCategory(
+      baseTarget,
+      category.rolloverEnabled,
+      prevBase,
+      prevSpent,
+    );
+
+    results.push({ month: m, spent, target });
   }
 
   return results;

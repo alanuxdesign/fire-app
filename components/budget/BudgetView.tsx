@@ -4,7 +4,9 @@ import { BulkCategorizeBar } from "@/components/budget/BulkCategorizeBar";
 import { SubscriptionHomeRow } from "@/components/budget/SubscriptionHomeRow";
 import { SubscriptionsDetailView } from "@/components/budget/SubscriptionsDetailView";
 import { BucketEditorSheet } from "@/components/budget/BucketEditorSheet";
+import { BillsSection } from "@/components/budget/BillsSection";
 import { BucketTrendChart } from "@/components/budget/BucketTrendChart";
+import { CashFlowChart } from "@/components/budget/CashFlowChart";
 import { BudgetIcon } from "@/components/budget/BudgetIcon";
 import { BudgetSyncProgress } from "@/components/budget/BudgetSyncProgress";
 import { CreateBucketSheet } from "@/components/budget/CreateBucketSheet";
@@ -31,10 +33,21 @@ import type {
   BudgetCategoryOption,
   BudgetSummary,
   BudgetSummaryBucket,
+  CashFlowPoint,
+  DuplicateGroup,
+  RecurringBill,
   SerializedTransaction,
 } from "@/lib/budget-types";
 import { formatCurrency } from "@/lib/format";
-import { ChevronLeft, ChevronRight, Plus, RefreshCw, Search, Settings2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings2,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -159,7 +172,13 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   );
   const [error, setError] = useState<string | null>(null);
   const [screen, setScreen] = useState<
-    "home" | "review" | "bucket" | "all" | "subscriptions"
+    | "home"
+    | "review"
+    | "bucket"
+    | "all"
+    | "subscriptions"
+    | "insights"
+    | "duplicates"
   >("home");
   const [activeBucket, setActiveBucket] = useState<BudgetSummaryBucket | null>(null);
   const [transactions, setTransactions] = useState<SerializedTransaction[]>([]);
@@ -184,6 +203,9 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const [subscriptionsRefreshKey, setSubscriptionsRefreshKey] = useState(0);
   const [subscriptionsSummary, setSubscriptionsSummary] =
     useState<SubscriptionsSummary | null>(null);
+  const [cashFlowSeries, setCashFlowSeries] = useState<CashFlowPoint[]>([]);
+  const [billsDue, setBillsDue] = useState<RecurringBill[]>([]);
+  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
 
   const currentMonth = getCurrentBudgetMonth();
   const showBackToToday = month !== currentMonth;
@@ -213,6 +235,15 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     setSubscriptionsSummary(toSubscriptionsSummary(data));
   }, []);
 
+  const loadBillsDue = useCallback(async (m: string) => {
+    const res = await fetch(
+      `/api/budget/bills?month=${encodeURIComponent(m)}`,
+    );
+    if (!res.ok) return [];
+    const body = (await res.json()) as { bills: RecurringBill[] };
+    return body.bills;
+  }, []);
+
   const loadTags = useCallback(async () => {
     const res = await fetch("/api/budget/tags");
     if (!res.ok) return [];
@@ -234,15 +265,17 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const [sum, cats, tagList] = await Promise.all([
+      const [sum, cats, tagList, , bills] = await Promise.all([
         loadSummary(month),
         loadCategories(),
         loadTags(),
         loadSubscriptionsSummary(),
+        loadBillsDue(month),
       ]);
       setSummary(sum);
       setCategories(cats);
       setTags(tagList);
+      setBillsDue(bills);
       if (sum.includePendingInBudget !== undefined) {
         setIncludePendingInBudget(sum.includePendingInBudget);
       }
@@ -251,7 +284,53 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load");
     }
-  }, [loadSummary, loadCategories, loadTags, loadSubscriptionsSummary, month]);
+  }, [loadSummary, loadCategories, loadTags, loadBillsDue, loadSubscriptionsSummary, month]);
+
+  const openInsights = async () => {
+    setScreen("insights");
+    const res = await fetch("/api/budget/cash-flow?months=12");
+    if (res.ok) {
+      const body = (await res.json()) as { series: CashFlowPoint[] };
+      setCashFlowSeries(body.series);
+    }
+  };
+
+  const openDuplicates = async () => {
+    setScreen("duplicates");
+    const res = await fetch("/api/budget/duplicates");
+    if (res.ok) {
+      const body = (await res.json()) as { groups: DuplicateGroup[] };
+      setDuplicateGroups(body.groups);
+    }
+  };
+
+  const exportCsv = () => {
+    if (isDemo) return;
+    window.location.href = `/api/budget/export?month=${encodeURIComponent(month)}`;
+  };
+
+  const markDuplicate = async (keepId: string, duplicateId: string) => {
+    if (isDemo) return;
+    await fetch(`/api/transactions/${duplicateId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ duplicateOfTransactionId: keepId }),
+    });
+    await openDuplicates();
+    await refresh();
+  };
+
+  const toggleBucketRollover = async (categoryId: string, enabled: boolean) => {
+    if (isDemo) return;
+    await fetch(`/api/budget/categories/${categoryId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rolloverEnabled: enabled }),
+    });
+    await refresh();
+    const updated = summary?.buckets.find((b) => b.id === categoryId);
+    if (updated) setActiveBucket(updated);
+  };
 
   const fetchSyncStatus = useCallback(async () => {
     const res = await fetch("/api/plaid/sync-transactions/status");
@@ -358,7 +437,10 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const openBucket = async (bucket: BudgetSummaryBucket) => {
     setActiveBucket(bucket);
     setScreen("bucket");
-    const params: Record<string, string> = { limit: "200" };
+    const params: Record<string, string> = {
+      limit: "200",
+      month,
+    };
     if (bucket.id) {
       params.categoryId = bucket.id;
     } else if (bucket.slug === "uncategorized") {
@@ -368,7 +450,11 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     } else if (bucket.slug === "review") {
       setScreen("review");
       setActiveBucket(null);
-      const txns = await loadTransactions({ reviewStatus: "pending", limit: "200" });
+      const txns = await loadTransactions({
+        reviewStatus: "pending",
+        month,
+        limit: "200",
+      });
       setTransactions(txns);
       return;
     }
@@ -393,7 +479,11 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const openReview = async () => {
     setScreen("review");
     setActiveBucket(null);
-    const txns = await loadTransactions({ reviewStatus: "pending", limit: "200" });
+    const txns = await loadTransactions({
+      reviewStatus: "pending",
+      month,
+      limit: "200",
+    });
     setTransactions(txns);
   };
 
@@ -443,7 +533,11 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     await refresh();
     if (screen === "review") {
       setTransactions(
-        await loadTransactions({ reviewStatus: "pending", limit: "200" }),
+        await loadTransactions({
+          reviewStatus: "pending",
+          month,
+          limit: "200",
+        }),
       );
     } else if (screen === "all") {
       await openAllTransactions(txnSearch);
@@ -513,7 +607,11 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       await refresh();
       if (screen === "review") {
         setTransactions(
-          await loadTransactions({ reviewStatus: "pending", limit: "200" }),
+          await loadTransactions({
+            reviewStatus: "pending",
+            month,
+            limit: "200",
+          }),
         );
       } else if (screen === "all") {
         await openAllTransactions(txnSearch);
@@ -562,10 +660,22 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const openAllTransactions = async (search: string) => {
     setScreen("all");
     setActiveBucket(null);
-    const params: Record<string, string> = { limit: "200" };
+    const params: Record<string, string> = { limit: "200", month };
     if (search.trim()) params.search = search.trim();
     setTransactions(await loadTransactions(params));
   };
+
+  useEffect(() => {
+    if (screen === "bucket" && activeBucket) {
+      void openBucket(activeBucket);
+    } else if (screen === "review") {
+      void openReview();
+    } else if (screen === "all") {
+      void openAllTransactions(txnSearch);
+    }
+    // Re-load list views when the selected month changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [month]);
 
   const saveBucketTarget = async () => {
     if (!activeBucket?.id || isDemo) return;
@@ -651,14 +761,24 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
         </div>
         <div className="flex items-center gap-1">
           {screen === "home" && !isDemo ? (
-            <button
-              type="button"
-              onClick={() => setShowCreateBucket(true)}
-              className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              aria-label="New bucket"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => void exportCsv()}
+                className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                aria-label="Export CSV"
+              >
+                <Download className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCreateBucket(true)}
+                className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                aria-label="New bucket"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </>
           ) : null}
           <button
             type="button"
@@ -712,8 +832,51 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               {(summary.effectiveBudgetTotal ?? summary.totalTarget) > 0
                 ? ` of ${formatCurrency(summary.effectiveBudgetTotal ?? summary.totalTarget)} budgeted`
                 : ""}
+              {(summary.billsCommitted ?? 0) > 0
+                ? ` · ${formatCurrency(summary.billsCommitted ?? 0)} bills due`
+                : ""}
             </p>
           </div>
+
+          {summary.savingsRate != null && summary.income > 0 ? (
+            <div className="mt-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Savings rate
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                {Math.round(summary.savingsRate * 100)}%
+              </p>
+              <p className="mt-1 text-sm text-zinc-500">
+                {formatCurrency(summary.income)} income ·{" "}
+                {formatCurrency(summary.totalSpent)} spent
+              </p>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => void openInsights()}
+              className="flex-1 rounded-xl border border-zinc-200 bg-white py-2.5 text-sm font-medium text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            >
+              Cash flow
+            </button>
+            <button
+              type="button"
+              onClick={() => void openDuplicates()}
+              className="flex-1 rounded-xl border border-zinc-200 bg-white py-2.5 text-sm font-medium text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            >
+              Duplicates
+            </button>
+          </div>
+
+          <BillsSection
+            month={formatMonthLabel(month)}
+            bills={billsDue}
+            categories={categories}
+            isDemo={isDemo}
+            onChanged={refresh}
+          />
 
           {(summary.unreviewedCount ?? 0) > 0 ? (
             <button
@@ -764,6 +927,67 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             </p>
           ) : null}
         </>
+      ) : null}
+
+      {screen === "insights" ? (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Insights
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Income vs spending over the last 12 months
+          </p>
+          <div className="mt-4">
+            <CashFlowChart series={cashFlowSeries} />
+          </div>
+        </div>
+      ) : null}
+
+      {screen === "duplicates" ? (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Possible duplicates
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Same amount and similar merchant within one day
+          </p>
+          {duplicateGroups.length === 0 ? (
+            <p className="mt-4 text-sm text-zinc-500">No duplicates found.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {duplicateGroups.map((group) => (
+                <li
+                  key={group.ids.join("-")}
+                  className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                >
+                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {group.merchantLabel}
+                  </p>
+                  <p className="text-sm text-zinc-500">
+                    {formatCurrency(group.amount)} · {group.dates.join(", ")}
+                  </p>
+                  {!isDemo ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-medium dark:bg-zinc-800">
+                        Keep first
+                      </span>
+                      {group.ids.slice(1).map((dupId) => (
+                        <button
+                          key={dupId}
+                          type="button"
+                          onClick={() => void markDuplicate(group.ids[0], dupId)}
+                          className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium dark:border-zinc-700"
+                        >
+                          Mark other as duplicate
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       ) : null}
 
       {screen === "subscriptions" ? (
@@ -909,18 +1133,34 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               </button>
             ) : null}
           </div>
-          {activeBucket.target > 0 ? (
-            <p className="mt-1 text-sm text-zinc-500">
-              {activeBucket.spent < 0
-                ? `${formatCurrency(Math.abs(activeBucket.spent))} credit`
-                : `${formatCurrency(activeBucket.spent)} of ${formatCurrency(activeBucket.target)}`}{" "}
-              this month
-            </p>
-          ) : null}
+          <p className="mt-1 text-sm text-zinc-500">
+            {activeBucket.target > 0 ? (
+              <>
+                {activeBucket.spent < 0
+                  ? `${formatCurrency(Math.abs(activeBucket.spent))} credit`
+                  : `${formatCurrency(activeBucket.spent)} of ${formatCurrency(activeBucket.target)}`}{" "}
+                in {formatMonthLabel(month)}
+              </>
+            ) : (
+              <>Transactions in {formatMonthLabel(month)}</>
+            )}
+          </p>
           {trends.length > 0 ? (
             <div className="mt-4">
               <BucketTrendChart trends={trends} />
             </div>
+          ) : null}
+          {activeBucket.id && !isDemo ? (
+            <label className="mt-3 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <input
+                type="checkbox"
+                checked={activeBucket.rolloverEnabled ?? false}
+                onChange={(e) =>
+                  void toggleBucketRollover(activeBucket.id!, e.target.checked)
+                }
+              />
+              Roll unused budget into next month
+            </label>
           ) : null}
           {activeBucket.id && !isDemo ? (
             <div className="mt-3 flex gap-2">
@@ -994,6 +1234,10 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             }
           }}
           onCreateTag={createTag}
+          onSplitsSaved={async () => {
+            await refresh();
+            if (activeBucket) await openBucket(activeBucket);
+          }}
         />
       ) : null}
 
@@ -1022,6 +1266,10 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           categoryId={activeBucket.id}
           label={activeBucket.label}
           icon={activeBucket.icon}
+          rolloverEnabled={
+            categories.find((c) => c.id === activeBucket.id)?.rolloverEnabled ??
+            activeBucket.rolloverEnabled
+          }
           onClose={() => setShowBucketEditor(false)}
           onSaved={async () => {
             await refresh();

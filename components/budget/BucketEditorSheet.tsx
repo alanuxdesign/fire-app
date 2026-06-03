@@ -9,6 +9,7 @@ type BucketEditorSheetProps = {
   categoryId: string;
   label: string;
   icon: string;
+  rolloverEnabled?: boolean;
   onClose: () => void;
   onSaved: () => Promise<void>;
   onDeleted: () => Promise<void>;
@@ -18,12 +19,14 @@ export function BucketEditorSheet({
   categoryId,
   label: initialLabel,
   icon: initialIcon,
+  rolloverEnabled: initialRollover = false,
   onClose,
   onSaved,
   onDeleted,
 }: BucketEditorSheetProps) {
   const [label, setLabel] = useState(initialLabel);
   const [icon, setIcon] = useState(initialIcon);
+  const [rolloverEnabled, setRolloverEnabled] = useState(initialRollover);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +42,7 @@ export function BucketEditorSheet({
       const res = await fetch(`/api/budget/categories/${categoryId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: trimmed, icon }),
+        body: JSON.stringify({ label: trimmed, icon, rolloverEnabled }),
       });
       if (!res.ok) {
         const body = (await res.json()) as { error?: string };
@@ -123,6 +126,15 @@ export function BucketEditorSheet({
             </button>
           ))}
         </div>
+
+        <label className="mt-4 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={rolloverEnabled}
+            onChange={(e) => setRolloverEnabled(e.target.checked)}
+          />
+          Roll unused budget into next month
+        </label>
 
         <button
           type="button"

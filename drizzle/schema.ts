@@ -234,11 +234,52 @@ export const transactions = pgTable("transactions", {
   reviewStatus: text("review_status"),
   reviewedAt: timestamp("reviewed_at", { mode: "date" }),
   subscriptionGroupId: uuid("subscription_group_id"),
+  duplicateOfTransactionId: uuid("duplicate_of_transaction_id"),
+  hasSplits: boolean("has_splits").notNull().default(false),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+});
+
+export const transactionSplits = pgTable("transaction_splits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  transactionId: uuid("transaction_id")
+    .notNull()
+    .references(() => transactions.id, { onDelete: "cascade" }),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => budgetCategories.id, { onDelete: "cascade" }),
+  amount: numeric("amount", { precision: 19, scale: 4 }).notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const recurringBills = pgTable("recurring_bills", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  merchantKey: text("merchant_key"),
+  expectedAmount: numeric("expected_amount", { precision: 19, scale: 4 }).notNull(),
+  cadence: text("cadence").notNull().default("monthly"),
+  nextDueDate: date("next_due_date").notNull(),
+  categoryId: uuid("category_id").references(() => budgetCategories.id, {
+    onDelete: "set null",
+  }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const savedReports = pgTable("saved_reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  filters: jsonb("filters").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
 export const transactionTags = pgTable(
@@ -366,5 +407,36 @@ export const transactionsRelations = relations(transactions, ({ one, many }) => 
     fields: [transactions.userCategoryId],
     references: [budgetCategories.id],
   }),
+  duplicateOf: one(transactions, {
+    fields: [transactions.duplicateOfTransactionId],
+    references: [transactions.id],
+    relationName: "duplicateOf",
+  }),
   transactionTags: many(transactionTags),
+  splits: many(transactionSplits),
+}));
+
+export const transactionSplitsRelations = relations(
+  transactionSplits,
+  ({ one }) => ({
+    transaction: one(transactions, {
+      fields: [transactionSplits.transactionId],
+      references: [transactions.id],
+    }),
+    category: one(budgetCategories, {
+      fields: [transactionSplits.categoryId],
+      references: [budgetCategories.id],
+    }),
+  }),
+);
+
+export const recurringBillsRelations = relations(recurringBills, ({ one }) => ({
+  user: one(users, {
+    fields: [recurringBills.userId],
+    references: [users.id],
+  }),
+  category: one(budgetCategories, {
+    fields: [recurringBills.categoryId],
+    references: [budgetCategories.id],
+  }),
 }));

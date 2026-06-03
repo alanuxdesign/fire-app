@@ -1,6 +1,10 @@
 import { requireUserId } from "@/lib/api-auth";
 import { getMonthBounds } from "@/lib/budget-month";
-import { listBudgetCategoriesForUser } from "@/lib/budget-categories";
+import {
+  buildCategoryIdRemap,
+  categoryIdsForCanonical,
+  listBudgetCategoriesForUser,
+} from "@/lib/budget-categories";
 import { getExcludedBudgetAccountIds } from "@/lib/budget-rollups";
 import { serializeTransaction } from "@/lib/plaid-transactions";
 import { transactionTags, transactions } from "@/drizzle/schema";
@@ -16,12 +20,16 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const month = searchParams.get("month");
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
   const categoryId = searchParams.get("categoryId");
+  const tagId = searchParams.get("tagId");
+  const accountId = searchParams.get("accountId");
   const reviewStatus = searchParams.get("reviewStatus");
   const virtual = searchParams.get("virtual");
   const search = searchParams.get("search")?.trim();
   const forBudget = searchParams.get("forBudget") === "1";
-  const limit = Math.min(200, Number(searchParams.get("limit") ?? "100"));
+  const limit = Math.min(500, Number(searchParams.get("limit") ?? "100"));
 
   const conditions = [eq(transactions.userId, authResult.userId)];
 
@@ -29,10 +37,20 @@ export async function GET(request: Request) {
     const { start, end } = getMonthBounds(month);
     conditions.push(gte(transactions.date, start));
     conditions.push(lte(transactions.date, end));
+  } else {
+    if (from) conditions.push(gte(transactions.date, from));
+    if (to) conditions.push(lte(transactions.date, to));
+  }
+
+  if (accountId) {
+    conditions.push(eq(transactions.financialAccountId, accountId));
   }
 
   if (categoryId) {
-    conditions.push(eq(transactions.userCategoryId, categoryId));
+    const categories = await listBudgetCategoriesForUser(authResult.userId);
+    const idRemap = await buildCategoryIdRemap(authResult.userId, categories);
+    const categoryIds = categoryIdsForCanonical(categoryId, idRemap);
+    conditions.push(inArray(transactions.userCategoryId, categoryIds));
   }
 
   if (reviewStatus) {
@@ -56,11 +74,20 @@ export async function GET(request: Request) {
     );
   }
 
-  const rows = await db.query.transactions.findMany({
+  let rows = await db.query.transactions.findMany({
     where: and(...conditions),
     orderBy: [desc(transactions.date), desc(transactions.createdAt)],
-    limit,
+    limit: tagId ? 500 : limit,
   });
+
+  if (tagId) {
+    const tagged = await db
+      .select({ transactionId: transactionTags.transactionId })
+      .from(transactionTags)
+      .where(eq(transactionTags.tagId, tagId));
+    const allowed = new Set(tagged.map((t) => t.transactionId));
+    rows = rows.filter((r) => allowed.has(r.id)).slice(0, limit);
+  }
 
   let filtered = rows;
   if (forBudget) {

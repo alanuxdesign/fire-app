@@ -19,15 +19,32 @@ export async function PATCH(request: Request, context: RouteContext) {
     rolloverEnabled?: boolean;
   };
 
+  const onlyRollover =
+    body.rolloverEnabled !== undefined &&
+    body.label === undefined &&
+    body.icon === undefined;
+
   const category = await db.query.budgetCategories.findFirst({
-    where: and(
-      eq(budgetCategories.id, id),
-      eq(budgetCategories.userId, authResult.userId),
-      eq(budgetCategories.isSystem, false),
-    ),
+    where: eq(budgetCategories.id, id),
   });
 
   if (!category) {
+    return NextResponse.json({ error: "Category not found" }, { status: 404 });
+  }
+
+  if (onlyRollover) {
+    const [updated] = await db
+      .update(budgetCategories)
+      .set({ rolloverEnabled: body.rolloverEnabled })
+      .where(eq(budgetCategories.id, id))
+      .returning();
+    return NextResponse.json({ category: updated });
+  }
+
+  if (
+    category.isSystem ||
+    category.userId !== authResult.userId
+  ) {
     return NextResponse.json(
       { error: "Category not found or cannot edit" },
       { status: 404 },

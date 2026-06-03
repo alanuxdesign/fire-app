@@ -21,6 +21,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     note?: string | null;
     reviewStatus?: "pending" | "reviewed" | null;
     tagIds?: string[];
+    duplicateOfTransactionId?: string | null;
   };
 
   const existing = await db.query.transactions.findFirst({
@@ -50,6 +51,9 @@ export async function PATCH(request: Request, context: RouteContext) {
             reviewedAt:
               body.reviewStatus === "reviewed" ? new Date() : null,
           }
+        : {}),
+      ...(body.duplicateOfTransactionId !== undefined
+        ? { duplicateOfTransactionId: body.duplicateOfTransactionId }
         : {}),
       updatedAt: new Date(),
     })

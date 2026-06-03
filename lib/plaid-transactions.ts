@@ -340,5 +340,7 @@ export function serializeTransaction(
     isTransfer: row.isTransfer,
     reviewStatus: row.reviewStatus,
     tagIds: row.tagIds ?? [],
+    hasSplits: row.hasSplits ?? false,
+    duplicateOfTransactionId: row.duplicateOfTransactionId ?? null,
   };
 }

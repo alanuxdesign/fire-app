@@ -15,13 +15,13 @@ type SheetShellProps = {
 export function SheetShell({
   children,
   zIndexClassName = "z-[60]",
-  backdropClassName = "bg-stone-100 dark:bg-zinc-950",
+  backdropClassName = "bg-canvas",
 }: SheetShellProps) {
   return (
     <div
       className={`fixed inset-0 ${zIndexClassName} flex flex-col ${backdropClassName} lg:items-center lg:justify-center lg:bg-black/50 lg:dark:bg-black/60`}
     >
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-y-auto px-4 py-4 lg:max-h-[85dvh] lg:flex-none lg:rounded-2xl lg:bg-stone-100 lg:px-6 lg:py-6 lg:shadow-xl lg:ring-1 lg:ring-black/5 lg:dark:bg-zinc-950 lg:dark:ring-white/10">
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-y-auto px-4 py-4 lg:max-h-[85dvh] lg:flex-none lg:rounded-2xl lg:bg-canvas lg:px-6 lg:py-6 lg:shadow-float lg:ring-1 lg:ring-hairline">
         {children}
       </div>
     </div>

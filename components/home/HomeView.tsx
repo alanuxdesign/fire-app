@@ -1,6 +1,9 @@
 "use client";
 
 import { DemoBanner } from "@/components/portfolio/DemoBanner";
+import { SunriseHero } from "@/components/illustrations/SunriseHero";
+import { MountainMilestone } from "@/components/illustrations/MountainMilestone";
+import { EmptyAccounts } from "@/components/illustrations/EmptyStates";
 import { FLOATING_CARD } from "@/components/ui/cardStyles";
 import type { AccountsApiResponse } from "@/lib/account-groups";
 import type { BudgetSummary } from "@/lib/budget-types";
@@ -32,26 +35,27 @@ type HomeViewProps = {
   isDemo?: boolean;
 };
 
-const ICON_GRADIENTS = {
-  amber: "from-amber-400 to-orange-500 shadow-amber-500/30",
-  teal: "from-teal-400 to-emerald-600 shadow-teal-500/25",
-  violet: "from-violet-400 to-indigo-600 shadow-violet-500/25",
-  rose: "from-rose-400 to-pink-500 shadow-rose-500/25",
+// Flat pastel chips: soft tinted background + saturated icon (no gradients).
+const ICON_ACCENTS = {
+  gold: "bg-accent-gold-soft text-accent-gold",
+  green: "bg-accent-green-soft text-accent-green",
+  purple: "bg-accent-purple-soft text-accent-purple",
+  blue: "bg-accent-blue-soft text-accent-blue",
 } as const;
 
-type IconGradient = keyof typeof ICON_GRADIENTS;
+type IconAccent = keyof typeof ICON_ACCENTS;
 
 function HomeSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col animate-pulse">
-      <section className="shrink-0 bg-gradient-to-b from-zinc-900 via-teal-950 to-zinc-950 px-4 pb-16 pt-8">
-        <div className="mx-auto h-3 w-24 rounded-full bg-white/10" />
-        <div className="mx-auto mt-5 h-14 w-56 rounded-xl bg-white/10" />
-        <div className="mx-auto mt-2 h-3 w-28 rounded-full bg-white/10" />
+      <section className="shrink-0 bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) px-4 pb-16 pt-8">
+        <div className="mx-auto h-3 w-24 rounded-full bg-ink/5" />
+        <div className="mx-auto mt-5 h-14 w-56 rounded-xl bg-ink/5" />
+        <div className="mx-auto mt-2 h-3 w-28 rounded-full bg-ink/5" />
       </section>
       <div className="-mt-10 space-y-4 px-4 pb-6">
-        <div className="h-32 rounded-3xl bg-white/80 shadow-xl dark:bg-zinc-900/80" />
-        <div className="h-24 rounded-3xl bg-white/80 shadow-lg dark:bg-zinc-900/80" />
+        <div className="h-32 rounded-3xl bg-surface-raised shadow-card" />
+        <div className="h-24 rounded-3xl bg-surface-raised shadow-soft" />
       </div>
     </div>
   );
@@ -63,14 +67,14 @@ function GradientIcon({
   size = "md",
 }: {
   icon: LucideIcon;
-  gradient: IconGradient;
+  gradient: IconAccent;
   size?: "md" | "lg";
 }) {
   const dim = size === "lg" ? "h-14 w-14" : "h-11 w-11";
   const iconDim = size === "lg" ? "h-7 w-7" : "h-5 w-5";
   return (
     <span
-      className={`flex ${dim} shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${ICON_GRADIENTS[gradient]} text-white shadow-lg`}
+      className={`flex ${dim} shrink-0 items-center justify-center rounded-2xl ${ICON_ACCENTS[gradient]}`}
     >
       <Icon className={iconDim} strokeWidth={2} aria-hidden />
     </span>
@@ -96,71 +100,73 @@ function HomeHero({
 
   return (
     <section
-      className="relative shrink-0 overflow-hidden bg-gradient-to-b from-zinc-900 via-[#0c1f1f] to-zinc-950 pb-20 pt-8 text-white"
+      className="relative shrink-0 overflow-hidden bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) pb-20 pt-8 text-ink"
       aria-label="Net worth and journey progress"
     >
+      <SunriseHero className="pointer-events-none absolute inset-0 h-full w-full opacity-60" />
       <div
-        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-teal-500/20 blur-3xl lg:h-72 lg:w-72"
+        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl lg:h-72 lg:w-72"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -left-10 top-32 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl lg:h-56 lg:w-56"
+        className="pointer-events-none absolute -left-10 top-32 h-40 w-40 rounded-full bg-accent-gold/10 blur-3xl lg:h-56 lg:w-56"
         aria-hidden
       />
 
-      <div className="lg:mx-auto lg:w-full lg:max-w-5xl">
+      <div className="relative lg:mx-auto lg:w-full lg:max-w-5xl">
       <div className="relative px-4 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-300/80">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
           {hasAccounts ? "Your path" : "Net worth"}
         </p>
 
-        <p className="mt-3 text-[clamp(2.75rem,14vw,3.5rem)] font-bold leading-none tracking-tight tabular-nums text-white drop-shadow-sm">
+        <p className="mt-3 text-[clamp(2.75rem,14vw,3.5rem)] font-bold leading-none tracking-tight tabular-nums text-ink">
           {formatCurrency(netWorth)}
         </p>
 
         {hasAccounts ? (
-          <p className="mt-2 text-xs font-medium tabular-nums text-zinc-400">
-            <span className={isPositive ? "text-emerald-400" : "text-rose-400"}>
+          <p className="mt-2 text-xs font-medium tabular-nums text-ink-muted">
+            <span className={isPositive ? "text-gain" : "text-loss"}>
               {formatSignedCurrency(changeAmount)}
               {Number.isFinite(changePercent) ? (
                 <> ({formatPercent(changePercent)})</>
               ) : null}
             </span>
-            <span className="text-zinc-600">
+            <span className="text-ink-muted">
               {" "}
               · {getChangeHorizonLabel("YTD")}
             </span>
           </p>
         ) : null}
 
-        <p className="mt-5 text-base font-semibold text-amber-100/95">
+        <p className="mt-5 text-base font-semibold text-ink">
           {encouragement.headline}
         </p>
-        <p className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-relaxed text-zinc-400">
+        <p className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-relaxed text-ink-secondary">
           {encouragement.subline}
         </p>
       </div>
 
       {nextMilestone && hasAccounts ? (
-        <div className="relative mx-4 mt-6 rounded-2xl bg-white/5 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur-sm lg:mx-auto lg:max-w-xl">
-          <div className="flex items-end justify-between gap-2">
+        <div className="relative mx-4 mt-6 overflow-hidden rounded-2xl bg-surface/70 p-4 shadow-card ring-1 ring-hairline backdrop-blur-sm lg:mx-auto lg:max-w-xl">
+          <MountainMilestone className="pointer-events-none absolute -right-2 -top-1 h-20 w-24 text-accent-purple opacity-40" />
+          <div className="relative flex items-end justify-between gap-2">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
                 Next milestone
               </p>
-              <p className="mt-0.5 text-2xl font-bold tabular-nums text-white">
+              <p className="mt-0.5 text-2xl font-bold tabular-nums text-ink">
                 {nextMilestone.label}
               </p>
             </div>
-            <p className="text-right text-[11px] tabular-nums text-zinc-500">
-              <span className="block text-sm font-semibold text-teal-300">
+            <p className="text-right text-[11px] tabular-nums text-ink-muted">
+              <span className="block text-sm font-semibold text-primary">
                 {formatCurrency(nextMilestone.remaining)}
               </span>
               to go
             </p>
           </div>
           <div
-            className="mt-3 h-3 overflow-hidden rounded-full bg-zinc-800/80 shadow-inner"
+            className="relative mt-3 h-3 overflow-hidden rounded-full bg-canvas-sunken"
             role="progressbar"
             aria-valuenow={Math.round(nextMilestone.progress * 100)}
             aria-valuemin={0}
@@ -168,7 +174,7 @@ function HomeHero({
             aria-label={`Progress toward ${nextMilestone.label}`}
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-teal-400 to-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.55)] motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out"
+              className="h-full rounded-full bg-primary motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out"
               style={{ width: `${nextMilestone.progress * 100}%` }}
             />
           </div>
@@ -204,24 +210,24 @@ function ActionCard({
   title: string;
   description: string;
   icon: LucideIcon;
-  gradient: IconGradient;
+  gradient: IconAccent;
 }) {
   return (
     <Link
       href={href}
-      className="group flex min-h-[4.5rem] items-center gap-4 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-8px_rgba(24,24,27,0.14)] ring-1 ring-black/[0.04] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-12px_rgba(24,24,27,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-100 dark:bg-zinc-900 dark:shadow-[0_12px_36px_-8px_rgba(0,0,0,0.5)] dark:ring-white/[0.06] dark:focus-visible:ring-offset-zinc-950"
+      className="group flex min-h-[4.5rem] items-center gap-4 rounded-3xl bg-surface-raised p-4 shadow-card ring-1 ring-hairline transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
     >
       <GradientIcon icon={Icon} gradient={gradient} />
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold text-zinc-900 dark:text-zinc-50">
+        <span className="block text-[15px] font-semibold text-ink">
           {title}
         </span>
-        <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+        <span className="block text-xs text-ink-muted">
           {description}
         </span>
       </span>
       <ArrowRight
-        className="h-4 w-4 shrink-0 text-zinc-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-teal-500 dark:text-zinc-600"
+        className="h-4 w-4 shrink-0 text-ink-muted transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
         strokeWidth={2}
         aria-hidden
       />
@@ -246,14 +252,14 @@ function WinChip({
 }) {
   const Icon = WIN_ICONS[id] ?? Trophy;
   return (
-    <li className="flex min-w-[9.5rem] shrink-0 flex-col gap-2 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/80 p-3.5 shadow-sm ring-1 ring-emerald-200/60 dark:from-emerald-950/40 dark:to-teal-950/30 dark:ring-emerald-800/40">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-500/25">
+    <li className="flex min-w-[9.5rem] shrink-0 flex-col gap-2 rounded-2xl bg-gain-soft p-3.5 shadow-soft ring-1 ring-hairline">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gain text-on-primary">
         <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
       </span>
-      <span className="text-sm font-semibold leading-tight text-emerald-950 dark:text-emerald-100">
+      <span className="text-sm font-semibold leading-tight text-ink">
         {label}
       </span>
-      <span className="text-[11px] leading-snug text-emerald-700/80 dark:text-emerald-400/80">
+      <span className="text-[11px] leading-snug text-ink-secondary">
         {detail}
       </span>
     </li>
@@ -332,18 +338,18 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
         hasAccounts={hasAccounts}
       />
 
-      <div className="relative z-10 -mt-12 flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
+      <div className="relative z-10 -mt-12 flex min-h-0 flex-1 flex-col overflow-y-auto bg-canvas">
         <div className="space-y-5 px-4 pb-8 pt-2 lg:mx-auto lg:grid lg:w-full lg:max-w-5xl lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0 lg:px-6">
           {error ? (
             <FloatingCard className="lg:col-span-2">
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <p className="text-sm text-loss">{error}</p>
               <button
                 type="button"
                 onClick={() => {
                   setLoading(true);
                   void load();
                 }}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-red-100 px-3 py-2 text-sm font-medium text-red-800 transition-colors hover:bg-red-200/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:bg-red-950/50 dark:text-red-200 dark:hover:bg-red-900/50"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-loss-soft px-3 py-2 text-sm font-medium text-loss transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss"
               >
                 <RefreshCw className="h-4 w-4" strokeWidth={2} aria-hidden />
                 Try again
@@ -353,17 +359,17 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
 
           {!hasAccounts ? (
             <FloatingCard className="text-center lg:col-span-2">
-              <GradientIcon icon={Sparkles} gradient="amber" size="lg" />
-              <p className="mt-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              <EmptyAccounts className="mx-auto h-28 w-32" />
+              <p className="mt-4 text-lg font-semibold text-ink">
                 Ready when you are
               </p>
-              <p className="mx-auto mt-1.5 max-w-xs text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mx-auto mt-1.5 max-w-xs text-sm text-ink-secondary">
                 Link your first account on Portfolio to start tracking progress
                 toward freedom.
               </p>
               <Link
                 href="/portfolio"
-                className="mt-5 inline-flex h-12 min-w-[11rem] items-center justify-center rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 px-6 text-sm font-semibold text-white shadow-lg shadow-teal-500/30 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-teal-500/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                className="mt-5 inline-flex h-12 min-w-[11rem] items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-on-primary shadow-soft transition-[transform,box-shadow] hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 Go to Portfolio
               </Link>
@@ -373,18 +379,18 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
           {showBudgetSetup ? (
             <FloatingCard className="lg:col-span-2">
               <div className="flex items-start gap-3">
-                <GradientIcon icon={LayoutGrid} gradient="teal" />
+                <GradientIcon icon={LayoutGrid} gradient="green" />
                 <div>
-                  <p className="font-semibold text-zinc-900 dark:text-zinc-50">
+                  <p className="font-semibold text-ink">
                     Set up your budget
                   </p>
-                  <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  <p className="mt-1 text-sm text-ink-secondary">
                     Add bucket targets to see monthly progress and savings rate
                     here.
                   </p>
                   <Link
                     href="/budget"
-                    className="mt-3 inline-flex text-sm font-semibold text-teal-600 transition-colors hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+                    className="mt-3 inline-flex text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
                   >
                     Open Budget →
                   </Link>
@@ -396,9 +402,9 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
           {hasBudgetPulse ? (
             <Link
               href="/budget"
-              className="block rounded-3xl bg-white p-5 shadow-[0_12px_40px_-12px_rgba(24,24,27,0.18)] ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_20px_48px_-12px_rgba(20,184,166,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:bg-zinc-900 dark:ring-white/[0.06] dark:hover:shadow-[0_20px_48px_-12px_rgba(20,184,166,0.15)] lg:order-1 lg:self-stretch"
+              className="block rounded-3xl bg-surface-raised p-5 shadow-card ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:order-1 lg:self-stretch"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-600 dark:text-teal-400">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
                 {budget?.month
                   ? formatBudgetMonthLabel(budget.month)
                   : "This month"}
@@ -414,24 +420,22 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
               >
                 {leftToSpend != null && budget.totalTarget > 0 ? (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
                       Left to spend
                     </p>
-                    <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-zinc-900 dark:text-white">
+                    <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">
                       {formatCurrency(Math.max(0, leftToSpend))}
                     </p>
                   </div>
                 ) : null}
                 {savingsRate != null ? (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
                       Savings rate
                     </p>
                     <p
                       className={`mt-1 text-3xl font-bold tabular-nums tracking-tight ${
-                        savingsRate >= 0
-                          ? "text-emerald-500"
-                          : "text-rose-500"
+                        savingsRate >= 0 ? "text-gain" : "text-loss"
                       }`}
                     >
                       {savingsRate.toFixed(0)}%
@@ -444,7 +448,7 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
 
           {wins.length > 0 ? (
             <div className="lg:order-3 lg:col-span-2">
-              <p className="mb-3 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">
+              <p className="mb-3 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-ink-muted">
                 Wins along the way
               </p>
               <ul className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
@@ -461,15 +465,16 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
           ) : null}
 
           {showFourPercentCard ? (
-            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-600 p-5 text-white shadow-[0_16px_48px_-12px_rgba(16,185,129,0.45)] lg:order-2 lg:self-stretch">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100/80">
+            <div className="relative overflow-hidden rounded-3xl bg-primary p-5 text-on-primary shadow-card lg:order-2 lg:self-stretch">
+              <MountainMilestone className="pointer-events-none absolute -bottom-2 -right-2 h-24 w-28 text-on-primary opacity-25" />
+              <p className="relative text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary/80">
                 The 4% rule
               </p>
-              <p className="mt-3 text-4xl font-bold tabular-nums tracking-tight">
+              <p className="relative mt-3 text-4xl font-bold tabular-nums tracking-tight">
                 {formatCurrency(fourPercentMonthly)}
               </p>
-              <p className="text-xs font-medium text-emerald-100/90">per month</p>
-              <p className="mt-3 text-sm leading-relaxed text-emerald-50/90">
+              <p className="relative text-xs font-medium text-on-primary/90">per month</p>
+              <p className="relative mt-3 max-w-[20rem] text-sm leading-relaxed text-on-primary/90">
                 Your portfolio could sustainably cover this much spending. Real
                 progress, even if full independence is still ahead.
               </p>
@@ -487,7 +492,7 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
                   title={`Review ${reviewCount} transaction${reviewCount === 1 ? "" : "s"}`}
                   description="Clear the queue so your budget stays accurate"
                   icon={ClipboardList}
-                  gradient="amber"
+                  gradient="gold"
                 />
               ) : null}
               <ActionCard
@@ -495,14 +500,14 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
                 title="Budget"
                 description="Buckets, spending, and what's left"
                 icon={LayoutGrid}
-                gradient="teal"
+                gradient="green"
               />
               <ActionCard
                 href="/portfolio"
                 title="Portfolio"
                 description="Accounts and how your assets are growing"
                 icon={PieChart}
-                gradient="violet"
+                gradient="purple"
               />
             </nav>
           ) : null}

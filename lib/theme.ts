@@ -2,7 +2,7 @@ export type Theme = "dark" | "light";
 
 export const THEME_STORAGE_KEY = "fire-theme";
 
-export const DEFAULT_THEME: Theme = "dark";
+export const DEFAULT_THEME: Theme = "light";
 
 export function getStoredTheme(): Theme {
   if (typeof window === "undefined") {
@@ -10,7 +10,7 @@ export function getStoredTheme(): Theme {
   }
 
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return stored === "light" ? "light" : "dark";
+  return stored === "dark" ? "dark" : "light";
 }
 
 export function applyTheme(theme: Theme) {

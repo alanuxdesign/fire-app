@@ -30,7 +30,7 @@ export function NetWorthHeader({
         <button
           type="button"
           onClick={onBackToToday}
-          className={`absolute left-3 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-zinc-200 shadow-lg ring-1 ring-white/10 transition-colors hover:bg-white/15 ${
+          className={`absolute left-3 rounded-full bg-surface/80 px-3 py-1.5 text-xs font-semibold text-ink-secondary shadow-soft ring-1 ring-hairline transition-colors hover:bg-surface ${
             hero ? "top-8" : "top-6"
           }`}
         >
@@ -40,8 +40,8 @@ export function NetWorthHeader({
       <p
         className={
           hero
-            ? "text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-300/80"
-            : "text-center text-sm font-medium tracking-wide text-zinc-400"
+            ? "text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-primary"
+            : "text-center text-sm font-medium tracking-wide text-ink-muted"
         }
       >
         {isEstimated
@@ -53,7 +53,7 @@ export function NetWorthHeader({
             : "Net Worth"}
       </p>
       <p
-        className={`text-center font-bold tracking-tight tabular-nums text-white transition-all duration-200 ${
+        className={`text-center font-bold tracking-tight tabular-nums text-ink transition-all duration-200 ${
           hero
             ? "mt-3 text-[clamp(2.75rem,14vw,3.5rem)] leading-none drop-shadow-sm"
             : "mt-2 text-4xl font-semibold"
@@ -66,13 +66,13 @@ export function NetWorthHeader({
           hero ? "mt-2 text-xs" : "mt-1 text-sm"
         }`}
       >
-        <span className={isPositive ? "text-emerald-400" : "text-rose-400"}>
+        <span className={isPositive ? "text-gain" : "text-loss"}>
           {formatSignedCurrency(changeAmount)}
           {Number.isFinite(changePercent) ? (
             <> ({formatPercent(changePercent)})</>
           ) : null}
         </span>
-        <span className={hero ? "text-zinc-600" : "text-zinc-500"}>
+        <span className="text-ink-muted">
           {" "}
           · {changeHorizonLabel}
         </span>

@@ -27,10 +27,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-dvh flex-col bg-stone-100 font-sans dark:bg-zinc-950">
+      <head>
+        <script
+          // Apply the stored theme before paint to avoid a light/dark flash.
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('fire-theme')==='dark'?'dark':'light';var r=document.documentElement;r.classList.add(t);r.style.colorScheme=t;}catch(e){document.documentElement.classList.add('light');}})();`,
+          }}
+        />
+      </head>
+      <body className="flex min-h-dvh flex-col bg-canvas font-sans text-ink">
         <Providers>
           <main className="mx-auto flex w-full max-w-lg flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:max-w-none lg:pb-0 lg:pl-60">
             {children}

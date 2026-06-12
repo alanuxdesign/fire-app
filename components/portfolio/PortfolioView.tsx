@@ -2,6 +2,7 @@
 
 import { AddAccountButton } from "@/components/portfolio/AddAccountButton";
 import { DemoBanner } from "@/components/portfolio/DemoBanner";
+import { SunriseHero } from "@/components/illustrations/SunriseHero";
 import { PortfolioHoldings } from "@/components/portfolio/PortfolioHoldings";
 import {
   NetWorthChart,
@@ -137,13 +138,14 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
     <div className="flex min-h-0 flex-1 flex-col">
       {isDemo ? <DemoBanner /> : null}
 
-      <section className="relative shrink-0 overflow-hidden bg-gradient-to-b from-zinc-900 via-[#0c1f1f] to-zinc-950 pb-14 text-white">
+      <section className="relative shrink-0 overflow-hidden bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) pb-14 text-ink">
+        <SunriseHero className="pointer-events-none absolute inset-0 h-full w-full opacity-60" />
         <div
-          className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-teal-500/20 blur-3xl"
+          className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-primary/15 blur-3xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -left-8 top-24 h-36 w-36 rounded-full bg-violet-500/10 blur-3xl"
+          className="pointer-events-none absolute -left-8 top-24 h-36 w-36 rounded-full bg-accent-purple/10 blur-3xl"
           aria-hidden
         />
 
@@ -159,7 +161,7 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
             size="hero"
           />
 
-          <div className="relative mx-3 overflow-hidden rounded-2xl bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur-sm lg:mx-0">
+          <div className="relative mx-3 overflow-hidden rounded-2xl bg-surface/70 shadow-card ring-1 ring-hairline backdrop-blur-sm lg:mx-0">
             <NetWorthChart
               currentNetWorth={data?.netWorth ?? 0}
               onDisplayChange={handleNetWorthDisplayChange}
@@ -172,14 +174,14 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
         </div>
       </section>
 
-      <div className="relative z-10 -mt-10 flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
+      <div className="relative z-10 -mt-10 flex min-h-0 flex-1 flex-col overflow-y-auto bg-canvas">
         {!isDemo ? (
           <div className="flex items-center justify-end px-4 pt-2 lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
             <button
               type="button"
               onClick={() => refresh()}
               disabled={refreshing}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-zinc-600 shadow-md ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 dark:bg-zinc-800/90 dark:text-zinc-300 dark:ring-white/[0.06]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-surface/90 px-3 py-1.5 text-xs font-semibold text-ink-secondary shadow-soft ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card disabled:opacity-50"
               aria-label="Refresh accounts"
             >
               <RefreshCw
@@ -194,7 +196,7 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
         <div className="space-y-5 px-4 pb-8 pt-2 lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
           {error ? (
             <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-3`}>
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <p className="text-sm text-loss">{error}</p>
             </div>
           ) : null}
 
@@ -216,7 +218,7 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
           ) : null}
 
           {lastUpdatedLabel ? (
-            <p className="pt-1 text-center text-[11px] font-medium text-zinc-400">
+            <p className="pt-1 text-center text-[11px] font-medium text-ink-muted">
               Last updated {lastUpdatedLabel}
             </p>
           ) : null}

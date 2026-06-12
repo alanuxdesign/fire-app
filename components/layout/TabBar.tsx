@@ -9,7 +9,7 @@ type TabBarProps = {
 export function TabBar({ pathname, reviewCount }: TabBarProps) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.06)] dark:border-zinc-800 dark:bg-zinc-900 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-hairline bg-surface shadow-soft lg:hidden"
       aria-label="Main navigation"
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
@@ -28,8 +28,8 @@ export function TabBar({ pathname, reviewCount }: TabBarProps) {
               href={href}
               className={`relative flex flex-col items-center gap-0.5 px-1 py-2 transition-colors ${
                 active
-                  ? "font-semibold text-zinc-900 dark:text-zinc-100"
-                  : "font-medium text-zinc-400 dark:text-zinc-500"
+                  ? "font-semibold text-primary"
+                  : "font-medium text-ink-muted"
               }`}
               aria-current={active ? "page" : undefined}
             >
@@ -40,7 +40,7 @@ export function TabBar({ pathname, reviewCount }: TabBarProps) {
                   aria-hidden
                 />
                 {badge ? (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
+                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-warn px-1 text-[9px] font-bold text-on-primary">
                     {badge}
                   </span>
                 ) : null}

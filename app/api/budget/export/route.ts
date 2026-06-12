@@ -9,11 +9,20 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 function csvEscape(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Neutralize spreadsheet formula injection: Excel/Sheets execute cells
+  // starting with these characters, and names/notes are attacker-influenced.
+  let safe = value;
+  if (/^[=+\-@\t\r]/.test(safe)) {
+    safe = `'${safe}`;
   }
-  return value;
+  if (safe.includes(",") || safe.includes('"') || safe.includes("\n")) {
+    return `"${safe.replace(/"/g, '""')}"`;
+  }
+  return safe;
 }
+
+const DATE_PARAM = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_PARAM = /^\d{4}-\d{2}$/;
 
 export async function GET(request: Request) {
   const authResult = await requireUserId();
@@ -25,6 +34,13 @@ export async function GET(request: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const month = searchParams.get("month");
+
+  if (month && !MONTH_PARAM.test(month)) {
+    return NextResponse.json({ error: "Invalid month" }, { status: 400 });
+  }
+  if ((from && !DATE_PARAM.test(from)) || (to && !DATE_PARAM.test(to))) {
+    return NextResponse.json({ error: "Invalid date range" }, { status: 400 });
+  }
 
   let start: string;
   let end: string;

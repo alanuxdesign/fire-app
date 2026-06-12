@@ -49,8 +49,9 @@ export function NetWorthChartPlot({
     >
       <defs>
         <linearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.45} />
-          <stop offset="100%" stopColor="#2dd4bf" stopOpacity={0} />
+          <stop offset="0%" stopColor="#34d399" stopOpacity={0.55} />
+          <stop offset="55%" stopColor="#2dd4bf" stopOpacity={0.2} />
+          <stop offset="100%" stopColor="#14b8a6" stopOpacity={0} />
         </linearGradient>
       </defs>
 
@@ -74,8 +75,8 @@ export function NetWorthChartPlot({
       <Area
         type="monotone"
         dataKey="chartValue"
-        stroke="#34d399"
-        strokeWidth={2}
+        stroke="#6ee7b7"
+        strokeWidth={2.5}
         fill="url(#netWorthFill)"
         baseValue="dataMin"
         dot={chartData.length === 1 ? { r: 4, fill: "#34d399" } : false}

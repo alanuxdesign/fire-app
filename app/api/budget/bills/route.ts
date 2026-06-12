@@ -1,4 +1,5 @@
 import { requireUserId, requireWritableUser } from "@/lib/api-auth";
+import { categoriesBelongToUser } from "@/lib/budget-validation";
 import {
   createRecurringBill,
   getBillsDueInMonth,
@@ -44,6 +45,14 @@ export async function POST(request: Request) {
       { error: "name, expectedAmount, and nextDueDate are required" },
       { status: 400 },
     );
+  }
+
+  if (!Number.isFinite(Number(body.expectedAmount))) {
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.categoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
   const bill = await createRecurringBill(authResult.userId, {

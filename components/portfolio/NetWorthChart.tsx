@@ -512,8 +512,8 @@ export function NetWorthChart({
   }, [clearHoldTimer]);
 
   return (
-    <div className="px-2 pb-4">
-      <div ref={viewportRef} className="h-40 w-full">
+    <div className="px-3 pb-4 pt-2">
+      <div ref={viewportRef} className="h-44 w-full lg:h-72">
         {loading ||
         (showPopulatingMessage &&
           backfillPending &&
@@ -586,10 +586,10 @@ export function NetWorthChart({
               key={option}
               type="button"
               onClick={() => setRange(option)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-[transform,box-shadow,background-color] duration-200 ${
                 isActive
-                  ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40"
-                  : "text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-300"
+                  ? "bg-gradient-to-r from-teal-400/30 to-emerald-500/30 text-emerald-100 shadow-[0_0_12px_rgba(52,211,153,0.25)] ring-1 ring-emerald-400/50"
+                  : "text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
               }`}
             >
               {option}

@@ -159,6 +159,28 @@ export const budgetCategories = pgTable("budget_categories", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+/**
+ * Per-user overrides for shared system categories. System buckets are global
+ * rows (userId null), so per-user flags like rollover must live here.
+ */
+export const budgetCategoryPrefs = pgTable(
+  "budget_category_prefs",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => budgetCategories.id, { onDelete: "cascade" }),
+    rolloverEnabled: boolean("rollover_enabled").notNull().default(false),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.categoryId] })],
+);
+
 export const budgetTags = pgTable("budget_tags", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")

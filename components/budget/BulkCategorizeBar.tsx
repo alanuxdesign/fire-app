@@ -26,7 +26,7 @@ export function BulkCategorizeBar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-lg px-4">
+    <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-lg px-4 lg:bottom-6 lg:left-60">
       <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
           {selectedCount} selected

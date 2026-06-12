@@ -1,4 +1,5 @@
 import { requireWritableUser } from "@/lib/api-auth";
+import { categoriesBelongToUser } from "@/lib/budget-validation";
 import { parseCurrencyInput } from "@/lib/currency";
 import { budgetTargets } from "@/drizzle/schema";
 import { db } from "@/lib/db";
@@ -26,6 +27,10 @@ export async function PUT(request: Request) {
   const amount = parseCurrencyInput(body.amount ?? null);
   if (amount === null || amount < 0) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.categoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
   await db

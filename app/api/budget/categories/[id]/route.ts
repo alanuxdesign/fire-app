@@ -1,4 +1,5 @@
 import { requireWritableUser } from "@/lib/api-auth";
+import { setRolloverOverride } from "@/lib/budget-categories";
 import { budgetCategories, budgetTargets, transactions } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, eq } from "drizzle-orm";
@@ -28,17 +29,33 @@ export async function PATCH(request: Request, context: RouteContext) {
     where: eq(budgetCategories.id, id),
   });
 
-  if (!category) {
+  // Visible categories are the user's own plus global system rows; anything
+  // else must stay untouchable even for rollover-only updates.
+  const canAccess =
+    category &&
+    (category.userId === authResult.userId ||
+      (category.isSystem && category.userId === null));
+
+  if (!category || !canAccess) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
   }
 
   if (onlyRollover) {
-    const [updated] = await db
-      .update(budgetCategories)
-      .set({ rolloverEnabled: body.rolloverEnabled })
-      .where(eq(budgetCategories.id, id))
-      .returning();
-    return NextResponse.json({ category: updated });
+    if (category.userId === authResult.userId) {
+      const [updated] = await db
+        .update(budgetCategories)
+        .set({ rolloverEnabled: body.rolloverEnabled })
+        .where(eq(budgetCategories.id, id))
+        .returning();
+      return NextResponse.json({ category: updated });
+    }
+
+    // Shared system bucket: store a per-user pref instead of mutating the
+    // global row, which every user reads.
+    await setRolloverOverride(authResult.userId, id, body.rolloverEnabled!);
+    return NextResponse.json({
+      category: { ...category, rolloverEnabled: body.rolloverEnabled },
+    });
   }
 
   if (

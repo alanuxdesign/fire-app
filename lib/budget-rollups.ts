@@ -2,6 +2,7 @@ import { parseBalance } from "@/lib/account-groups";
 import {
   buildCategoryIdRemap,
   categoryIdsForCanonical,
+  getRolloverOverrides,
   isIncomeCategory,
   listBudgetCategoriesForUser,
   resolveCanonicalCategoryId,
@@ -445,7 +446,16 @@ export async function getBucketMonthlyTrends(
   const category = await db.query.budgetCategories.findFirst({
     where: eq(budgetCategories.id, categoryId),
   });
-  if (!category) return [];
+  // Only categories visible to this user: their own or global system rows.
+  if (!category || (category.userId !== null && category.userId !== userId)) {
+    return [];
+  }
+
+  let rolloverEnabled = category.rolloverEnabled;
+  if (category.userId === null) {
+    const overrides = await getRolloverOverrides(userId);
+    rolloverEnabled = overrides.get(category.id) ?? rolloverEnabled;
+  }
 
   const categories = await listBudgetCategoriesForUser(userId);
   const categoryIdRemap = await buildCategoryIdRemap(userId, categories);
@@ -514,14 +524,14 @@ export async function getBucketMonthlyTrends(
     const prevBase = targetByMonth.get(prevMonth) ?? 0;
 
     let prevSpent = 0;
-    if (category.rolloverEnabled) {
+    if (rolloverEnabled) {
       const prevRollup = await aggregateMonth(userId, prevMonth, includePending);
       prevSpent = prevRollup.spentByCategory.get(categoryId) ?? 0;
     }
 
     const target = effectiveTargetForCategory(
       baseTarget,
-      category.rolloverEnabled,
+      rolloverEnabled,
       prevBase,
       prevSpent,
     );

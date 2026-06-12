@@ -1,6 +1,6 @@
 import { bucketSlugForPlaid } from "@/lib/plaid-pfc-map";
 import { SYSTEM_CATEGORY_SEEDS } from "@/lib/budget-category-seeds";
-import { budgetCategories } from "@/drizzle/schema";
+import { budgetCategories, budgetCategoryPrefs } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, asc, eq, isNull, or } from "drizzle-orm";
 
@@ -121,6 +121,53 @@ export async function resolveCategoryIdForPlaid(
   return category?.id ?? (await getSystemCategoryBySlug("other"))?.id ?? null;
 }
 
+/**
+ * Per-user rollover overrides. System buckets are global rows shared by all
+ * users, so their per-user flags live in budget_category_prefs.
+ */
+export async function getRolloverOverrides(
+  userId: string,
+): Promise<Map<string, boolean>> {
+  try {
+    const rows = await db.query.budgetCategoryPrefs.findMany({
+      where: eq(budgetCategoryPrefs.userId, userId),
+    });
+    return new Map(rows.map((r) => [r.categoryId, r.rolloverEnabled]));
+  } catch (error) {
+    // Tolerate a deploy that precedes the 0007 migration: budget pages must
+    // keep loading; toggles fail loudly via setRolloverOverride instead.
+    console.error("Failed to load budget category prefs:", error);
+    return new Map();
+  }
+}
+
+export async function setRolloverOverride(
+  userId: string,
+  categoryId: string,
+  rolloverEnabled: boolean,
+): Promise<void> {
+  await db
+    .insert(budgetCategoryPrefs)
+    .values({ userId, categoryId, rolloverEnabled })
+    .onConflictDoUpdate({
+      target: [budgetCategoryPrefs.userId, budgetCategoryPrefs.categoryId],
+      set: { rolloverEnabled, updatedAt: new Date() },
+    });
+}
+
+/** Shared system rows get the user's override; own rows keep their column. */
+function applyRolloverOverrides(
+  rows: BudgetCategoryRow[],
+  overrides: Map<string, boolean>,
+): BudgetCategoryRow[] {
+  if (overrides.size === 0) return rows;
+  return rows.map((c) =>
+    c.userId === null && overrides.has(c.id)
+      ? { ...c, rolloverEnabled: overrides.get(c.id)! }
+      : c,
+  );
+}
+
 export async function listBudgetCategoriesForUser(
   userId: string,
 ): Promise<BudgetCategoryRow[]> {
@@ -137,7 +184,8 @@ export async function listBudgetCategoriesForUser(
     orderBy: [asc(budgetCategories.sortOrder), asc(budgetCategories.label)],
   });
 
-  return dedupeBudgetCategories(rows);
+  const overrides = await getRolloverOverrides(userId);
+  return applyRolloverOverrides(dedupeBudgetCategories(rows), overrides);
 }
 
 /** Spend buckets for transaction pickers (excludes income + transfer). */

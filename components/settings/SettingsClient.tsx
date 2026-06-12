@@ -84,7 +84,7 @@ export function SettingsClient() {
   };
 
   return (
-    <div className="flex flex-1 flex-col px-4 py-8">
+    <div className="flex flex-1 flex-col px-4 py-8 lg:mx-auto lg:w-full lg:max-w-3xl">
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-zinc-100">
         Settings
       </h1>

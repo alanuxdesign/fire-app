@@ -11,6 +11,8 @@ import { BudgetIcon } from "@/components/budget/BudgetIcon";
 import { BudgetSyncProgress } from "@/components/budget/BudgetSyncProgress";
 import { CreateBucketSheet } from "@/components/budget/CreateBucketSheet";
 import { TransactionListRow } from "@/components/budget/TransactionListRow";
+import { Card } from "@/components/ui/Card";
+import { SECONDARY_BUTTON } from "@/components/ui/cardStyles";
 import {
   TransactionDetailSheet,
   type BudgetTag,
@@ -54,6 +56,72 @@ import { useCallback, useEffect, useState } from "react";
 type BudgetViewProps = {
   isDemo?: boolean;
 };
+
+type SummaryCardsProps = {
+  summary: BudgetSummary;
+  isDemo: boolean;
+  includePendingInBudget: boolean;
+  onTogglePending: () => void;
+};
+
+/** "Left to spend" + "Savings rate" cards; rendered inline on mobile and in the desktop sidebar. */
+function SummaryCards({
+  summary,
+  isDemo,
+  includePendingInBudget,
+  onTogglePending,
+}: SummaryCardsProps) {
+  return (
+    <>
+      <Card className="mt-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              Left to spend
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+              {formatCurrency(summary.leftToSpend)}
+            </p>
+          </div>
+          {!isDemo ? (
+            <label className="flex shrink-0 items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+              <input
+                type="checkbox"
+                checked={includePendingInBudget}
+                onChange={onTogglePending}
+              />
+              Include pending
+            </label>
+          ) : null}
+        </div>
+        <p className="mt-1 text-sm text-zinc-500">
+          Spent {formatCurrency(summary.totalSpent)}
+          {(summary.effectiveBudgetTotal ?? summary.totalTarget) > 0
+            ? ` of ${formatCurrency(summary.effectiveBudgetTotal ?? summary.totalTarget)} budgeted`
+            : ""}
+          {(summary.billsCommitted ?? 0) > 0
+            ? ` · ${formatCurrency(summary.billsCommitted ?? 0)} bills due`
+            : ""}
+        </p>
+      </Card>
+
+      {summary.savingsRate != null && summary.income > 0 ? (
+        <Card className="mt-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Savings rate
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+            {Math.round(summary.savingsRate * 100)}%
+          </p>
+          <p className="mt-1 text-sm text-zinc-500">
+            {formatCurrency(summary.income)} income ·{" "}
+            {formatCurrency(summary.totalSpent)} spent
+          </p>
+        </Card>
+      ) : null}
+    </>
+  );
+}
 
 function formatMonthLabel(month: string): string {
   const [y, m] = month.split("-").map(Number);
@@ -705,7 +773,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col px-4 py-4">
+    <div className="flex flex-1 flex-col px-4 py-4 lg:mx-auto lg:w-full lg:max-w-6xl lg:px-6">
       <div className="flex items-center justify-between gap-2">
         {screen !== "home" ? (
           <button
@@ -804,79 +872,45 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
         </div>
       ) : null}
 
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-6">
+      <div className="min-w-0">
       {screen === "home" && summary ? (
         <>
-          <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Left to spend
-                </p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-                  {formatCurrency(summary.leftToSpend)}
-                </p>
-              </div>
-              {!isDemo ? (
-                <label className="flex shrink-0 items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-                  <input
-                    type="checkbox"
-                    checked={includePendingInBudget}
-                    onChange={() => void toggleIncludePending().catch((e) => setError(String(e)))}
-                  />
-                  Include pending
-                </label>
-              ) : null}
+          <div className="lg:hidden">
+            <SummaryCards
+              summary={summary}
+              isDemo={isDemo}
+              includePendingInBudget={includePendingInBudget}
+              onTogglePending={() =>
+                void toggleIncludePending().catch((e) => setError(String(e)))
+              }
+            />
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void openInsights()}
+                className={`flex-1 ${SECONDARY_BUTTON}`}
+              >
+                Cash flow
+              </button>
+              <button
+                type="button"
+                onClick={() => void openDuplicates()}
+                className={`flex-1 ${SECONDARY_BUTTON}`}
+              >
+                Duplicates
+              </button>
             </div>
-            <p className="mt-1 text-sm text-zinc-500">
-              Spent {formatCurrency(summary.totalSpent)}
-              {(summary.effectiveBudgetTotal ?? summary.totalTarget) > 0
-                ? ` of ${formatCurrency(summary.effectiveBudgetTotal ?? summary.totalTarget)} budgeted`
-                : ""}
-              {(summary.billsCommitted ?? 0) > 0
-                ? ` · ${formatCurrency(summary.billsCommitted ?? 0)} bills due`
-                : ""}
-            </p>
+
+            <BillsSection
+              month={formatMonthLabel(month)}
+              bills={billsDue}
+              categories={categories}
+              isDemo={isDemo}
+              onChanged={refresh}
+            />
           </div>
-
-          {summary.savingsRate != null && summary.income > 0 ? (
-            <div className="mt-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Savings rate
-              </p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                {Math.round(summary.savingsRate * 100)}%
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                {formatCurrency(summary.income)} income ·{" "}
-                {formatCurrency(summary.totalSpent)} spent
-              </p>
-            </div>
-          ) : null}
-
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={() => void openInsights()}
-              className="flex-1 rounded-xl border border-zinc-200 bg-white py-2.5 text-sm font-medium text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-            >
-              Cash flow
-            </button>
-            <button
-              type="button"
-              onClick={() => void openDuplicates()}
-              className="flex-1 rounded-xl border border-zinc-200 bg-white py-2.5 text-sm font-medium text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-            >
-              Duplicates
-            </button>
-          </div>
-
-          <BillsSection
-            month={formatMonthLabel(month)}
-            bills={billsDue}
-            categories={categories}
-            isDemo={isDemo}
-            onChanged={refresh}
-          />
 
           {(summary.unreviewedCount ?? 0) > 0 ? (
             <button
@@ -1217,6 +1251,48 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           </div>
         </div>
       ) : null}
+      </div>
+
+      <aside className="hidden lg:sticky lg:top-6 lg:block">
+        {summary ? (
+          <>
+            <SummaryCards
+              summary={summary}
+              isDemo={isDemo}
+              includePendingInBudget={includePendingInBudget}
+              onTogglePending={() =>
+                void toggleIncludePending().catch((e) => setError(String(e)))
+              }
+            />
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void openInsights()}
+                className={`flex-1 ${SECONDARY_BUTTON}`}
+              >
+                Cash flow
+              </button>
+              <button
+                type="button"
+                onClick={() => void openDuplicates()}
+                className={`flex-1 ${SECONDARY_BUTTON}`}
+              >
+                Duplicates
+              </button>
+            </div>
+
+            <BillsSection
+              month={formatMonthLabel(month)}
+              bills={billsDue}
+              categories={categories}
+              isDemo={isDemo}
+              onChanged={refresh}
+            />
+          </>
+        ) : null}
+      </aside>
+      </div>
 
       {selectedTxn ? (
         <TransactionDetailSheet

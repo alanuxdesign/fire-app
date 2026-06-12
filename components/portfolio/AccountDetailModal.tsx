@@ -362,7 +362,7 @@ export function AccountDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-black/50"
+      className="fixed inset-0 z-[60] flex flex-col bg-black/50 lg:items-center lg:justify-center"
       role="presentation"
       onClick={onClose}
     >
@@ -370,7 +370,7 @@ export function AccountDetailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-detail-title"
-        className="flex h-[100dvh] w-full flex-col bg-white dark:bg-zinc-900"
+        className="flex h-[100dvh] w-full flex-col bg-white dark:bg-zinc-900 lg:h-auto lg:max-h-[85dvh] lg:max-w-2xl lg:rounded-2xl lg:shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-start gap-3 border-b border-stone-200 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] dark:border-zinc-800">

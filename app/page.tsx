@@ -1,7 +1,9 @@
-export default function HomePage() {
-  return (
-    <div className="flex flex-1 items-center justify-center">
-      <p className="text-lg text-zinc-600">Home — Coming Soon</p>
-    </div>
-  );
+import { HomeView } from "@/components/home/HomeView";
+import { auth, isDemoUser } from "@/lib/auth";
+
+export default async function HomePage() {
+  const session = await auth();
+  const isDemo = isDemoUser(session);
+
+  return <HomeView isDemo={isDemo} />;
 }

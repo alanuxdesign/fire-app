@@ -1,4 +1,8 @@
 import { requireWritableUser } from "@/lib/api-auth";
+import {
+  categoriesBelongToUser,
+  tagsBelongToUser,
+} from "@/lib/budget-validation";
 import { transactionTags, transactions } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, eq, inArray } from "drizzle-orm";
@@ -20,6 +24,14 @@ export async function POST(request: Request) {
 
   if (!body.ids?.length) {
     return NextResponse.json({ error: "ids is required" }, { status: 400 });
+  }
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.userCategoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+  }
+
+  if (body.tagIds && !(await tagsBelongToUser(authResult.userId, body.tagIds))) {
+    return NextResponse.json({ error: "Invalid tag" }, { status: 400 });
   }
 
   const rows = await db.query.transactions.findMany({

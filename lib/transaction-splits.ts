@@ -17,8 +17,18 @@ export type TransactionSplitRow = {
 };
 
 export async function getSplitsForTransaction(
+  userId: string,
   transactionId: string,
 ): Promise<TransactionSplitRow[]> {
+  const txn = await db.query.transactions.findFirst({
+    where: and(
+      eq(transactions.id, transactionId),
+      eq(transactions.userId, userId),
+    ),
+    columns: { id: true },
+  });
+  if (!txn) return [];
+
   const rows = await db.query.transactionSplits.findMany({
     where: eq(transactionSplits.transactionId, transactionId),
     orderBy: [asc(transactionSplits.sortOrder)],

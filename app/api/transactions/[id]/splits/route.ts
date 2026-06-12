@@ -15,7 +15,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const splits = await getSplitsForTransaction(id);
+  const splits = await getSplitsForTransaction(authResult.userId, id);
   return NextResponse.json({ splits });
 }
 

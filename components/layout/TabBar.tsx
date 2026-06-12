@@ -1,73 +1,15 @@
-"use client";
-
-import {
-  CalendarDays,
-  Home,
-  LayoutGrid,
-  PieChart,
-  Settings,
-  type LucideIcon,
-} from "lucide-react";
+import { isActive, tabs } from "@/components/layout/navConfig";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
-type Tab = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  center?: boolean;
-  badgeKey?: "budgetReview";
+type TabBarProps = {
+  pathname: string;
+  reviewCount: number;
 };
 
-const tabs: Tab[] = [
-  { href: "/budget", label: "Budget", icon: LayoutGrid, badgeKey: "budgetReview" },
-  { href: "/planner", label: "Planner", icon: CalendarDays },
-  { href: "/", label: "Home", icon: Home, center: true },
-  { href: "/portfolio", label: "Portfolio", icon: PieChart },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
-
-function isActive(pathname: string, href: string) {
-  if (href === "/") {
-    return pathname === "/";
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-export function TabBar() {
-  const pathname = usePathname();
-  const [reviewCount, setReviewCount] = useState(0);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch("/api/budget/review-count");
-        if (res.ok) {
-          const body = (await res.json()) as { count: number };
-          setReviewCount(body.count);
-        }
-      } catch {
-        /* ignore */
-      }
-    };
-    void load();
-
-    const onCount = (e: Event) => {
-      const detail = (e as CustomEvent<number>).detail;
-      if (typeof detail === "number") setReviewCount(detail);
-    };
-    window.addEventListener("budget-review-count", onCount);
-    return () => window.removeEventListener("budget-review-count", onCount);
-  }, [pathname]);
-
-  if (pathname === "/login" || pathname.startsWith("/api")) {
-    return null;
-  }
-
+export function TabBar({ pathname, reviewCount }: TabBarProps) {
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.06)] dark:border-zinc-800 dark:bg-zinc-900"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.06)] dark:border-zinc-800 dark:bg-zinc-900 lg:hidden"
       aria-label="Main navigation"
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">

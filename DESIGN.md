@@ -242,13 +242,23 @@ Product components should feel tactile and familiar: the same button height, the
 
 ### Navigation
 
-- **Tab bar:** Fixed bottom, 5 equal columns, max-w-lg centered. Active tab: semibold zinc-100/900; inactive: zinc-400/500. Center Home icon slightly larger (28px vs 20px). Review badge: amber-500 dot with white 9px bold count.
+- **Tab bar (below lg):** Fixed bottom, 5 equal columns, max-w-lg centered. Active tab: semibold zinc-100/900; inactive: zinc-400/500. Center Home icon slightly larger (28px vs 20px). Review badge: amber-500 dot with white 9px bold count.
+- **Left rail (lg+):** Fixed 15rem (`w-60`) rail, white/zinc-900 with hairline right border. Icon + label rows (`rounded-xl`), active row gets stone-100/zinc-800 fill; Settings pinned to the bottom. Badge rendered inline after the label. Both surfaces share `components/layout/navConfig.ts`.
 - **In-page controls:** Uppercase tracked labels (12px) beside pill toggles or compact selects; border-b separator under control rows.
 
 ### Sheets / Modals
 
 - **Bottom sheet pattern:** `rounded-t-2xl` on mobile, `rounded-2xl` centered on sm+. Scrim + shadow-xl. Header with 18px semibold title and optional 14px slate subtitle.
-- **Full-screen detail:** Account detail uses full viewport height with safe-area padding; close control is rounded-full icon button.
+- **Full-screen detail:** Account detail uses full viewport height with safe-area padding; close control is rounded-full icon button. At lg+ it becomes a centered `rounded-2xl` dialog (max-w-2xl, max-h 85dvh) over a black/50 scrim.
+- **Full-screen sheets:** Budget sheets render through `components/ui/SheetShell.tsx` — full-screen takeover below lg, centered dialog over a scrim at lg+.
+
+### Shared primitives
+
+Reusable building blocks live in `components/ui/`; prefer these over re-typing surface classes:
+
+- `Card` — the standard flat bordered card (rounded-2xl, white/zinc-900, zinc border).
+- `cardStyles.ts` — `FLOATING_CARD` (elevated rounded-3xl surface used on Portfolio/Home) and `SECONDARY_BUTTON` (bordered white action button).
+- `SheetShell` — sheet/dialog container described above.
 
 ## Do's and Don'ts
 

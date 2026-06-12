@@ -1,4 +1,5 @@
 import { requireWritableUser } from "@/lib/api-auth";
+import { categoriesBelongToUser } from "@/lib/budget-validation";
 import {
   deleteRecurringBill,
   updateRecurringBill,
@@ -23,6 +24,17 @@ export async function PATCH(request: Request, context: RouteContext) {
     categoryId?: string | null;
     isActive?: boolean;
   };
+
+  if (
+    body.expectedAmount !== undefined &&
+    !Number.isFinite(Number(body.expectedAmount))
+  ) {
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.categoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+  }
 
   const bill = await updateRecurringBill(authResult.userId, id, {
     ...body,

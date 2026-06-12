@@ -1,5 +1,5 @@
 import { Providers } from "@/app/providers";
-import { TabBar } from "@/components/layout/TabBar";
+import { AppNav } from "@/components/layout/AppNav";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -32,10 +32,10 @@ export default function RootLayout({
     >
       <body className="flex min-h-dvh flex-col bg-stone-100 font-sans dark:bg-zinc-950">
         <Providers>
-          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:max-w-none lg:pb-0 lg:pl-60">
             {children}
           </main>
-          <TabBar />
+          <AppNav />
         </Providers>
       </body>
     </html>

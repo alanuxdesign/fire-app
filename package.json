@@ -15,6 +15,7 @@
     "db:migrate-subscriptions": "npx tsx scripts/apply-subscription-dismissed-column.ts",
     "db:migrate-subscription-unique": "npx tsx scripts/apply-subscription-unique-index.ts",
     "db:migrate-budget-v2": "npx tsx scripts/apply-budget-v2-migration.ts",
+    "db:migrate-category-prefs": "npx tsx scripts/apply-budget-category-prefs.ts",
     "recategorize": "npx tsx scripts/recategorize-transactions.ts"
   },
   "dependencies": {

@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { ChangeLabel } from "@/components/portfolio/ChangeLabel";
+import { PORTFOLIO_FLOATING_CARD } from "@/components/portfolio/portfolioStyles";
 import type { AccountGroupResponse, AccountListItem } from "@/lib/account-groups";
 import { formatAccountBalance, formatGroupTotal, isLiabilityGroupName } from "@/lib/account-display";
 import { formatPercent } from "@/lib/format";
@@ -114,7 +115,7 @@ export function PortfolioTableView({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className={`overflow-hidden ${PORTFOLIO_FLOATING_CARD}`}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>

@@ -1,4 +1,5 @@
 import { requireWritableUser } from "@/lib/api-auth";
+import { categoriesBelongToUser } from "@/lib/budget-validation";
 import { subscriptionGroups } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, eq } from "drizzle-orm";
@@ -29,6 +30,10 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (!existing || existing.isDismissed) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.categoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
   const [updated] = await db

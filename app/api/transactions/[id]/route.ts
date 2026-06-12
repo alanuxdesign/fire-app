@@ -1,5 +1,10 @@
 import { requireWritableUser } from "@/lib/api-auth";
 import { listBudgetCategoriesForUser } from "@/lib/budget-categories";
+import {
+  categoriesBelongToUser,
+  tagsBelongToUser,
+  transactionsBelongToUser,
+} from "@/lib/budget-validation";
 import { serializeTransaction } from "@/lib/plaid-transactions";
 import { transactionTags, transactions } from "@/drizzle/schema";
 import { db } from "@/lib/db";
@@ -33,6 +38,26 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.userCategoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+  }
+
+  if (body.tagIds && !(await tagsBelongToUser(authResult.userId, body.tagIds))) {
+    return NextResponse.json({ error: "Invalid tag" }, { status: 400 });
+  }
+
+  if (
+    body.duplicateOfTransactionId &&
+    !(await transactionsBelongToUser(authResult.userId, [
+      body.duplicateOfTransactionId,
+    ]))
+  ) {
+    return NextResponse.json(
+      { error: "Invalid duplicate transaction" },
+      { status: 400 },
+    );
   }
 
   const [updated] = await db

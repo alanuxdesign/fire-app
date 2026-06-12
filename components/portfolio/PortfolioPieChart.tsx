@@ -1,6 +1,7 @@
 "use client";
 
 import { AccountRow } from "@/components/portfolio/AccountRow";
+import { PORTFOLIO_FLOATING_CARD } from "@/components/portfolio/portfolioStyles";
 import type {
   AccountGroupResponse,
   AccountListItem,
@@ -50,7 +51,7 @@ export function PortfolioPieChart({
 
   if (pieData.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-4 py-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
+      <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-12 text-center`}>
         <p className="text-sm text-slate-600 dark:text-zinc-400">
           No holdings to chart yet.
         </p>
@@ -59,8 +60,8 @@ export function PortfolioPieChart({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="relative overflow-hidden rounded-2xl border border-stone-200/80 bg-white px-2 py-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
+      <div className={`relative overflow-hidden ${PORTFOLIO_FLOATING_CARD} px-2 py-4`}>
         <div className="relative mx-auto h-64 w-full max-w-sm">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -106,7 +107,7 @@ export function PortfolioPieChart({
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Net Worth
             </p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
+            <p className="mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-zinc-900 dark:text-white">
               {formatCurrency(data.netWorth)}
             </p>
           </div>
@@ -135,7 +136,7 @@ export function PortfolioPieChart({
       </div>
 
       {selected ? (
-        <section className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <section className={`overflow-hidden ${PORTFOLIO_FLOATING_CARD}`}>
           <div className="border-b border-stone-100 px-4 py-3 dark:border-zinc-800">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100">

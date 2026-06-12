@@ -37,7 +37,7 @@ export function PortfolioListView({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
       {groups.map((group) => (
         <AccountGroup
           key={group.type}

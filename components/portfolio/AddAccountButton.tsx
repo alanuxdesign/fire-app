@@ -145,7 +145,7 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
         type="button"
         onClick={() => setPanel("chooser")}
         disabled={disabled || plaidLoading}
-        className="flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white text-[15px] font-medium text-slate-800 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-600 text-[15px] font-semibold text-white shadow-lg shadow-violet-500/30 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/35 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
       >
         {plaidLoading ? "Linking account…" : "+ Add account"}
       </button>
@@ -174,10 +174,10 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
                 type="button"
                 onClick={handleConnectBank}
                 disabled={plaidLoading}
-                className="flex w-full items-center gap-3 rounded-xl border border-stone-200 px-4 py-3.5 text-left transition-colors hover:bg-stone-50 disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-2xl bg-stone-50 px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 dark:bg-zinc-800 dark:ring-white/[0.06]"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700">
-                  <Building2 className="h-5 w-5" />
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 text-white shadow-md shadow-teal-500/25">
+                  <Building2 className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <span>
                   <span className="block text-[15px] font-medium text-slate-900">
@@ -192,10 +192,10 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
               <button
                 type="button"
                 onClick={() => setPanel("manual")}
-                className="flex w-full items-center gap-3 rounded-xl border border-stone-200 px-4 py-3.5 text-left transition-colors hover:bg-stone-50"
+                className="flex w-full items-center gap-3 rounded-2xl bg-stone-50 px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md dark:bg-zinc-800 dark:ring-white/[0.06]"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700">
-                  <PenLine className="h-5 w-5" />
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-indigo-600 text-white shadow-md shadow-violet-500/25">
+                  <PenLine className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <span>
                   <span className="block text-[15px] font-medium text-slate-900">

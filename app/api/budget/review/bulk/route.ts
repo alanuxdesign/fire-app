@@ -1,4 +1,5 @@
 import { requireWritableUser } from "@/lib/api-auth";
+import { categoriesBelongToUser } from "@/lib/budget-validation";
 import { transactions } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, eq, inArray } from "drizzle-orm";
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
     userCategoryId?: string | null;
     markReviewed?: boolean;
   };
+
+  if (!(await categoriesBelongToUser(authResult.userId, [body.userCategoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+  }
 
   const markReviewed = body.markReviewed !== false;
   const conditions = [eq(transactions.userId, authResult.userId)];

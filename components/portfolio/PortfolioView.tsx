@@ -8,6 +8,7 @@ import {
   type NetWorthDisplay,
 } from "@/components/portfolio/NetWorthChart";
 import { NetWorthHeader } from "@/components/portfolio/NetWorthHeader";
+import { PORTFOLIO_FLOATING_CARD } from "@/components/portfolio/portfolioStyles";
 import { PortfolioSkeleton } from "@/components/portfolio/PortfolioSkeleton";
 import type { AccountsApiResponse } from "@/lib/account-groups";
 import { getChangeHorizonLabel } from "@/lib/chart-data";
@@ -135,55 +136,72 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {isDemo ? <DemoBanner /> : null}
-      <section className="shrink-0 bg-zinc-950 text-white">
-        <NetWorthHeader
-          netWorth={netWorthDisplay.netWorth}
-          changeAmount={netWorthDisplay.changeAmount}
-          changePercent={netWorthDisplay.changePercent}
-          changeHorizonLabel={netWorthDisplay.changeHorizonLabel}
-          showBackToToday={netWorthDisplay.showBackToToday}
-          isEstimated={netWorthDisplay.isEstimated}
-          onBackToToday={() => backToTodayRef.current()}
+
+      <section className="relative shrink-0 overflow-hidden bg-gradient-to-b from-zinc-900 via-[#0c1f1f] to-zinc-950 pb-14 text-white">
+        <div
+          className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-teal-500/20 blur-3xl"
+          aria-hidden
         />
-        <NetWorthChart
-          currentNetWorth={data?.netWorth ?? 0}
-          onDisplayChange={handleNetWorthDisplayChange}
-          onRegisterBackToToday={(handler) => {
-            backToTodayRef.current = handler;
-          }}
-          refreshKey={snapshotRefreshKey}
+        <div
+          className="pointer-events-none absolute -left-8 top-24 h-36 w-36 rounded-full bg-violet-500/10 blur-3xl"
+          aria-hidden
         />
+
+        <div className="lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
+          <NetWorthHeader
+            netWorth={netWorthDisplay.netWorth}
+            changeAmount={netWorthDisplay.changeAmount}
+            changePercent={netWorthDisplay.changePercent}
+            changeHorizonLabel={netWorthDisplay.changeHorizonLabel}
+            showBackToToday={netWorthDisplay.showBackToToday}
+            isEstimated={netWorthDisplay.isEstimated}
+            onBackToToday={() => backToTodayRef.current()}
+            size="hero"
+          />
+
+          <div className="relative mx-3 overflow-hidden rounded-2xl bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_32px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur-sm lg:mx-0">
+            <NetWorthChart
+              currentNetWorth={data?.netWorth ?? 0}
+              onDisplayChange={handleNetWorthDisplayChange}
+              onRegisterBackToToday={(handler) => {
+                backToTodayRef.current = handler;
+              }}
+              refreshKey={snapshotRefreshKey}
+            />
+          </div>
+        </div>
       </section>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-stone-100 dark:bg-zinc-950">
+      <div className="relative z-10 -mt-10 flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-b from-stone-100 via-stone-50 to-stone-100 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
         {!isDemo ? (
-          <div className="flex items-center justify-end px-4 pt-3">
+          <div className="flex items-center justify-end px-4 pt-2 lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
             <button
               type="button"
               onClick={() => refresh()}
               disabled={refreshing}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-stone-200/60 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-zinc-600 shadow-md ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 dark:bg-zinc-800/90 dark:text-zinc-300 dark:ring-white/[0.06]"
               aria-label="Refresh accounts"
             >
               <RefreshCw
-                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
+                strokeWidth={2}
               />
               Refresh
             </button>
           </div>
         ) : null}
 
-        <div className="space-y-4 px-4 pb-6">
+        <div className="space-y-5 px-4 pb-8 pt-2 lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
           {error ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-              {error}
-            </p>
+            <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-3`}>
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            </div>
           ) : null}
 
           {refreshing ? (
             <div className="space-y-4 animate-pulse">
-              <div className="h-16 rounded-xl bg-stone-200/80 dark:bg-zinc-900" />
-              <div className="h-40 rounded-2xl bg-stone-200/80 dark:bg-zinc-900" />
+              <div className={`h-16 ${PORTFOLIO_FLOATING_CARD}`} />
+              <div className={`h-40 ${PORTFOLIO_FLOATING_CARD}`} />
             </div>
           ) : data ? (
             <PortfolioHoldings
@@ -198,8 +216,8 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
           ) : null}
 
           {lastUpdatedLabel ? (
-            <p className="pt-2 text-center text-xs text-slate-500 dark:text-zinc-500">
-              Last Updated {lastUpdatedLabel}
+            <p className="pt-1 text-center text-[11px] font-medium text-zinc-400">
+              Last updated {lastUpdatedLabel}
             </p>
           ) : null}
         </div>

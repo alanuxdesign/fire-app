@@ -2,6 +2,7 @@
 
 import { BudgetIcon } from "@/components/budget/BudgetIcon";
 import { TransactionSplitEditor } from "@/components/budget/TransactionSplitEditor";
+import { SheetShell } from "@/components/ui/SheetShell";
 import type {
   BudgetCategoryOption,
   SerializedTransaction,
@@ -74,8 +75,10 @@ export function TransactionDetailSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-stone-100 dark:bg-zinc-950">
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-y-auto px-4 py-4">
+    <SheetShell
+      zIndexClassName="z-[60]"
+      backdropClassName="bg-stone-100 dark:bg-zinc-950"
+    >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Transaction</h3>
           <button
@@ -244,7 +247,6 @@ export function TransactionDetailSheet({
             {saving ? "Saving…" : "Save"}
           </button>
         ) : null}
-      </div>
-    </div>
+    </SheetShell>
   );
 }

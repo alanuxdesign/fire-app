@@ -1,5 +1,9 @@
 import { requireWritableUser } from "@/lib/api-auth";
 import {
+  categoriesBelongToUser,
+  tagsBelongToUser,
+} from "@/lib/budget-validation";
+import {
   applyMerchantRuleRetroactive,
   upsertMerchantRule,
 } from "@/lib/merchant-rules";
@@ -30,6 +34,17 @@ export async function PUT(request: Request) {
   }
 
   const categoryId = body.defaultCategoryId ?? body.categoryId ?? null;
+
+  if (!(await categoriesBelongToUser(authResult.userId, [categoryId]))) {
+    return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+  }
+
+  if (
+    body.defaultTagIds &&
+    !(await tagsBelongToUser(authResult.userId, body.defaultTagIds))
+  ) {
+    return NextResponse.json({ error: "Invalid tag" }, { status: 400 });
+  }
 
   const rule = await upsertMerchantRule({
     userId: authResult.userId,

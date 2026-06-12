@@ -29,7 +29,10 @@ export async function GET(request: Request) {
   const virtual = searchParams.get("virtual");
   const search = searchParams.get("search")?.trim();
   const forBudget = searchParams.get("forBudget") === "1";
-  const limit = Math.min(500, Number(searchParams.get("limit") ?? "100"));
+  const limitParam = Number(searchParams.get("limit") ?? "100");
+  const limit = Number.isFinite(limitParam)
+    ? Math.min(500, Math.max(1, Math.floor(limitParam)))
+    : 100;
 
   const conditions = [eq(transactions.userId, authResult.userId)];
 

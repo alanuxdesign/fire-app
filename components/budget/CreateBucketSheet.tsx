@@ -1,6 +1,7 @@
 "use client";
 
 import { BudgetIcon } from "@/components/budget/BudgetIcon";
+import { SheetShell } from "@/components/ui/SheetShell";
 import { BUCKET_ICON_OPTIONS } from "@/lib/budget-icon-options";
 import { X } from "lucide-react";
 import { useState } from "react";
@@ -44,8 +45,10 @@ export function CreateBucketSheet({ onClose, onCreated }: CreateBucketSheetProps
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-stone-100/95 dark:bg-zinc-950/95">
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col overflow-y-auto px-4 py-4">
+    <SheetShell
+      zIndexClassName="z-[70]"
+      backdropClassName="bg-stone-100/95 dark:bg-zinc-950/95"
+    >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">New bucket</h3>
           <button
@@ -95,7 +98,6 @@ export function CreateBucketSheet({ onClose, onCreated }: CreateBucketSheetProps
         >
           {saving ? "Creating…" : "Create bucket"}
         </button>
-      </div>
-    </div>
+    </SheetShell>
   );
 }

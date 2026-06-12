@@ -88,28 +88,28 @@ export function BucketEditorSheet({
   return (
     <SheetShell
       zIndexClassName="z-[70]"
-      backdropClassName="bg-stone-100/95 dark:bg-zinc-950/95"
+      backdropClassName="bg-canvas/95"
     >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Edit bucket</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+            className="rounded-lg p-2 hover:bg-canvas-sunken"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {error ? (
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-3 text-sm text-loss">{error}</p>
         ) : null}
 
         <label className="mt-4 block text-sm font-medium">Name</label>
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-xl border border-hairline bg-surface px-3 py-2"
         />
 
         <p className="mt-4 text-sm font-medium">Icon</p>
@@ -121,8 +121,8 @@ export function BucketEditorSheet({
               onClick={() => setIcon(name)}
               className={`flex items-center justify-center rounded-xl border p-2 ${
                 icon === name
-                  ? "border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800"
-                  : "border-zinc-200 dark:border-zinc-700"
+                  ? "border-primary bg-primary-soft"
+                  : "border-hairline"
               }`}
             >
               <BudgetIcon name={name} className="h-5 w-5" />
@@ -143,7 +143,7 @@ export function BucketEditorSheet({
           type="button"
           disabled={saving}
           onClick={() => void save()}
-          className="mt-6 w-full rounded-2xl bg-zinc-900 py-3 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          className="mt-6 w-full rounded-2xl bg-primary py-3 font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save changes"}
         </button>
@@ -152,7 +152,7 @@ export function BucketEditorSheet({
           type="button"
           disabled={saving}
           onClick={() => void remove()}
-          className="mt-3 w-full rounded-2xl border border-red-200 py-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:text-red-400"
+          className="mt-3 w-full rounded-2xl border border-loss/40 py-3 text-sm font-medium text-loss"
         >
           Delete bucket
         </button>

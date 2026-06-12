@@ -24,7 +24,7 @@ function AccountNameCell({ row }: { row: TableRow }) {
       <span>{row.name}</span>
       {row.assetClassOverride ? (
         <span
-          className="text-amber-600 dark:text-amber-400"
+          className="text-warn"
           title="Asset class overridden"
         >
           *
@@ -43,31 +43,31 @@ function TableAccountRow({
 }) {
   return (
     <tr
-      className="cursor-pointer text-slate-800 transition-colors hover:bg-stone-50/80 dark:text-zinc-200 dark:hover:bg-zinc-800/50"
+      className="cursor-pointer text-ink transition-colors hover:bg-canvas-sunken/80"
       onClick={() => onAccountClick(row)}
     >
       <td className="px-3 py-2.5 font-medium">
         <AccountNameCell row={row} />
       </td>
-      <td className="px-3 py-2.5 text-slate-600 dark:text-zinc-400">
+      <td className="px-3 py-2.5 text-ink-secondary">
         {row.institution}
       </td>
-      <td className="px-3 py-2.5 capitalize text-slate-600 dark:text-zinc-400">
+      <td className="px-3 py-2.5 capitalize text-ink-secondary">
         {row.subtitle ?? row.type}
       </td>
-      <td className="px-3 py-2.5 text-slate-600 dark:text-zinc-400">
+      <td className="px-3 py-2.5 text-ink-secondary">
         {row.assetClass}
       </td>
       <td
         className={`px-3 py-2.5 text-right font-medium tabular-nums ${
           row.group === "Liabilities"
-            ? "text-red-600 dark:text-red-400"
+            ? "text-loss"
             : ""
         }`}
       >
         {formatAccountBalance(row)}
       </td>
-      <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">
+      <td className="px-3 py-2.5 text-right tabular-nums text-ink-secondary">
         {formatPercent(row.percentOfPortfolio, { signed: false })}
       </td>
       <td className="px-3 py-2.5 text-right">
@@ -119,7 +119,7 @@ export function PortfolioTableView({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-stone-200 bg-stone-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-400">
+            <tr className="border-b border-hairline bg-canvas-sunken/80 text-xs font-semibold uppercase tracking-wide text-ink-secondary">
               <th className="px-3 py-2.5">Name</th>
               <th className="px-3 py-2.5">Institution</th>
               <th className="px-3 py-2.5">Type</th>
@@ -129,24 +129,24 @@ export function PortfolioTableView({
               <th className="px-3 py-2.5 text-right">Change</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-hairline">
             {sections.map((section) => (
               <Fragment key={section.key}>
                 {section.label ? (
                   <tr
-                    className="bg-stone-50/60 dark:bg-zinc-800/40"
+                    className="bg-canvas-sunken/60"
                   >
                     <td
                       colSpan={5}
-                      className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-zinc-300"
+                      className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-ink-secondary"
                     >
                       {section.label}
                     </td>
                     <td
                       className={`px-3 py-2 text-right text-xs font-semibold tabular-nums ${
                         section.label && isLiabilityGroupName(section.label)
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-slate-700 dark:text-zinc-200"
+                          ? "text-loss"
+                          : "text-ink-secondary"
                       }`}
                     >
                       {section.total !== null

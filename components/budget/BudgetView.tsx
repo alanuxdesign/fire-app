@@ -1,5 +1,6 @@
 "use client";
 
+import { CelebrateSpot } from "@/components/illustrations/CelebrateSpot";
 import { BulkCategorizeBar } from "@/components/budget/BulkCategorizeBar";
 import { SubscriptionHomeRow } from "@/components/budget/SubscriptionHomeRow";
 import { SubscriptionsDetailView } from "@/components/budget/SubscriptionsDetailView";
@@ -76,15 +77,15 @@ function SummaryCards({
       <Card className="mt-4">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
               Left to spend
             </p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">
               {formatCurrency(summary.leftToSpend)}
             </p>
           </div>
           {!isDemo ? (
-            <label className="flex shrink-0 items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+            <label className="flex shrink-0 items-center gap-1.5 text-xs text-ink-secondary">
               <input
                 type="checkbox"
                 checked={includePendingInBudget}
@@ -94,7 +95,7 @@ function SummaryCards({
             </label>
           ) : null}
         </div>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-ink-secondary">
           Spent {formatCurrency(summary.totalSpent)}
           {(summary.effectiveBudgetTotal ?? summary.totalTarget) > 0
             ? ` of ${formatCurrency(summary.effectiveBudgetTotal ?? summary.totalTarget)} budgeted`
@@ -107,13 +108,13 @@ function SummaryCards({
 
       {summary.savingsRate != null && summary.income > 0 ? (
         <Card className="mt-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
             Savings rate
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-gain">
             {Math.round(summary.savingsRate * 100)}%
           </p>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-ink-secondary">
             {formatCurrency(summary.income)} income ·{" "}
             {formatCurrency(summary.totalSpent)} spent
           </p>
@@ -156,31 +157,31 @@ function BucketRow({
   const over = bucket.target > 0 && bucket.spent > bucket.target;
   const barColor =
     alertLevel === "over" || over
-      ? "bg-red-500"
+      ? "bg-loss"
       : alertLevel === "warning"
-        ? "bg-amber-500"
-        : "bg-emerald-500";
+        ? "bg-warn"
+        : "bg-gain";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-2xl border bg-white p-4 text-left transition-colors hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 ${
+      className={`w-full rounded-2xl border bg-surface p-4 text-left transition-colors hover:bg-canvas-sunken ${
         showAlert
           ? alertLevel === "over"
-            ? "border-red-200 dark:border-red-900/50"
-            : "border-amber-200 dark:border-amber-900/50"
-          : "border-zinc-200 dark:border-zinc-800"
+            ? "border-loss/40"
+            : "border-warn/40"
+          : "border-hairline"
       }`}
     >
       <div className="flex items-center gap-3">
-        <BudgetIcon name={bucket.icon} className="h-6 w-6 shrink-0 text-zinc-600 dark:text-zinc-400" />
+        <BudgetIcon name={bucket.icon} className="h-6 w-6 shrink-0 text-ink-secondary" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-medium text-zinc-900 dark:text-zinc-100">
+            <span className="truncate font-medium text-ink">
               {bucket.label}
             </span>
-            <span className="shrink-0 text-sm tabular-nums text-zinc-600 dark:text-zinc-400">
+            <span className="shrink-0 text-sm tabular-nums text-ink-secondary">
               {credit
                 ? `${formatCurrency(Math.abs(bucket.spent))} credit`
                 : formatCurrency(bucket.spent)}
@@ -192,8 +193,8 @@ function BucketRow({
               <span
                 className={`text-xs font-medium ${
                   alertLevel === "over"
-                    ? "text-red-700 dark:text-red-400"
-                    : "text-amber-700 dark:text-amber-400"
+                    ? "text-loss"
+                    : "text-warn"
                 }`}
               >
                 {alertLevel === "over" ? "Over budget" : "80% of budget"}
@@ -207,21 +208,21 @@ function BucketRow({
                     onDismissAlert();
                   }
                 }}
-                className="text-[10px] text-zinc-500 underline"
+                className="text-[10px] text-ink-secondary underline"
               >
                 Dismiss
               </button>
             </div>
           ) : null}
           {bucket.target > 0 ? (
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-canvas-sunken">
               <div
                 className={`h-full rounded-full transition-all ${barColor}`}
                 style={{ width: `${progressPct}%` }}
               />
             </div>
           ) : bucket.spent !== 0 ? (
-            <p className="mt-1 text-xs text-zinc-500">No budget set</p>
+            <p className="mt-1 text-xs text-ink-secondary">No budget set</p>
           ) : null}
         </div>
       </div>
@@ -783,7 +784,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               setActiveBucket(null);
               setTransactions([]);
             }}
-            className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -792,7 +793,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           <button
             type="button"
             onClick={() => setMonth(currentMonth)}
-            className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-100 transition-colors hover:bg-zinc-700 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-on-primary transition-colors hover:bg-primary-hover"
           >
             Back to today
           </button>
@@ -804,27 +805,27 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             <button
               type="button"
               onClick={() => setMonth((m) => shiftBudgetMonth(m, -1))}
-              className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken"
               aria-label="Previous month"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <span className="min-w-[8rem] text-center text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            <span className="min-w-[8rem] text-center text-sm font-semibold text-ink">
               {formatMonthLabel(month)}
             </span>
             <button
               type="button"
               onClick={() => setMonth((m) => shiftBudgetMonth(m, 1))}
-              className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken"
               aria-label="Next month"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
           {showBackToToday ? (
-            <p className="text-[10px] text-zinc-500">Not current month</p>
+            <p className="text-[10px] text-ink-secondary">Not current month</p>
           ) : lastSyncLabel && !syncing ? (
-            <p className="text-[10px] text-zinc-500">Synced {lastSyncLabel}</p>
+            <p className="text-[10px] text-ink-secondary">Synced {lastSyncLabel}</p>
           ) : null}
         </div>
         <div className="flex items-center gap-1">
@@ -833,7 +834,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               <button
                 type="button"
                 onClick={() => void exportCsv()}
-                className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken"
                 aria-label="Export CSV"
               >
                 <Download className="h-5 w-5" />
@@ -841,7 +842,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               <button
                 type="button"
                 onClick={() => setShowCreateBucket(true)}
-                className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken"
                 aria-label="New bucket"
               >
                 <Plus className="h-5 w-5" />
@@ -852,7 +853,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             type="button"
             onClick={() => void runTransactionSync()}
             disabled={syncing || isDemo}
-            className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 disabled:opacity-40 dark:hover:bg-zinc-800"
+            className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken disabled:opacity-40"
             aria-label="Sync transactions"
           >
             <RefreshCw className={`h-5 w-5 ${syncing ? "animate-spin" : ""}`} />
@@ -861,7 +862,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       </div>
 
       {error ? (
-        <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <p className="mt-3 rounded-xl bg-loss-soft px-3 py-2 text-sm text-loss">
           {error}
         </p>
       ) : null}
@@ -916,7 +917,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             <button
               type="button"
               onClick={() => void openReview()}
-              className="mt-3 w-full rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm font-medium text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+              className="mt-3 w-full rounded-2xl border border-warn/40 bg-warn-soft px-4 py-3 text-left text-sm font-medium text-warn"
             >
               {summary.unreviewedCount} transaction
               {summary.unreviewedCount === 1 ? "" : "s"} need review
@@ -946,15 +947,15 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           <button
             type="button"
             onClick={() => void openAllTransactions("")}
-            className="mt-3 w-full rounded-2xl border border-dashed border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            className="mt-3 w-full rounded-2xl border border-dashed border-hairline-strong px-4 py-3 text-sm font-medium text-ink-secondary transition-colors hover:bg-canvas-sunken"
           >
             All transactions
           </button>
 
           {!isDemo ? (
-            <p className="mt-6 text-center text-xs text-zinc-500">
+            <p className="mt-6 text-center text-xs text-ink-secondary">
               Connect accounts in{" "}
-              <Link href="/portfolio" className="font-medium text-zinc-700 underline dark:text-zinc-300">
+              <Link href="/portfolio" className="font-medium text-ink-secondary underline">
                 Portfolio
               </Link>{" "}
               to sync transactions.
@@ -965,10 +966,10 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
 
       {screen === "insights" ? (
         <div className="mt-4">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-lg font-semibold text-ink">
             Insights
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-ink-secondary">
             Income vs spending over the last 12 months
           </p>
           <div className="mt-4">
@@ -979,30 +980,30 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
 
       {screen === "duplicates" ? (
         <div className="mt-4">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-lg font-semibold text-ink">
             Possible duplicates
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-ink-secondary">
             Same amount and similar merchant within one day
           </p>
           {duplicateGroups.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-500">No duplicates found.</p>
+            <p className="mt-4 text-sm text-ink-secondary">No duplicates found.</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {duplicateGroups.map((group) => (
                 <li
                   key={group.ids.join("-")}
-                  className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                  className="rounded-2xl border border-hairline bg-surface p-4"
                 >
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <p className="font-medium text-ink">
                     {group.merchantLabel}
                   </p>
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-ink-secondary">
                     {formatCurrency(group.amount)} · {group.dates.join(", ")}
                   </p>
                   {!isDemo ? (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-medium dark:bg-zinc-800">
+                      <span className="rounded-lg bg-canvas-sunken px-3 py-1.5 text-xs font-medium">
                         Keep first
                       </span>
                       {group.ids.slice(1).map((dupId) => (
@@ -1010,7 +1011,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                           key={dupId}
                           type="button"
                           onClick={() => void markDuplicate(group.ids[0], dupId)}
-                          className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium dark:border-zinc-700"
+                          className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium"
                         >
                           Mark other as duplicate
                         </button>
@@ -1026,7 +1027,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
 
       {screen === "subscriptions" ? (
         <div className="mt-4">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-lg font-semibold text-ink">
             Subscriptions
           </h2>
           <SubscriptionsDetailView
@@ -1040,7 +1041,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       {screen === "review" ? (
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-lg font-semibold text-ink">
               Needs review
             </h2>
             <div className="flex items-center gap-2">
@@ -1053,7 +1054,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                       setSelectedTxnIds(new Set());
                       setBulkMessage(null);
                     }}
-                    className="text-sm font-medium text-zinc-600 dark:text-zinc-400"
+                    className="text-sm font-medium text-ink-secondary"
                   >
                     {bulkMode ? "Done" : "Select"}
                   </button>
@@ -1061,7 +1062,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                     type="button"
                     disabled={bulkReviewing}
                     onClick={() => void markAllReviewed()}
-                    className="text-sm font-medium text-zinc-600 underline disabled:opacity-50 dark:text-zinc-400"
+                    className="text-sm font-medium text-ink-secondary underline disabled:opacity-50"
                   >
                     {bulkReviewing ? "Saving…" : "Mark all reviewed"}
                   </button>
@@ -1070,7 +1071,10 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             </div>
           </div>
           {transactions.length === 0 ? (
-            <p className="text-sm text-zinc-500">You&apos;re all caught up.</p>
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <CelebrateSpot className="h-24 w-24" />
+              <p className="text-sm text-ink-secondary">You&apos;re all caught up.</p>
+            </div>
           ) : (
             transactions.map((txn) => (
               <TransactionListRow
@@ -1092,7 +1096,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       {screen === "all" ? (
         <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-lg font-semibold text-ink">
               All transactions
             </h2>
             {!isDemo ? (
@@ -1103,14 +1107,14 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                   setSelectedTxnIds(new Set());
                   setBulkMessage(null);
                 }}
-                className="text-sm font-medium text-zinc-600 dark:text-zinc-400"
+                className="text-sm font-medium text-ink-secondary"
               >
                 {bulkMode ? "Done" : "Select"}
               </button>
             ) : null}
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
             <input
               type="search"
               value={txnSearch}
@@ -1119,13 +1123,13 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                 if (e.key === "Enter") void openAllTransactions(txnSearch);
               }}
               placeholder="Search merchants…"
-              className="w-full rounded-xl border border-zinc-200 bg-white py-2 pl-9 pr-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="w-full rounded-xl border border-hairline bg-surface py-2 pl-9 pr-3 text-sm"
             />
           </div>
           <button
             type="button"
             onClick={() => void openAllTransactions(txnSearch)}
-            className="w-full rounded-xl bg-zinc-100 py-2 text-sm font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200"
+            className="w-full rounded-xl bg-canvas-sunken py-2 text-sm font-medium text-ink"
           >
             Search
           </button>
@@ -1151,8 +1155,8 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
         <div className="mt-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
-              <BudgetIcon name={activeBucket.icon} className="h-7 w-7 shrink-0 text-zinc-600" />
-              <h2 className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              <BudgetIcon name={activeBucket.icon} className="h-7 w-7 shrink-0 text-ink-secondary" />
+              <h2 className="truncate text-lg font-semibold text-ink">
                 {activeBucket.label}
               </h2>
             </div>
@@ -1160,14 +1164,14 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               <button
                 type="button"
                 onClick={() => setShowBucketEditor(true)}
-                className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-lg p-2 text-ink-secondary hover:bg-canvas-sunken"
                 aria-label="Edit bucket"
               >
                 <Settings2 className="h-5 w-5" />
               </button>
             ) : null}
           </div>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-ink-secondary">
             {activeBucket.target > 0 ? (
               <>
                 {activeBucket.spent < 0
@@ -1185,7 +1189,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             </div>
           ) : null}
           {activeBucket.id && !isDemo ? (
-            <label className="mt-3 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <label className="mt-3 flex items-center gap-2 text-sm text-ink-secondary">
               <input
                 type="checkbox"
                 checked={activeBucket.rolloverEnabled ?? false}
@@ -1205,12 +1209,12 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                 placeholder="Monthly budget"
                 value={targetInput}
                 onChange={(e) => setTargetInput(e.target.value)}
-                className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                className="flex-1 rounded-xl border border-hairline bg-surface px-3 py-2 text-sm"
               />
               <button
                 type="button"
                 onClick={() => void saveBucketTarget()}
-                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover"
               >
                 Set target
               </button>
@@ -1226,7 +1230,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
                     setSelectedTxnIds(new Set());
                     setBulkMessage(null);
                   }}
-                  className="text-sm font-medium text-zinc-600 dark:text-zinc-400"
+                  className="text-sm font-medium text-ink-secondary"
                 >
                   {bulkMode ? "Done selecting" : "Select multiple"}
                 </button>

@@ -22,7 +22,7 @@ export function ChangeLabel({
   return (
     <span
       className={`${className} ${
-        isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+        isPositive ? "text-gain" : "text-loss"
       }`}
     >
       {isPositive ? "↗" : "↘"} {formatSignedCurrency(Math.abs(amount))}

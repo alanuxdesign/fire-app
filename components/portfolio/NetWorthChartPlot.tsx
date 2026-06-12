@@ -5,6 +5,7 @@ import {
   formatDayLabel,
   type NetWorthChartPoint,
 } from "@/lib/chart-data";
+import { useChartColors } from "@/lib/chart-colors";
 import {
   Area,
   AreaChart,
@@ -36,6 +37,7 @@ export function NetWorthChartPlot({
   xAxisTicks,
 }: NetWorthChartPlotProps) {
   const maxXIndex = Math.max(chartData.length - 1, 0);
+  const colors = useChartColors();
 
   return (
     <AreaChart
@@ -49,9 +51,9 @@ export function NetWorthChartPlot({
     >
       <defs>
         <linearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity={0.55} />
-          <stop offset="55%" stopColor="#2dd4bf" stopOpacity={0.2} />
-          <stop offset="100%" stopColor="#14b8a6" stopOpacity={0} />
+          <stop offset="0%" stopColor={colors.primary} stopOpacity={0.5} />
+          <stop offset="55%" stopColor={colors.primary} stopOpacity={0.18} />
+          <stop offset="100%" stopColor={colors.primary} stopOpacity={0} />
         </linearGradient>
       </defs>
 
@@ -62,7 +64,7 @@ export function NetWorthChartPlot({
         ticks={xAxisTicks}
         axisLine={false}
         tickLine={false}
-        tick={{ fill: "#71717a", fontSize: 11 }}
+        tick={{ fill: colors.inkMuted, fontSize: 11 }}
         tickFormatter={(index) => {
           const point = chartData[Math.round(index)];
           return point ? formatDayLabel(point.date) : "";
@@ -75,11 +77,11 @@ export function NetWorthChartPlot({
       <Area
         type="monotone"
         dataKey="chartValue"
-        stroke="#6ee7b7"
+        stroke={colors.primary}
         strokeWidth={2.5}
         fill="url(#netWorthFill)"
         baseValue="dataMin"
-        dot={chartData.length === 1 ? { r: 4, fill: "#34d399" } : false}
+        dot={chartData.length === 1 ? { r: 4, fill: colors.primary } : false}
         activeDot={false}
         isAnimationActive
         animationDuration={500}
@@ -90,7 +92,7 @@ export function NetWorthChartPlot({
         <>
           <ReferenceLine
             x={scrub.exactIndex}
-            stroke="#34d399"
+            stroke={colors.primary}
             strokeWidth={1}
             strokeDasharray="4 4"
             ifOverflow="hidden"
@@ -99,8 +101,8 @@ export function NetWorthChartPlot({
             x={scrub.exactIndex}
             y={scrub.chartValue}
             r={5}
-            fill="#34d399"
-            stroke="#ecfdf5"
+            fill={colors.primary}
+            stroke="var(--surface-raised)"
             strokeWidth={2}
             ifOverflow="hidden"
           />
@@ -113,7 +115,7 @@ export function NetWorthChartPlot({
 export function ChartScrubDateTooltip({ scrub }: { scrub: ChartScrubDetail }) {
   return (
     <div
-      className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-800/95 px-2.5 py-1.5 text-xs font-medium text-zinc-100 shadow-lg ring-1 ring-zinc-700"
+      className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink/95 px-2.5 py-1.5 text-xs font-medium text-canvas shadow-card ring-1 ring-hairline"
       style={{ left: scrub.tooltipX, top: 4 }}
     >
       {scrub.hoverDateLabel}

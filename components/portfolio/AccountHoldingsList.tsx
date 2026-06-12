@@ -14,11 +14,11 @@ type AccountHoldingsListProps = {
 
 function gainClass(value: number | null): string {
   if (value == null || value === 0) {
-    return "text-slate-500 dark:text-zinc-400";
+    return "text-ink-secondary";
   }
   return value > 0
-    ? "text-emerald-600 dark:text-emerald-400"
-    : "text-red-600 dark:text-red-400";
+    ? "text-gain"
+    : "text-loss";
 }
 
 export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps) {
@@ -26,7 +26,7 @@ export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps
 
   if (holdings.length === 0) {
     return (
-      <p className="text-sm text-slate-500 dark:text-zinc-400">
+      <p className="text-sm text-ink-secondary">
         No individual holdings reported for this account.
       </p>
     );
@@ -34,22 +34,22 @@ export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps
 
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-stone-200 rounded-xl border border-stone-200 dark:divide-zinc-800 dark:border-zinc-700">
+      <ul className="divide-y divide-hairline rounded-xl border border-hairline">
         {holdings.map((holding) => (
           <li
             key={holding.id}
             className="flex items-start justify-between gap-3 px-3 py-3"
           >
             <div className="min-w-0">
-              <p className="font-medium text-slate-900 dark:text-zinc-100">
+              <p className="font-medium text-ink">
                 <span className="tabular-nums">{holding.symbol}</span>
                 {holding.name !== holding.symbol ? (
-                  <span className="ml-1.5 font-normal text-slate-500 dark:text-zinc-400">
+                  <span className="ml-1.5 font-normal text-ink-secondary">
                     {holding.name}
                   </span>
                 ) : null}
               </p>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
+              <p className="mt-0.5 text-xs text-ink-secondary">
                 {holding.quantity.toLocaleString("en-US", {
                   maximumFractionDigits: 4,
                 })}{" "}
@@ -60,7 +60,7 @@ export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="font-medium tabular-nums text-slate-900 dark:text-zinc-100">
+              <p className="font-medium tabular-nums text-ink">
                 {formatCurrency(holding.value, currency)}
               </p>
               {holding.gainLoss != null ? (
@@ -75,7 +75,7 @@ export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps
                   ) : null}
                 </p>
               ) : (
-                <p className="mt-0.5 text-xs text-slate-400 dark:text-zinc-500">
+                <p className="mt-0.5 text-xs text-ink-muted">
                   Gain/loss unavailable
                 </p>
               )}
@@ -84,12 +84,12 @@ export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps
         ))}
       </ul>
 
-      <div className="flex items-center justify-between rounded-xl bg-stone-50 px-3 py-2.5 dark:bg-zinc-800/60">
-        <span className="text-sm font-medium text-slate-700 dark:text-zinc-300">
+      <div className="flex items-center justify-between rounded-xl bg-canvas-sunken px-3 py-2.5">
+        <span className="text-sm font-medium text-ink-secondary">
           Total
         </span>
         <div className="text-right">
-          <p className="text-sm font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
+          <p className="text-sm font-semibold tabular-nums text-ink">
             {formatCurrency(totalValue, currency)}
           </p>
           {totalGainLoss != null ? (
@@ -108,7 +108,7 @@ export function AccountHoldingsList({ data, currency }: AccountHoldingsListProps
       </div>
 
       {data.asOf ? (
-        <p className="text-xs text-slate-400 dark:text-zinc-500">
+        <p className="text-xs text-ink-muted">
           Prices as of {data.asOf}
         </p>
       ) : null}

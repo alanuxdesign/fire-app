@@ -8,13 +8,14 @@ import {
 } from "@/lib/account-display";
 import { useState } from "react";
 
+// Deterministic saturated avatar chips drawn from the warm accent palette.
 const INSTITUTION_COLORS = [
-  "bg-sky-600",
-  "bg-emerald-600",
-  "bg-violet-600",
-  "bg-amber-600",
-  "bg-rose-600",
-  "bg-cyan-600",
+  "bg-accent-blue",
+  "bg-accent-green",
+  "bg-accent-purple",
+  "bg-accent-gold",
+  "bg-accent-peach",
+  "bg-primary",
 ];
 
 function getInstitutionColor(seed: string) {
@@ -41,7 +42,7 @@ export function InstitutionAvatar({ account, className = "" }: InstitutionAvatar
 
   return (
     <div
-      className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold text-white ${showLogo ? "bg-white" : getInstitutionColor(colorSeed)} ${className}`}
+      className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold text-white ${showLogo ? "bg-surface" : getInstitutionColor(colorSeed)} ${className}`}
       aria-hidden
     >
       {showLogo ? (

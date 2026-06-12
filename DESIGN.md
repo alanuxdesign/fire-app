@@ -1,32 +1,33 @@
 ---
 name: Fire
-description: A warm, mobile-first personal finance companion for the FIRE marathon
+description: A warm, encouraging, illustration-forward companion for the FIRE marathon
 colors:
-  primary: "#18181b"
-  primary-inverted: "#fafafa"
-  canvas-light: "#f5f5f4"
-  canvas-dark: "#09090b"
-  surface-light: "#ffffff"
-  surface-dark: "#18181b"
-  ink-light: "#0f172a"
-  ink-dark: "#fafafa"
-  muted-ink: "#71717a"
-  border-light: "#e4e4e7"
-  border-dark: "#27272a"
-  success: "#34d399"
-  success-deep: "#059669"
-  danger: "#f87171"
-  danger-deep: "#dc2626"
-  warning: "#f59e0b"
-  warning-deep: "#b45309"
-  celebrate: "#f59e0b"
-  chart-teal: "#0d9488"
-  chart-indigo: "#6366f1"
+  primary: "#ef7b5a"
+  primary-hover: "#e26542"
+  primary-soft: "#fce6dd"
+  on-primary: "#ffffff"
+  canvas: "#fbf6ef"
+  canvas-sunken: "#f4ebdf"
+  surface: "#fffdf9"
+  surface-raised: "#ffffff"
+  ink: "#2a2420"
+  ink-secondary: "#6b5f55"
+  ink-muted: "#9a8c7e"
+  hairline: "#ebe0d2"
+  hairline-strong: "#dccdb9"
+  accent-blue: "#5b8def"
+  accent-green: "#4fb286"
+  accent-gold: "#e0a23b"
+  accent-purple: "#9b7be0"
+  accent-peach: "#ef9a6a"
+  gain: "#3da776"
+  loss: "#d8593e"
+  warn: "#d89a2e"
 typography:
   display:
     fontFamily: "var(--font-geist-sans), system-ui, sans-serif"
     fontSize: "2.25rem"
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: 1.1
     letterSpacing: "-0.025em"
   headline:
@@ -34,248 +35,119 @@ typography:
     fontSize: "1.125rem"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "normal"
   title:
     fontFamily: "var(--font-geist-sans), system-ui, sans-serif"
     fontSize: "0.9375rem"
     fontWeight: 500
     lineHeight: 1.4
-    letterSpacing: "normal"
   body:
     fontFamily: "var(--font-geist-sans), system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.5
-    letterSpacing: "normal"
   label:
     fontFamily: "var(--font-geist-sans), system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 500
     lineHeight: 1.3
     letterSpacing: "0.05em"
-  mono:
-    fontFamily: "var(--font-geist-mono), ui-monospace, monospace"
-    fontSize: "0.875rem"
-    fontWeight: 400
-    lineHeight: 1.4
-    letterSpacing: "normal"
 rounded:
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
+  sm: "0.5rem"
+  md: "0.875rem"
+  lg: "1.125rem"
+  xl: "1.5rem"
+  xxl: "2rem"
   full: "9999px"
-spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "16px"
-  lg: "24px"
-  xl: "32px"
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.primary-inverted}"
-    typography: "{typography.title}"
-    rounded: "{rounded.md}"
-    padding: "12px 16px"
-    height: "48px"
-  button-primary-hover:
-    backgroundColor: "#27272a"
-    textColor: "{colors.primary-inverted}"
-    rounded: "{rounded.md}"
-  button-secondary:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.ink-light}"
-    typography: "{typography.title}"
-    rounded: "{rounded.md}"
-    padding: "12px 16px"
-    height: "48px"
-  chip-selected:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.primary-inverted}"
-    typography: "{typography.label}"
-    rounded: "{rounded.full}"
-    padding: "4px 12px"
-  chip-default:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "#475569"
-    typography: "{typography.label}"
-    rounded: "{rounded.full}"
-    padding: "4px 12px"
-  card-surface:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.ink-light}"
-    rounded: "{rounded.lg}"
-    padding: "16px"
-  input-field:
-    backgroundColor: "{colors.surface-light}"
-    textColor: "{colors.ink-light}"
-    typography: "{typography.body}"
-    rounded: "{rounded.sm}"
-    padding: "8px 12px"
-    height: "40px"
-  nav-tab-active:
-    textColor: "{colors.ink-dark}"
-    typography: "{typography.label}"
-  nav-tab-default:
-    textColor: "{colors.muted-ink}"
-    typography: "{typography.label}"
+shadows:
+  soft: "0 1px 2px rgba(120,90,60,.04), 0 8px 24px -12px rgba(120,90,60,.12)"
+  card: "0 2px 4px rgba(120,90,60,.05), 0 16px 40px -16px rgba(120,90,60,.16)"
+  float: "0 4px 8px rgba(120,90,60,.06), 0 24px 56px -20px rgba(120,90,60,.22)"
 ---
 
 # Design System: Fire
 
 ## Overview
 
-**Creative North Star: "The Clearing Path"**
+**Creative North Star: "The Sunrise Trail"**
 
-Fire's visual system is a mobile-first product UI that makes financial progress feel lighter, not heavier. The interface sits between Headspace's calming encouragement and Monarch's grounded trust: warm enough to celebrate milestones, restrained enough to never feel like hustle-culture fintech or corporate banking. Dark mode is the default because portfolio and net-worth moments read best on a deep canvas; light surfaces carry the working content below.
+Fire is a warm, encouraging, illustration-forward companion for the long FIRE marathon. The interface feels like a sunrise over a winding path: optimistic, calm, and human. It celebrates progress without hustle-culture pressure and grounds trust without cold institutional chrome.
 
-Density is comfortable, not spreadsheet-tight. Numbers are always tabular and precise; voice stays gentle. Celebration shows up in semantic color (green months, amber warnings, milestone badges), not confetti or hero metrics. The tool should disappear into the task of checking progress and feeling hope.
+The palette is coral-on-cream: a soft warm canvas, a friendly coral primary, and a small set of pastel accents (blue, green, gold, purple, peach) for stat chips and data. Corners are generously rounded, shadows are soft and warm-tinted, lines are simple, and spot illustrations carry the emotional moments (a sunrise hero, a journey path, a mountain milestone, celebratory empty states).
+
+Both light and dark are first-class: light is warm cream; dark is warm espresso/plum, never cold zinc. **Light is the default.** Numbers are always tabular and precise; the voice stays gentle.
 
 **Key Characteristics:**
 
-- Mobile shell capped at `max-w-lg` with a fixed bottom tab bar
-- Dark hero band for portfolio/net-worth; light stone canvas for scrollable work areas
-- Geist Sans throughout; one family, fixed rem scale, no display/body pairing
-- Tonal layering over decorative shadows; borders and surface shifts carry depth
-- Semantic green/red/amber for progress, never decorative gradient accents
-- Rounded-xl buttons and rounded-2xl cards; familiar product affordances
+- Warm cream (light) / espresso (dark) canvas — never a dark hero band in light mode.
+- Coral primary for actions and key accents; pastel accents for category/stat chips and charts.
+- Very rounded corners (cards 24px, buttons 18px, inputs 14px) and soft, warm shadows.
+- Geist Sans throughout; one family, fixed rem scale, tabular figures for money.
+- Custom inline SVG illustrations for hero, milestone, journey, and empty states.
+- Semantic gain/loss/warn reserved for meaning; pastel accents are decorative-but-systematic.
 
-## Colors
+## Tokens
 
-A restrained neutral system with warm stone undertones and semantic color reserved for meaning.
+All color, radius, and shadow values are CSS custom properties registered in `app/globals.css` via `@theme inline`, with light values on `:root` and warm-dark values on `.dark`. Components use the **token utilities** (`bg-canvas`, `bg-surface`, `text-ink`, `text-ink-secondary`, `border-hairline`, `bg-primary`, `text-on-primary`, `bg-accent-blue`/`-soft`, `text-gain`/`bg-gain-soft`, `shadow-card`, …), never stock Tailwind color classes. Because each token flips by theme automatically, `dark:` variants are needed only for non-color structural tweaks.
 
-### Primary
+### Colors
 
-- **Midnight Ink** (#18181b): Primary actions, selected chips, and the portfolio hero band. The anchor that says "this is the real UI," not a marketing page.
-- **Inverted Paper** (#fafafa): Primary button text on dark surfaces; inverted primary buttons in dark mode sheets.
-
-### Neutral
-
-- **Stone Canvas** (#f5f5f4): Light-mode scrollable background behind cards and lists.
-- **Zinc Night** (#09090b): Dark-mode page background and portfolio header canvas.
-- **White Surface** (#ffffff) / **Zinc Panel** (#18181b): Card and sheet backgrounds in light and dark modes.
-- **Slate Ink** (#0f172a) / **Zinc Mist** (#fafafa): Primary text in light and dark modes.
-- **Quiet Zinc** (#71717a): Secondary labels, inactive tab icons, helper copy.
-- **Hairline Border** (#e4e4e7 light / #27272a dark): Card edges, dividers, input strokes.
-
-### Tertiary
-
-- **Trail Green** (#34d399 dark / #059669 light): Positive change, on-track budget progress, gains.
-- **Honest Red** (#f87171 dark / #dc2626 light): Losses, over-budget alerts, errors.
-- **Nudge Amber** (#f59e0b): Review badges, 80% budget warnings, celebratory attention without alarm.
-- **Chart Spectrum** (teal #0d9488, indigo #6366f1, and extended palette): Data visualization only; never used as decorative UI chrome.
+- **Coral Primary** (#ef7b5a): Primary buttons, active nav, key accents, the net-worth chart area. `primary-hover` for hover; `primary-soft` for tinted chips behind coral text; `on-primary` for text/icons on coral fills.
+- **Warm Neutrals:** `canvas` (page) → `surface` (cards) → `surface-raised` (floating). Text steps `ink` → `ink-secondary` → `ink-muted`. Edges use `hairline` / `hairline-strong`.
+- **Pastel Accents** (blue, green, gold, purple, peach): each has a saturated base (icon/avatar/segment) and a `-soft` tint (chip background). Used for stat-card chips, institution avatars, and chart segments.
+- **Semantic** (`gain` green, `loss` terracotta, `warn` gold): gains/losses, over-budget, review attention. Each has a `-soft` background tint for banners and chips.
 
 ### Named Rules
 
-**The Meaning-Only Color Rule.** Green, red, and amber appear only when they communicate state: gain/loss, on-track/over-budget, needs-attention. They are never background decoration or brand gradients.
+**The Token-Only Color Rule.** Components reference semantic token utilities, never `zinc-*`/`stone-*`/`emerald-*` etc. A recolor happens in `globals.css`, not across the tree.
 
-**The No-SaaS-Cream Rule.** Avoid warm near-white body backgrounds (#faf7f2, sand, parchment). Fire's light canvas is cool stone; warmth lives in copy and milestone moments, not default page tint.
+**The Warm-Both-Ways Rule.** Light is warm cream; dark is warm espresso/plum. Neither theme uses cold blue-grey neutrals, and light mode never shows a dark hero band.
+
+**The Meaning-Plus-Palette Rule.** `gain`/`loss`/`warn` appear only for state. The pastel accents are decorative but systematic — drawn from the token palette, never ad-hoc gradients.
 
 ## Typography
 
-**Display Font:** Geist Sans (with system-ui fallback)
-**Body Font:** Geist Sans (with system-ui fallback)
-**Label/Mono Font:** Geist Mono for code-like values when needed; labels use Geist Sans
-
-**Character:** Clean, modern, and quietly confident. Fixed rem sizes keep the mobile shell predictable. Financial figures always use `tabular-nums`.
-
-### Hierarchy
-
-- **Display** (600, 2.25rem / 36px, 1.1): Net worth and other hero numbers. Centered in the dark portfolio band only.
-- **Headline** (600, 1.125rem / 18px, 1.3): Sheet titles, section headers ("Add account", bucket names in detail).
-- **Title** (500, 0.9375rem / 15px, 1.4): Button labels, row titles, emphasized list primary text.
-- **Body** (400, 0.875rem / 14px, 1.5): Descriptions, helper text, form copy. Keep prose blocks under 65–75ch when they appear.
-- **Label** (500, 0.75rem / 12px, uppercase + wide tracking): Control section labels ("View", "Group by"), tab bar labels (10px), metadata.
-
-### Named Rules
-
-**The One Family Rule.** Geist Sans carries headings, buttons, labels, body, and data. No display serif pairing; familiarity beats flourish in product UI.
-
-**The Tabular Money Rule.** All currency, percentages, and deltas use tabular figures. Alignment and scanability matter more than personality.
+Geist Sans throughout (system-ui fallback); Geist Mono only for code-like values. Hero numbers use Display (700). Currency, percentages, and deltas always use `tabular-nums`.
 
 ## Elevation
 
-Fire is flat-by-default with tonal layering. Depth comes from surface color shifts (zinc-950 hero → stone-100 content), hairline borders, and occasional sheet shadows, not persistent card elevation.
-
-### Shadow Vocabulary
-
-- **Sheet lift** (`box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)`): Bottom sheets and chooser modals only.
-- **Tab bar edge** (`box-shadow: 0 -1px 3px rgba(0,0,0,0.06)`): Separates fixed navigation from scrollable content.
-- **Scrim** (`background: rgba(0,0,0,0.4–0.5)`): Modal overlays; never glassmorphism blur.
-
-### Named Rules
-
-**The Flat Card Rule.** List rows and budget buckets use bordered surfaces at rest. Shadows appear only when a surface detaches (sheet, modal), not on every card in a grid.
+Soft, warm-tinted shadows as tokens: `shadow-soft` (subtle lift, nav, pills), `shadow-card` (resting cards, sheets), `shadow-float` (hover / detached surfaces). Depth still comes mostly from surface-color steps (canvas → surface → surface-raised) and hairline borders; shadows are gentle, never hard drop-shadows.
 
 ## Components
 
-Product components should feel tactile and familiar: the same button height, the same border language, the same chip shape everywhere.
+- **Buttons:** Coral primary fill (`bg-primary text-on-primary`, hover `bg-primary-hover`), 48px on primary flows, 18px radius. Secondary: bordered surface (`SECONDARY_BUTTON`). Ghost: text-only.
+- **Chips / pills:** `rounded-full`; selected = coral (`bg-primary text-on-primary`) or pastel-soft; default = bordered surface.
+- **Cards:** `Card` primitive (bordered `surface`, 24px radius) or `FLOATING_CARD` (elevated `surface-raised`, 32px radius, `shadow-card`). Stat cards pair a pastel-soft icon chip with a saturated accent icon.
+- **Inputs:** 14px radius, `border-hairline-strong`, `bg-surface`; focus shifts border/ring to `primary`.
+- **Navigation:** Bottom tab bar (below lg) and left rail (lg+) share `components/layout/navConfig.ts`. Active = coral (`text-primary`, rail row `bg-primary-soft`); inactive = `text-ink-muted`/`text-ink-secondary`. Review badge = `bg-warn text-on-primary`.
+- **Sheets / Modals:** `components/ui/SheetShell.tsx` — full-screen below lg, centered dialog over a scrim at lg+. Account detail mirrors this.
 
-### Buttons
+## Illustrations
 
-- **Shape:** Generously rounded (12px / `rounded-xl`) on primary flows; compact pills (full radius) for filter toggles.
-- **Primary:** Midnight Ink fill, white text, 48px height, 15px medium weight. Used for irreversible or forward actions ("Save", "Connect").
-- **Secondary:** White/stone surface with slate border; hover shifts to stone-50. Used for "+ Add account" and non-destructive alternatives.
-- **Ghost:** Text-only cancel actions in sheets (slate-500, no border).
-- **Hover / Focus:** Color shift only (slate-900 → zinc-800); 150–200ms transitions. Focus ring: 1px slate/zinc ring on inputs and selects.
+Custom inline SVG components in `components/illustrations/`, no dependencies. They consume tokens via `currentColor` and `var(--token)` so they flip with the theme, and gate motion behind `motion-safe:` plus an in-SVG `prefers-reduced-motion` guard.
 
-### Chips
+- **SunriseHero** — full-bleed sunrise + hill bands behind the net-worth number (Home + Portfolio heroes).
+- **MountainMilestone** — peak + summit flag for "Next milestone" and the 4%-rule card.
+- **JourneyStepper** — winding path with checkmark nodes (done = gain, current = primary, future = hairline) for journey progress.
+- **CelebrateSpot** — person celebrating, for milestone-hit and "all caught up" states.
+- **EmptyAccounts / EmptyBudget / EmptyTransactions** — labelled line-art spots (coral + one pastel) for empty states.
 
-- **Style:** `rounded-full`, 12px horizontal padding, xs medium weight.
-- **Selected:** Midnight Ink fill, inverted text (portfolio view toggles).
-- **Default:** White/zinc-900 surface with 1px stone/zinc ring; hover stone-50/zinc-800.
-
-### Cards / Containers
-
-- **Corner Style:** 16px (`rounded-2xl`) for budget buckets and account groups.
-- **Background:** White (light) / zinc-900 (dark).
-- **Border:** zinc-200 / zinc-800 default; semantic tint (amber/red) only for alert states.
-- **Internal Padding:** 16px standard; list rows use 16px vertical padding with flex alignment.
-- **Progress bars:** 8px height, full-radius track in zinc-100/zinc-800; fill uses semantic green/amber/red.
-
-### Inputs / Fields
-
-- **Style:** 8px radius, 1px stone-300 / zinc-700 border, white/zinc-900 fill, 14px body text.
-- **Focus:** Border darkens to slate-500 with 1px matching ring.
-- **Error:** red-50 / red-950 background with red-700 / red-300 text in rounded-lg banners.
-- **Disabled:** 60% opacity; never hide the field.
-
-### Navigation
-
-- **Tab bar (below lg):** Fixed bottom, 5 equal columns, max-w-lg centered. Active tab: semibold zinc-100/900; inactive: zinc-400/500. Center Home icon slightly larger (28px vs 20px). Review badge: amber-500 dot with white 9px bold count.
-- **Left rail (lg+):** Fixed 15rem (`w-60`) rail, white/zinc-900 with hairline right border. Icon + label rows (`rounded-xl`), active row gets stone-100/zinc-800 fill; Settings pinned to the bottom. Badge rendered inline after the label. Both surfaces share `components/layout/navConfig.ts`.
-- **In-page controls:** Uppercase tracked labels (12px) beside pill toggles or compact selects; border-b separator under control rows.
-
-### Sheets / Modals
-
-- **Bottom sheet pattern:** `rounded-t-2xl` on mobile, `rounded-2xl` centered on sm+. Scrim + shadow-xl. Header with 18px semibold title and optional 14px slate subtitle.
-- **Full-screen detail:** Account detail uses full viewport height with safe-area padding; close control is rounded-full icon button. At lg+ it becomes a centered `rounded-2xl` dialog (max-w-2xl, max-h 85dvh) over a black/50 scrim.
-- **Full-screen sheets:** Budget sheets render through `components/ui/SheetShell.tsx` — full-screen takeover below lg, centered dialog over a scrim at lg+.
-
-### Shared primitives
-
-Reusable building blocks live in `components/ui/`; prefer these over re-typing surface classes:
-
-- `Card` — the standard flat bordered card (rounded-2xl, white/zinc-900, zinc border).
-- `cardStyles.ts` — `FLOATING_CARD` (elevated rounded-3xl surface used on Portfolio/Home) and `SECONDARY_BUTTON` (bordered white action button).
-- `SheetShell` — sheet/dialog container described above.
+Decorative illustrations are `aria-hidden`; meaningful ones use `role="img"` + `aria-label`.
 
 ## Do's and Don'ts
 
-### Do:
+### Do
 
-- **Do** use semantic green/red/amber only for gains, losses, budget state, and review attention.
-- **Do** default to dark mode for portfolio hero moments; use stone-100 / zinc-950 split between hero and working content.
-- **Do** keep primary actions at 48px height with verb + object labels ("Save changes", "Connect Bank/Brokerage").
-- **Do** celebrate milestones with copy and color state, not motion-dependent effects; always provide reduced-motion alternatives.
-- **Do** maintain one component vocabulary: rounded-xl buttons, rounded-2xl cards, rounded-lg inputs, everywhere.
+- Use token utilities (`bg-surface`, `text-ink`, `bg-primary`, `bg-accent-*`) everywhere.
+- Keep light warm-cream and dark warm-espresso; let the hero be a light cream→peach gradient with dark ink text in light mode.
+- Reserve `gain`/`loss`/`warn` for state; use pastel accents for category/stat identity.
+- Lean on illustrations and gentle copy for celebration; always provide reduced-motion fallbacks.
+- Keep one rounded, soft-shadowed component vocabulary.
 
-### Don't:
+### Don't
 
-- **Don't** use generic SaaS dashboards: navy gradients, hero metrics, identical icon + heading + text card grids.
-- **Don't** feel like a corporate banking app: sterile institutional chrome, compliance-heavy density, cold trust signals.
-- **Don't** lean into high-tech fintech gamification: streaks, confetti overload, hustle culture, competitive leaderboards.
-- **Don't** ship spreadsheet-first UI: dense jargon tables as the default path, or power-user density before the journey is clear.
-- **Don't** add anxiety: red for decoration, alarming copy on neutral states, or screens that punish the user for down markets.
-- **Don't** use gradient text, glassmorphism, side-stripe borders, or numbered section eyebrows as decorative scaffolding.
-- **Don't** use display fonts in buttons, labels, or data tables.
+- Don't hardcode stock Tailwind colors (`zinc-*`, `emerald-*`, `teal-*`, …) in components.
+- Don't put a dark band in light mode, or cold blue-grey neutrals in either theme.
+- Don't use decorative gradient text, glassmorphism, or hard drop-shadows.
+- Don't add hustle-culture gamification: streaks, leaderboards, confetti overload.
+- Don't ship spreadsheet-first density or alarming red on neutral states.
+- Don't use display fonts in buttons, labels, or data tables.

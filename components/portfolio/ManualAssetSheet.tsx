@@ -16,7 +16,7 @@ type ManualAssetSheetProps = {
 };
 
 const inputClassName =
-  "w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-[15px] text-slate-900 outline-none transition-colors focus:border-slate-500 focus:ring-1 focus:ring-slate-500";
+  "w-full rounded-lg border border-hairline-strong bg-surface px-3 py-2.5 text-[15px] text-ink outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary";
 
 export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetProps) {
   const [name, setName] = useState("");
@@ -126,19 +126,19 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
         role="dialog"
         aria-modal="true"
         aria-labelledby="manual-asset-title"
-        className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl"
+        className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl sm:rounded-2xl"
       >
-        <div className="flex items-center justify-between border-b border-stone-200 px-4 py-4">
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-4">
           <h2
             id="manual-asset-title"
-            className="text-lg font-semibold text-slate-900"
+            className="text-lg font-semibold text-ink"
           >
             Add asset manually
           </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-stone-100"
+            className="rounded-lg p-1.5 text-ink-secondary transition-colors hover:bg-canvas-sunken"
             aria-label="Close form"
           >
             <X className="h-5 w-5" />
@@ -150,7 +150,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
         >
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-secondary">
               Asset name
             </span>
             <input
@@ -164,7 +164,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-secondary">
               Asset type
             </span>
             <select
@@ -181,9 +181,9 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-secondary">
               Current value{" "}
-              <span className="font-normal text-slate-400">
+              <span className="font-normal text-ink-muted">
                 (uses purchase value if blank)
               </span>
             </span>
@@ -198,9 +198,9 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-secondary">
               Purchase value{" "}
-              <span className="font-normal text-slate-400">(optional)</span>
+              <span className="font-normal text-ink-muted">(optional)</span>
             </span>
             <input
               type="text"
@@ -213,11 +213,11 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-secondary">
               Purchase date{" "}
-              <span className="font-normal text-slate-400">(optional)</span>
+              <span className="font-normal text-ink-muted">(optional)</span>
             </span>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ink-secondary">
               Your net worth chart excludes this asset before this date and
               grows from purchase value toward current value over time. Use{" "}
               <span className="font-medium">MM/DD/YYYY</span> (e.g. 2/3/2022).
@@ -232,7 +232,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
               aria-describedby="purchase-date-hint"
             />
             {parsePurchaseDateInput(purchaseDate) ? (
-              <p id="purchase-date-hint" className="text-xs text-slate-500">
+              <p id="purchase-date-hint" className="text-xs text-ink-secondary">
                 Chart starts{" "}
                 {formatPurchaseDateLabel(parsePurchaseDateInput(purchaseDate)!)}
               </p>
@@ -241,9 +241,9 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
 
           {assetType === "real_estate" ? (
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink-secondary">
                 Address{" "}
-                <span className="font-normal text-slate-400">(optional)</span>
+                <span className="font-normal text-ink-muted">(optional)</span>
               </span>
               <input
                 type="text"
@@ -256,9 +256,9 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           ) : null}
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-secondary">
               Notes{" "}
-              <span className="font-normal text-slate-400">(optional)</span>
+              <span className="font-normal text-ink-muted">(optional)</span>
             </span>
             <textarea
               value={notes}
@@ -270,7 +270,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           </label>
 
           {error ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-lg bg-loss-soft px-3 py-2 text-sm text-loss">
               {error}
             </p>
           ) : null}
@@ -278,7 +278,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           <button
             type="submit"
             disabled={submitting}
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-slate-900 text-[15px] font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-[15px] font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
           >
             {submitting ? "Saving…" : "Add asset"}
           </button>

@@ -27,15 +27,15 @@ export function BulkCategorizeBar({
 
   return (
     <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-lg px-4 lg:bottom-6 lg:left-60">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+      <div className="rounded-2xl border border-hairline bg-surface p-3 shadow-lg">
+        <p className="text-sm font-medium text-ink">
           {selectedCount} selected
         </p>
         <div className="mt-2 flex gap-2">
           <select
             value={categoryId}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-2 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            className="min-w-0 flex-1 rounded-xl border border-hairline bg-surface px-2 py-2 text-sm"
           >
             <option value="">Choose bucket…</option>
             {categories.map((c) => (
@@ -48,7 +48,7 @@ export function BulkCategorizeBar({
             type="button"
             disabled={!categoryId || applying}
             onClick={onApply}
-            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
           >
             {applying ? "…" : "Apply"}
           </button>
@@ -56,12 +56,12 @@ export function BulkCategorizeBar({
         <button
           type="button"
           onClick={onClear}
-          className="mt-2 text-xs text-zinc-500 underline"
+          className="mt-2 text-xs text-ink-secondary underline"
         >
           Clear selection
         </button>
         {message ? (
-          <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 text-xs text-gain">
             {message}
           </p>
         ) : null}

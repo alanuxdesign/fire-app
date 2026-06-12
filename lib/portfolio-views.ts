@@ -54,17 +54,17 @@ const ASSET_CLASS_ORDER: AssetClassLabel[] = [
   "Other",
 ];
 
+// Static warm-palette fallback (mirrors the accent tokens). Charts that can
+// read CSS vars pass a resolved, theme-aware palette to getSegmentColor.
 export const SEGMENT_COLORS = [
-  "#0d9488",
-  "#0891b2",
-  "#6366f1",
-  "#8b5cf6",
-  "#d97706",
-  "#ea580c",
-  "#e11d48",
-  "#64748b",
-  "#16a34a",
-  "#2563eb",
+  "#5b8def",
+  "#4fb286",
+  "#e0a23b",
+  "#9b7be0",
+  "#ef9a6a",
+  "#ef7b5a",
+  "#3da776",
+  "#d8593e",
 ];
 
 export function flattenAccounts(data: AccountsApiResponse): AccountListItem[] {
@@ -301,8 +301,12 @@ export function getPercentOfPortfolio(
   return (Math.abs(balance) / total) * 100;
 }
 
-export function getSegmentColor(index: number): string {
-  return SEGMENT_COLORS[index % SEGMENT_COLORS.length];
+export function getSegmentColor(
+  index: number,
+  palette: readonly string[] = SEGMENT_COLORS,
+): string {
+  const colors = palette.length > 0 ? palette : SEGMENT_COLORS;
+  return colors[index % colors.length];
 }
 
 export type TableRow = AccountListItem & {

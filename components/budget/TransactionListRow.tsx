@@ -33,10 +33,10 @@ export function TransactionListRow({
 
   return (
     <div
-      className={`flex w-full items-center gap-2 rounded-2xl border bg-white px-3 py-3 dark:bg-zinc-900 ${
+      className={`flex w-full items-center gap-2 rounded-2xl border bg-surface px-3 py-3 ${
         txn.pending
-          ? "border-dashed border-zinc-300 dark:border-zinc-600"
-          : "border-zinc-200 dark:border-zinc-800"
+          ? "border-dashed border-hairline-strong"
+          : "border-hairline"
       }`}
     >
       {bulkMode ? (
@@ -59,24 +59,24 @@ export function TransactionListRow({
       >
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">
+            <p className="truncate font-medium text-ink">
               {txn.merchantName ?? txn.name}
             </p>
             {txn.note?.trim() ? (
               <StickyNote
-                className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                className="h-3.5 w-3.5 shrink-0 text-warn"
                 aria-label="Has note"
               />
             ) : null}
           </div>
-          <p className="truncate text-xs text-zinc-500">{meta}</p>
+          <p className="truncate text-xs text-ink-secondary">{meta}</p>
           {txn.note?.trim() ? (
-            <p className="mt-0.5 truncate text-xs italic text-zinc-400">
+            <p className="mt-0.5 truncate text-xs italic text-ink-muted">
               {txn.note}
             </p>
           ) : null}
         </div>
-        <span className="ml-2 shrink-0 tabular-nums text-zinc-900 dark:text-zinc-100">
+        <span className="ml-2 shrink-0 tabular-nums text-ink">
           {formatCurrency(txn.amount)}
         </span>
       </button>

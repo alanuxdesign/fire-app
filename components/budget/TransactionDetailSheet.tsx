@@ -77,14 +77,14 @@ export function TransactionDetailSheet({
   return (
     <SheetShell
       zIndexClassName="z-[60]"
-      backdropClassName="bg-stone-100 dark:bg-zinc-950"
+      backdropClassName="bg-canvas"
     >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Transaction</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+            className="rounded-lg p-2 hover:bg-canvas-sunken"
           >
             <X className="h-5 w-5" />
           </button>
@@ -92,15 +92,15 @@ export function TransactionDetailSheet({
         <p className="mt-2 text-xl font-semibold tabular-nums">
           {formatCurrency(txn.amount)}
         </p>
-        <p className="text-zinc-600 dark:text-zinc-400">
+        <p className="text-ink-secondary">
           {txn.merchantName ?? txn.name}
         </p>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-ink-secondary">
           {txn.date}
           {txn.pending ? " · Pending" : ""}
         </p>
         {txn.categoryLabel ? (
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-secondary">
             {txn.categoryIcon ? (
               <BudgetIcon name={txn.categoryIcon} className="h-4 w-4" />
             ) : null}
@@ -119,7 +119,7 @@ export function TransactionDetailSheet({
               reviewStatus: e.target.value ? "reviewed" : txn.reviewStatus,
             })
           }
-          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-xl border border-hairline bg-surface px-3 py-2"
         >
           <option value="">Uncategorized</option>
           {categories.map((c) => (
@@ -141,8 +141,8 @@ export function TransactionDetailSheet({
                 onClick={() => toggleTag(tag.id)}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                    ? "bg-primary text-on-primary"
+                    : "border border-hairline bg-surface text-ink-secondary"
                 }`}
               >
                 {tag.name}
@@ -157,7 +157,7 @@ export function TransactionDetailSheet({
               placeholder="New tag"
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
-              className="flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="flex-1 rounded-xl border border-hairline bg-surface px-3 py-2 text-sm"
             />
             <button
               type="button"
@@ -170,7 +170,7 @@ export function TransactionDetailSheet({
                   setNewTagName("");
                 }
               }}
-              className="rounded-xl border border-zinc-200 px-3 py-2 text-sm font-medium dark:border-zinc-700"
+              className="rounded-xl border border-hairline px-3 py-2 text-sm font-medium"
             >
               Add
             </button>
@@ -202,12 +202,12 @@ export function TransactionDetailSheet({
           value={txn.note ?? ""}
           disabled={isDemo}
           onChange={(e) => setTxn({ ...txn, note: e.target.value })}
-          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-xl border border-hairline bg-surface px-3 py-2 text-sm"
           rows={2}
         />
 
         {!isDemo && txn.merchantKey ? (
-          <div className="mt-4 space-y-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
+          <div className="mt-4 space-y-2 rounded-xl border border-hairline p-3">
             <p className="text-sm font-medium">Apply to vendor</p>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -242,7 +242,7 @@ export function TransactionDetailSheet({
             type="button"
             disabled={saving}
             onClick={() => void handleSave()}
-            className="mt-6 w-full rounded-2xl bg-zinc-900 py-3 font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+            className="mt-6 w-full rounded-2xl bg-primary py-3 font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>

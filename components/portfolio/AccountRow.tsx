@@ -21,16 +21,16 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
     <button
       type="button"
       onClick={() => onClick(account)}
-      className="flex w-full items-start gap-3 rounded-2xl px-2 py-3.5 text-left transition-[background-color,transform] hover:bg-teal-50/50 active:scale-[0.99] dark:hover:bg-teal-950/20"
+      className="flex w-full items-start gap-3 rounded-2xl px-2 py-3.5 text-left transition-[background-color,transform] hover:bg-canvas-sunken active:scale-[0.99]"
     >
       <InstitutionAvatar account={account} />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-medium text-slate-900 dark:text-zinc-100">
+        <p className="truncate text-[15px] font-medium text-ink">
           <span>{account.name}</span>
           {account.assetClassOverride ? (
             <span
-              className="ml-1 text-amber-600 dark:text-amber-400"
+              className="ml-1 text-warn"
               title="Asset class overridden"
             >
               *
@@ -38,7 +38,7 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
           ) : null}
         </p>
         {account.subtitle ? (
-          <p className="truncate text-sm text-slate-500 dark:text-zinc-400">
+          <p className="truncate text-sm text-ink-secondary">
             {account.subtitle}
           </p>
         ) : null}
@@ -48,15 +48,15 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
         <p
           className={`text-lg font-bold tabular-nums tracking-tight ${
             account.group === "Liabilities"
-              ? "text-rose-500"
-              : "text-zinc-900 dark:text-zinc-50"
+              ? "text-loss"
+              : "text-ink"
           }`}
         >
           {formatAccountBalance(account)}
         </p>
         <div className="mt-0.5 flex flex-col items-end gap-0.5">
           <ChangeLabel amount={account.dailyChange} size="xs" />
-          <p className="text-xs text-slate-400 dark:text-zinc-500">
+          <p className="text-xs text-ink-muted">
             {secondaryLabel}
           </p>
         </div>

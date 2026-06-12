@@ -24,17 +24,17 @@ export function AccountGroup({ group, onAccountClick }: AccountGroupProps) {
 
   return (
     <section className={`overflow-hidden ${PORTFOLIO_FLOATING_CARD}`}>
-      <div className="bg-gradient-to-r from-stone-50/80 to-white px-4 pb-3 pt-4 dark:from-zinc-800/40 dark:to-zinc-900">
+      <div className="bg-gradient-to-r from-canvas-sunken/60 to-surface px-4 pb-3 pt-4">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-ink-secondary">
               {group.type}
             </h2>
             <p
               className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${
                 liability
-                  ? "text-rose-500"
-                  : "text-zinc-900 dark:text-white"
+                  ? "text-loss"
+                  : "text-ink"
               }`}
             >
               {formatGroupTotal(group.total, {
@@ -50,12 +50,12 @@ export function AccountGroup({ group, onAccountClick }: AccountGroupProps) {
                 showPercent
                 size="xs"
               />
-              <span className="mt-0.5 block text-zinc-400">This month</span>
+              <span className="mt-0.5 block text-ink-muted">This month</span>
             </p>
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
-              className="hidden rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-stone-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 lg:inline-flex"
+              className="hidden rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-canvas-sunken hover:text-ink-secondary lg:inline-flex"
               aria-expanded={!collapsed}
               aria-label={`${collapsed ? "Expand" : "Collapse"} ${group.type}`}
             >
@@ -70,7 +70,7 @@ export function AccountGroup({ group, onAccountClick }: AccountGroupProps) {
       </div>
 
       <div
-        className={`divide-y divide-stone-100/80 px-2 dark:divide-zinc-800/80 ${
+        className={`divide-y divide-hairline/80 px-2 ${
           collapsed ? "lg:hidden" : ""
         }`}
       >

@@ -72,10 +72,10 @@ export function PortfolioHoldings({
 
       {!hasHoldings ? (
         <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-10 text-center`}>
-          <p className="text-base font-semibold text-zinc-800 dark:text-zinc-100">
+          <p className="text-base font-semibold text-ink">
             No accounts yet
           </p>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-ink-secondary">
             Connect a bank or add an asset manually below.
           </p>
         </div>

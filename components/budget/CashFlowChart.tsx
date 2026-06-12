@@ -1,6 +1,7 @@
 "use client";
 
 import type { CashFlowPoint } from "@/lib/budget-types";
+import { useChartColors } from "@/lib/chart-colors";
 import { formatCurrency } from "@/lib/format";
 import {
   Bar,
@@ -23,6 +24,7 @@ function monthTick(month: string): string {
 }
 
 export function CashFlowChart({ series }: CashFlowChartProps) {
+  const colors = useChartColors();
   if (series.length === 0) return null;
 
   const data = series.map((p) => ({
@@ -33,22 +35,22 @@ export function CashFlowChart({ series }: CashFlowChartProps) {
   }));
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+    <div className="rounded-2xl border border-hairline bg-surface p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
         Cash flow
       </p>
       <div className="mt-3 h-48 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-700" />
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.hairline} />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 10, fill: "currentColor" }}
-              className="text-zinc-500"
+              className="text-ink-secondary"
             />
             <YAxis
               tick={{ fontSize: 10, fill: "currentColor" }}
-              className="text-zinc-500"
+              className="text-ink-secondary"
               tickFormatter={(v: number) => {
                 const abs = Math.abs(v);
                 if (abs >= 1000) {
@@ -71,9 +73,9 @@ export function CashFlowChart({ series }: CashFlowChartProps) {
               labelFormatter={(label) => `Month ${label}`}
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={20} />
-            <Bar dataKey="expense" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={20} />
-            <Line type="monotone" dataKey="net" stroke="#6366f1" strokeWidth={2} dot={{ r: 2 }} />
+            <Bar dataKey="income" fill={colors.gain} radius={[4, 4, 0, 0]} maxBarSize={20} />
+            <Bar dataKey="expense" fill={colors.loss} radius={[4, 4, 0, 0]} maxBarSize={20} />
+            <Line type="monotone" dataKey="net" stroke={colors.accentBlue} strokeWidth={2} dot={{ r: 2 }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

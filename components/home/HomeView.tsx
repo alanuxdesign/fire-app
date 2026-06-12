@@ -3,7 +3,7 @@
 import { DemoBanner } from "@/components/portfolio/DemoBanner";
 import { SunriseHero } from "@/components/illustrations/SunriseHero";
 import { MountainMilestone } from "@/components/illustrations/MountainMilestone";
-import { EmptyAccounts } from "@/components/illustrations/EmptyStates";
+import { EmptyAccounts, EmptyBudget } from "@/components/illustrations/EmptyStates";
 import { FLOATING_CARD } from "@/components/ui/cardStyles";
 import type { AccountsApiResponse } from "@/lib/account-groups";
 import type { BudgetSummary } from "@/lib/budget-types";
@@ -379,7 +379,7 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
           {showBudgetSetup ? (
             <FloatingCard className="lg:col-span-2">
               <div className="flex items-start gap-3">
-                <GradientIcon icon={LayoutGrid} gradient="green" />
+                <EmptyBudget className="h-12 w-14 shrink-0" />
                 <div>
                   <p className="font-semibold text-ink">
                     Set up your budget

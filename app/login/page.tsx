@@ -23,17 +23,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     : null;
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-950 px-6">
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
-        <h1 className="text-center text-2xl font-semibold tracking-tight text-zinc-50">
+    <div className="flex flex-1 flex-col items-center justify-center bg-canvas px-6">
+      <div className="w-full max-w-sm rounded-3xl border border-hairline bg-surface p-8 shadow-card">
+        <h1 className="text-center text-2xl font-semibold tracking-tight text-ink">
           Sign in
         </h1>
-        <p className="mt-2 text-center text-sm text-zinc-400">
+        <p className="mt-2 text-center text-sm text-ink-secondary">
           Connect your account to view your portfolio.
         </p>
         {errorMessage ? (
           <p
-            className="mt-4 rounded-lg border border-red-900/50 bg-red-950/40 px-3 py-2 text-center text-sm text-red-300"
+            className="mt-4 rounded-lg border border-loss/40 bg-loss-soft px-3 py-2 text-center text-sm text-loss"
             role="alert"
           >
             {errorMessage}
@@ -48,7 +48,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         >
           <button
             type="submit"
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-white px-4 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-hairline bg-surface-raised px-4 text-sm font-medium text-ink shadow-soft transition-colors hover:bg-canvas-sunken"
           >
             <GoogleIcon />
             Sign in with Google
@@ -57,7 +57,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <form action="/api/auth/demo" method="POST" className="mt-4">
           <button
             type="submit"
-            className="flex h-9 w-full items-center justify-center rounded-lg border border-zinc-700/80 bg-transparent px-4 text-xs font-medium text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
+            className="flex h-9 w-full items-center justify-center rounded-xl border border-hairline-strong bg-transparent px-4 text-xs font-medium text-ink-secondary transition-colors hover:border-primary hover:text-primary"
           >
             Try Demo
           </button>

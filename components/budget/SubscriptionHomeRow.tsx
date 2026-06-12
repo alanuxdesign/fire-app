@@ -20,20 +20,20 @@ export function SubscriptionHomeRow({
     <button
       type="button"
       onClick={onClick}
-      className="relative w-full rounded-2xl border border-zinc-200 bg-white p-4 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/80"
+      className="relative w-full rounded-2xl border border-hairline bg-surface p-4 text-left transition-colors hover:bg-canvas-sunken"
     >
       <div className="flex items-center gap-3">
-        <Repeat className="h-6 w-6 shrink-0 text-zinc-600 dark:text-zinc-400" />
+        <Repeat className="h-6 w-6 shrink-0 text-ink-secondary" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-medium text-zinc-900 dark:text-zinc-100">
+            <span className="truncate font-medium text-ink">
               Subscriptions
             </span>
-            <span className="shrink-0 text-sm tabular-nums text-zinc-600 dark:text-zinc-400">
+            <span className="shrink-0 text-sm tabular-nums text-ink-secondary">
               {formatCurrency(monthlyTotal)}/mo
             </span>
           </div>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-ink-secondary">
             {confirmedCount} confirmed
             {pendingCount > 0
               ? ` · ${pendingCount} to review`
@@ -42,7 +42,7 @@ export function SubscriptionHomeRow({
         </div>
         {pendingCount > 0 ? (
           <span
-            className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-semibold text-white"
+            className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-warn px-1.5 text-xs font-semibold text-on-primary"
             aria-label={`${pendingCount} to review`}
           >
             {pendingCount > 9 ? "9+" : pendingCount}

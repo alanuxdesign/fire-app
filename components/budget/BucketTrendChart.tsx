@@ -1,5 +1,6 @@
 "use client";
 
+import { useChartColors } from "@/lib/chart-colors";
 import { formatCurrency } from "@/lib/format";
 import {
   Bar,
@@ -28,6 +29,7 @@ function monthTick(month: string): string {
 }
 
 export function BucketTrendChart({ trends }: BucketTrendChartProps) {
+  const colors = useChartColors();
   if (trends.length === 0) return null;
 
   const data = trends.map((t) => ({
@@ -37,22 +39,22 @@ export function BucketTrendChart({ trends }: BucketTrendChartProps) {
   }));
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+    <div className="rounded-2xl border border-hairline bg-surface p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
         Spend vs budget
       </p>
       <div className="mt-3 h-44 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-200 dark:stroke-zinc-700" />
+            <CartesianGrid strokeDasharray="3 3" stroke={colors.hairline} />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 10, fill: "currentColor" }}
-              className="text-zinc-500"
+              className="text-ink-secondary"
             />
             <YAxis
               tick={{ fontSize: 10, fill: "currentColor" }}
-              className="text-zinc-500"
+              className="text-ink-secondary"
               tickFormatter={(v: number) => {
                 if (v >= 1000) {
                   const k = v / 1000;
@@ -70,17 +72,17 @@ export function BucketTrendChart({ trends }: BucketTrendChartProps) {
               labelFormatter={(label) => `Month ${label}`}
               contentStyle={{
                 borderRadius: 12,
-                border: "1px solid var(--border)",
+                border: "1px solid var(--hairline)",
                 fontSize: 12,
               }}
             />
-            <Bar dataKey="spent" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="spent" fill={colors.gain} radius={[4, 4, 0, 0]} maxBarSize={28} />
             <Line
               type="monotone"
               dataKey="target"
-              stroke="#a1a1aa"
+              stroke={colors.inkMuted}
               strokeWidth={2}
-              dot={{ r: 3, fill: "#a1a1aa" }}
+              dot={{ r: 3, fill: colors.inkMuted }}
             />
           </ComposedChart>
         </ResponsiveContainer>

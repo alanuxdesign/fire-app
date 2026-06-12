@@ -60,16 +60,16 @@ export function BillsSection({
   };
 
   return (
-    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="mt-4 rounded-2xl border border-hairline bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
           Bills due this month
         </p>
         {!isDemo ? (
           <button
             type="button"
             onClick={() => setShowForm((v) => !v)}
-            className="rounded-lg p-1.5 text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            className="rounded-lg p-1.5 text-ink-secondary hover:bg-canvas-sunken"
             aria-label="Add bill"
           >
             <Plus className="h-4 w-4" />
@@ -78,7 +78,7 @@ export function BillsSection({
       </div>
 
       {bills.length === 0 ? (
-        <p className="mt-2 text-sm text-zinc-500">No bills scheduled for {month}.</p>
+        <p className="mt-2 text-sm text-ink-secondary">No bills scheduled for {month}.</p>
       ) : (
         <ul className="mt-2 space-y-2">
           {bills.map((bill) => (
@@ -87,20 +87,20 @@ export function BillsSection({
               className="flex items-center justify-between gap-2 text-sm"
             >
               <div className="min-w-0">
-                <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">
+                <p className="truncate font-medium text-ink">
                   {bill.name}
                 </p>
-                <p className="text-xs text-zinc-500">Due {bill.nextDueDate}</p>
+                <p className="text-xs text-ink-secondary">Due {bill.nextDueDate}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="tabular-nums text-zinc-700 dark:text-zinc-300">
+                <span className="tabular-nums text-ink-secondary">
                   {formatCurrency(bill.expectedAmount)}
                 </span>
                 {!isDemo ? (
                   <button
                     type="button"
                     onClick={() => void removeBill(bill.id)}
-                    className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    className="rounded p-1 text-ink-secondary hover:bg-canvas-sunken"
                     aria-label="Remove bill"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -113,12 +113,12 @@ export function BillsSection({
       )}
 
       {showForm && !isDemo ? (
-        <div className="mt-3 space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+        <div className="mt-3 space-y-2 border-t border-hairline pt-3">
           <input
             placeholder="Bill name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="w-full rounded-xl border border-hairline px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
             <input
@@ -128,19 +128,19 @@ export function BillsSection({
               placeholder="Amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm"
             />
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="flex-1 rounded-xl border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm"
             />
           </div>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="w-full rounded-xl border border-hairline px-3 py-2 text-sm"
           >
             <option value="">No bucket</option>
             {categories.map((c) => (
@@ -153,7 +153,7 @@ export function BillsSection({
             type="button"
             disabled={saving}
             onClick={() => void addBill()}
-            className="w-full rounded-xl bg-zinc-900 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+            className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover"
           >
             {saving ? "Adding…" : "Add bill"}
           </button>

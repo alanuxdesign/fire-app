@@ -145,12 +145,12 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
         type="button"
         onClick={() => setPanel("chooser")}
         disabled={disabled || plaidLoading}
-        className="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-600 text-[15px] font-semibold text-white shadow-lg shadow-violet-500/30 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/35 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+        className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-[15px] font-semibold text-on-primary shadow-soft transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-card disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
       >
         {plaidLoading ? "Linking account…" : "+ Add account"}
       </button>
 
-      {error ? <p className="text-center text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-center text-sm text-loss">{error}</p> : null}
 
       {panel === "chooser" ? (
         <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -161,11 +161,11 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
             onClick={() => setPanel("closed")}
           />
 
-          <div className="relative z-10 w-full max-w-lg rounded-t-2xl bg-white px-4 pb-6 pt-5 shadow-xl sm:rounded-2xl">
-            <h3 className="text-center text-lg font-semibold text-slate-900">
+          <div className="relative z-10 w-full max-w-lg rounded-t-2xl bg-surface px-4 pb-6 pt-5 shadow-xl sm:rounded-2xl">
+            <h3 className="text-center text-lg font-semibold text-ink">
               Add account
             </h3>
-            <p className="mt-1 text-center text-sm text-slate-500">
+            <p className="mt-1 text-center text-sm text-ink-secondary">
               Connect an institution or enter an asset manually
             </p>
 
@@ -174,16 +174,16 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
                 type="button"
                 onClick={handleConnectBank}
                 disabled={plaidLoading}
-                className="flex w-full items-center gap-3 rounded-2xl bg-stone-50 px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 dark:bg-zinc-800 dark:ring-white/[0.06]"
+                className="flex w-full items-center gap-3 rounded-2xl bg-canvas-sunken px-4 py-3.5 text-left shadow-soft ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card disabled:opacity-50"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 text-white shadow-md shadow-teal-500/25">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-green-soft text-accent-green">
                   <Building2 className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <span>
-                  <span className="block text-[15px] font-medium text-slate-900">
+                  <span className="block text-[15px] font-medium text-ink">
                     Connect Bank/Brokerage
                   </span>
-                  <span className="block text-sm text-slate-500">
+                  <span className="block text-sm text-ink-secondary">
                     Securely link via Plaid
                   </span>
                 </span>
@@ -192,16 +192,16 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
               <button
                 type="button"
                 onClick={() => setPanel("manual")}
-                className="flex w-full items-center gap-3 rounded-2xl bg-stone-50 px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.04] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md dark:bg-zinc-800 dark:ring-white/[0.06]"
+                className="flex w-full items-center gap-3 rounded-2xl bg-canvas-sunken px-4 py-3.5 text-left shadow-soft ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-indigo-600 text-white shadow-md shadow-violet-500/25">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-purple-soft text-accent-purple">
                   <PenLine className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <span>
-                  <span className="block text-[15px] font-medium text-slate-900">
+                  <span className="block text-[15px] font-medium text-ink">
                     Add Manually
                   </span>
-                  <span className="block text-sm text-slate-500">
+                  <span className="block text-sm text-ink-secondary">
                     Real estate, vehicles, crypto, and more
                   </span>
                 </span>
@@ -211,7 +211,7 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
             <button
               type="button"
               onClick={() => setPanel("closed")}
-              className="mt-4 w-full py-2 text-sm font-medium text-slate-500"
+              className="mt-4 w-full py-2 text-sm font-medium text-ink-secondary"
             >
               Cancel
             </button>

@@ -519,13 +519,13 @@ export function NetWorthChart({
           backfillPending &&
           snapshots.length < BACKFILL_MIN_SNAPSHOT_COUNT) ? (
           showPopulatingMessage ? (
-            <div className="flex h-full items-center justify-center rounded-lg bg-zinc-900/60">
-              <p className="text-sm font-medium text-zinc-400">
+            <div className="flex h-full items-center justify-center rounded-lg bg-canvas-sunken">
+              <p className="text-sm font-medium text-ink-muted">
                 Populating data…
               </p>
             </div>
           ) : (
-            <div className="h-full animate-pulse rounded-lg bg-zinc-900" />
+            <div className="h-full animate-pulse rounded-lg bg-canvas-sunken" />
           )
         ) : (
           <div
@@ -588,8 +588,8 @@ export function NetWorthChart({
               onClick={() => setRange(option)}
               className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-[transform,box-shadow,background-color] duration-200 ${
                 isActive
-                  ? "bg-gradient-to-r from-teal-400/30 to-emerald-500/30 text-emerald-100 shadow-[0_0_12px_rgba(52,211,153,0.25)] ring-1 ring-emerald-400/50"
-                  : "text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+                  ? "bg-primary-soft text-primary ring-1 ring-primary/40"
+                  : "text-ink-secondary hover:bg-canvas-sunken hover:text-ink"
               }`}
             >
               {option}

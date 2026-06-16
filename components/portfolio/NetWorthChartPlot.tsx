@@ -51,9 +51,9 @@ export function NetWorthChartPlot({
     >
       <defs>
         <linearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.primary} stopOpacity={0.5} />
-          <stop offset="55%" stopColor={colors.primary} stopOpacity={0.18} />
-          <stop offset="100%" stopColor={colors.primary} stopOpacity={0} />
+          <stop offset="0%" stopColor={colors.gain} stopOpacity={0.42} />
+          <stop offset="55%" stopColor={colors.gain} stopOpacity={0.14} />
+          <stop offset="100%" stopColor={colors.gain} stopOpacity={0} />
         </linearGradient>
       </defs>
 
@@ -77,11 +77,11 @@ export function NetWorthChartPlot({
       <Area
         type="monotone"
         dataKey="chartValue"
-        stroke={colors.primary}
+        stroke={colors.gain}
         strokeWidth={2.5}
         fill="url(#netWorthFill)"
         baseValue="dataMin"
-        dot={chartData.length === 1 ? { r: 4, fill: colors.primary } : false}
+        dot={chartData.length === 1 ? { r: 4, fill: colors.gain } : false}
         activeDot={false}
         isAnimationActive
         animationDuration={500}
@@ -92,7 +92,7 @@ export function NetWorthChartPlot({
         <>
           <ReferenceLine
             x={scrub.exactIndex}
-            stroke={colors.primary}
+            stroke={colors.gain}
             strokeWidth={1}
             strokeDasharray="4 4"
             ifOverflow="hidden"
@@ -101,7 +101,7 @@ export function NetWorthChartPlot({
             x={scrub.exactIndex}
             y={scrub.chartValue}
             r={5}
-            fill={colors.primary}
+            fill={colors.gain}
             stroke="var(--surface-raised)"
             strokeWidth={2}
             ifOverflow="hidden"

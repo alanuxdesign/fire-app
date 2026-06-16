@@ -21,7 +21,7 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
     <button
       type="button"
       onClick={() => onClick(account)}
-      className="flex w-full items-start gap-3 rounded-2xl px-2 py-3.5 text-left transition-[background-color,transform] hover:bg-canvas-sunken active:scale-[0.99]"
+      className="flex w-full items-start gap-3 rounded-[14px] px-2 py-3.5 text-left transition-colors hover:bg-sage-wash/50"
     >
       <InstitutionAvatar account={account} />
 
@@ -46,10 +46,8 @@ export function AccountRow({ account, onClick }: AccountRowProps) {
 
       <div className="shrink-0 text-right">
         <p
-          className={`text-lg font-bold tabular-nums tracking-tight ${
-            account.group === "Liabilities"
-              ? "text-loss"
-              : "text-ink"
+          className={`text-lg font-semibold tabular-nums tracking-[-0.01em] ${
+            account.group === "Liabilities" ? "text-ink-soft" : "text-ink"
           }`}
         >
           {formatAccountBalance(account)}

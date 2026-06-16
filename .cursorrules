@@ -32,13 +32,17 @@ Tab structure (bottom nav):
 
 Design direction:
 
-- Dark theme for chart/hero areas (off-black/charcoal background, teal/green accent for charts with gradient and subtle dot grid tecture)
+- The single source of truth for ALL visual design is EMBER-DESIGN-SYSTEM.md. Read it before touching any UI.
 
-- Light theme for content cards below (off-white, subtle borders)
+- Warm-paper aesthetic: flat surfaces separated by hairline rules and whitespace, NOT boxed white cards with shadows. At most one soft-shadow hero card per view.
 
-- Clean, financial-app aesthetic — not flashy, not generic
+- Consume design tokens only (CSS custom properties in app/globals.css / the Tailwind utilities that point at them). Never hard-code a hex color, font family, or radius in a component.
 
-- Green for positive values, red for negative
+- Type: Newsreader for headlines/reflection, Hanken Grotesk (tabular-nums) for data/UI.
+
+- NO stoplight red/green. Growth is sage (--ds-sage); the single accent is terracotta (--ds-terra). Text is soft espresso, never pure black.
+
+- Voice: gentle mentor, growth/garden metaphors, never scold (see §7).
 
 File organization:
 

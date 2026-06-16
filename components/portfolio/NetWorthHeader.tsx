@@ -30,49 +30,43 @@ export function NetWorthHeader({
         <button
           type="button"
           onClick={onBackToToday}
-          className={`absolute left-3 rounded-full bg-surface/80 px-3 py-1.5 text-xs font-semibold text-ink-secondary shadow-soft ring-1 ring-hairline transition-colors hover:bg-surface ${
+          className={`absolute left-3 rounded-full border border-hairline bg-paper-2/80 px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:bg-paper-2 ${
             hero ? "top-8" : "top-6"
           }`}
         >
-          Back to Today
+          Back to today
         </button>
       ) : null}
       <p
         className={
           hero
-            ? "text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-primary"
-            : "text-center text-sm font-medium tracking-wide text-ink-muted"
+            ? "text-center text-[11.5px] font-bold uppercase tracking-[0.16em] text-terra"
+            : "text-center text-[11.5px] font-bold uppercase tracking-[0.16em] text-ink-faint"
         }
       >
-        {isEstimated
-          ? hero
-            ? "Estimated net worth"
-            : "Estimated Net Worth"
-          : hero
-            ? "Portfolio"
-            : "Net Worth"}
+        {isEstimated ? "Estimated net worth" : hero ? "Your portfolio" : "Net worth"}
       </p>
       <p
-        className={`text-center font-bold tracking-tight tabular-nums text-ink transition-all duration-200 ${
+        className={`text-center font-semibold tracking-[-0.02em] tabular-nums text-ink transition-all duration-200 ${
           hero
-            ? "mt-3 text-[clamp(2.75rem,14vw,3.5rem)] leading-none drop-shadow-sm"
-            : "mt-2 text-4xl font-semibold"
+            ? "mt-3 text-[clamp(2.75rem,13vw,3.4rem)] leading-none"
+            : "mt-2 text-4xl"
         }`}
       >
         {formatCurrency(netWorth)}
       </p>
       <p
         className={`text-center font-medium tabular-nums transition-colors duration-200 ${
-          hero ? "mt-2 text-xs" : "mt-1 text-sm"
+          hero ? "mt-2.5 text-[13px]" : "mt-1 text-sm"
         }`}
       >
-        <span className={isPositive ? "text-gain" : "text-loss"}>
+        <span className={isPositive ? "text-sage" : "text-ink-soft"}>
           {formatSignedCurrency(changeAmount)}
           {Number.isFinite(changePercent) ? (
             <> ({formatPercent(changePercent)})</>
           ) : null}
         </span>
-        <span className="text-ink-muted">
+        <span className="text-ink-faint">
           {" "}
           · {changeHorizonLabel}
         </span>

@@ -23,17 +23,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     : null;
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-canvas px-6">
-      <div className="w-full max-w-sm rounded-3xl border border-hairline bg-surface p-8 shadow-card">
-        <h1 className="text-center text-2xl font-semibold tracking-tight text-ink">
-          Sign in
+    <div className="flex flex-1 flex-col items-center justify-center bg-paper px-6">
+      <div className="w-full max-w-sm rounded-[22px] bg-surface-raised p-8 shadow-card ring-1 ring-hairline">
+        <h1 className="text-center font-display text-[2rem] leading-tight tracking-[-0.015em] text-ink">
+          Welcome to Fire
         </h1>
-        <p className="mt-2 text-center text-sm text-ink-secondary">
-          Connect your account to view your portfolio.
+        <p className="mx-auto mt-2 max-w-[18rem] text-center text-sm leading-relaxed text-ink-soft">
+          A gentle place to watch your savings take root and grow.
         </p>
         {errorMessage ? (
           <p
-            className="mt-4 rounded-lg border border-loss/40 bg-loss-soft px-3 py-2 text-center text-sm text-loss"
+            className="mt-4 rounded-[14px] bg-[color:var(--ds-sand)] px-3 py-2 text-center text-sm text-ink"
             role="alert"
           >
             {errorMessage}
@@ -48,18 +48,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         >
           <button
             type="submit"
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-hairline bg-surface-raised px-4 text-sm font-medium text-ink shadow-soft transition-colors hover:bg-canvas-sunken"
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-hairline bg-paper-2 px-4 text-sm font-semibold text-ink transition-colors hover:bg-sage-wash"
           >
             <GoogleIcon />
             Sign in with Google
           </button>
         </form>
-        <form action="/api/auth/demo" method="POST" className="mt-4">
+        <form action="/api/auth/demo" method="POST" className="mt-3">
           <button
             type="submit"
-            className="flex h-9 w-full items-center justify-center rounded-xl border border-hairline-strong bg-transparent px-4 text-xs font-medium text-ink-secondary transition-colors hover:border-primary hover:text-primary"
+            className="flex h-10 w-full items-center justify-center rounded-full px-4 text-xs font-semibold text-ink-soft transition-colors hover:text-terra"
           >
-            Try Demo
+            Take a look around first
           </button>
         </form>
       </div>

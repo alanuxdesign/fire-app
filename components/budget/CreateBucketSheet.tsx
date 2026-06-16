@@ -61,7 +61,7 @@ export function CreateBucketSheet({ onClose, onCreated }: CreateBucketSheetProps
         </div>
 
         {error ? (
-          <p className="mt-3 text-sm text-loss">{error}</p>
+          <p className="mt-3 text-sm text-amber">{error}</p>
         ) : null}
 
         <label className="mt-4 block text-sm font-medium">Name</label>
@@ -94,7 +94,7 @@ export function CreateBucketSheet({ onClose, onCreated }: CreateBucketSheetProps
           type="button"
           disabled={saving}
           onClick={() => void create()}
-          className="mt-6 w-full rounded-2xl bg-primary py-3 font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+          className="mt-6 w-full rounded-full bg-terra-deep py-3 font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
         >
           {saving ? "Creating…" : "Create bucket"}
         </button>

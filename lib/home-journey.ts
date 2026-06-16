@@ -62,9 +62,9 @@ export function getEncouragement(
 ): { headline: string; subline: string } {
   if (netWorth <= 0) {
     return {
-      headline: "Your journey starts here",
+      headline: "A fine place to begin",
       subline:
-        "Link your first account and every dollar you save becomes visible progress.",
+        "Link your first account, and every dollar you save takes root as visible growth.",
     };
   }
 
@@ -73,22 +73,22 @@ export function getEncouragement(
 
   if (green && summary?.savingsRate != null && summary.savingsRate > 0) {
     return {
-      headline: "A strong month",
-      subline: `On track and saving ${summary.savingsRate.toFixed(0)}% of income. That momentum adds up.`,
+      headline: "Thriving this month",
+      subline: `You set aside ${summary.savingsRate.toFixed(0)}% of what came in. That's steady growth, taking root.`,
     };
   }
 
   if (green) {
     return {
-      headline: "On track this month",
-      subline: "Spending is within your plan. Small wins stack into big ones.",
+      headline: "Growing steadily",
+      subline: "Spending settled within your plan this month. Small seeds, real growth.",
     };
   }
 
   if (next && next.progress >= 0.85) {
     return {
-      headline: `Almost at ${next.label}`,
-      subline: `${formatCurrency(next.remaining)} to go. Closer than it feels.`,
+      headline: `Almost to ${next.label}`,
+      subline: `${formatCurrency(next.remaining)} to go — closer than it feels.`,
     };
   }
 
@@ -96,14 +96,14 @@ export function getEncouragement(
   if (achieved.length > 0) {
     const latest = achieved[achieved.length - 1];
     return {
-      headline: "You're building something real",
-      subline: `Past ${formatMilestoneLabel(latest)}. The marathon is made of steps like this.`,
+      headline: "Quietly growing",
+      subline: `Past ${formatMilestoneLabel(latest)}. A garden is made of seasons like this one.`,
     };
   }
 
   return {
-    headline: "Every step counts",
-    subline: "Progress is not always linear, but it is always meaningful.",
+    headline: "Still growing",
+    subline: "Growth isn't always linear, but it's always real.",
   };
 }
 
@@ -116,16 +116,16 @@ export function getJourneyWins(
   if (summary?.savingsRate != null && summary.savingsRate > 0) {
     wins.push({
       id: "savings-rate",
-      label: "Saving this month",
-      detail: `${summary.savingsRate.toFixed(0)}% of income set aside`,
+      label: "Taking root",
+      detail: `${summary.savingsRate.toFixed(0)}% of income set aside to grow`,
     });
   }
 
   if (isGreenMonth(summary)) {
     wins.push({
       id: "green-month",
-      label: "On track",
-      detail: "Spending is within your monthly budget",
+      label: "Growing steadily",
+      detail: "Spending settled within your plan",
     });
   }
 
@@ -135,7 +135,7 @@ export function getJourneyWins(
     wins.push({
       id: `milestone-${latest}`,
       label: formatMilestoneLabel(latest) + " reached",
-      detail: "A milestone on your path to independence",
+      detail: "A season on your path to freedom",
     });
   }
 

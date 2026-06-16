@@ -138,16 +138,8 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
     <div className="flex min-h-0 flex-1 flex-col">
       {isDemo ? <DemoBanner /> : null}
 
-      <section className="relative shrink-0 overflow-hidden bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) pb-14 text-ink">
-        <SunriseHero className="pointer-events-none absolute inset-0 h-full w-full opacity-60" />
-        <div
-          className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-primary/15 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -left-8 top-24 h-36 w-36 rounded-full bg-accent-purple/10 blur-3xl"
-          aria-hidden
-        />
+      <section className="relative shrink-0 overflow-hidden bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) pb-14 pt-2 text-ink">
+        <SunriseHero className="pointer-events-none absolute inset-0 h-full w-full opacity-70" />
 
         <div className="lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
           <NetWorthHeader
@@ -161,7 +153,7 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
             size="hero"
           />
 
-          <div className="relative mx-3 overflow-hidden rounded-2xl bg-surface/70 shadow-card ring-1 ring-hairline backdrop-blur-sm lg:mx-0">
+          <div className="relative mx-3 mt-4 overflow-hidden rounded-[18px] bg-surface-raised shadow-card ring-1 ring-hairline lg:mx-0">
             <NetWorthChart
               currentNetWorth={data?.netWorth ?? 0}
               onDisplayChange={handleNetWorthDisplayChange}
@@ -181,7 +173,7 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
               type="button"
               onClick={() => refresh()}
               disabled={refreshing}
-              className="inline-flex items-center gap-1.5 rounded-full bg-surface/90 px-3 py-1.5 text-xs font-semibold text-ink-secondary shadow-soft ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:bg-sage-wash disabled:opacity-50"
               aria-label="Refresh accounts"
             >
               <RefreshCw
@@ -195,8 +187,8 @@ export function PortfolioView({ isDemo = false }: PortfolioViewProps) {
 
         <div className="space-y-5 px-4 pb-8 pt-2 lg:mx-auto lg:w-full lg:max-w-5xl lg:px-6">
           {error ? (
-            <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-3`}>
-              <p className="text-sm text-loss">{error}</p>
+            <div className="rounded-[18px] bg-sage-wash px-4 py-3">
+              <p className="text-sm text-sage-deep">{error}</p>
             </div>
           ) : null}
 

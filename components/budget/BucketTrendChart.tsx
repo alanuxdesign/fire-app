@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/format";
 import {
   Bar,
   CartesianGrid,
+  Cell,
   ComposedChart,
   Line,
   ResponsiveContainer,
@@ -39,9 +40,9 @@ export function BucketTrendChart({ trends }: BucketTrendChartProps) {
   }));
 
   return (
-    <div className="rounded-2xl border border-hairline bg-surface p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
-        Spend vs budget
+    <div className="border-t border-hairline pt-5">
+      <p className="text-[11.5px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+        Spend vs plan
       </p>
       <div className="mt-3 h-44 w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -76,12 +77,20 @@ export function BucketTrendChart({ trends }: BucketTrendChartProps) {
                 fontSize: 12,
               }}
             />
-            <Bar dataKey="spent" fill={colors.gain} radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="spent" radius={[4, 4, 0, 0]} maxBarSize={28}>
+              {data.map((_, index) => (
+                <Cell
+                  key={index}
+                  fill={index === data.length - 1 ? colors.primary : colors.olive}
+                />
+              ))}
+            </Bar>
             <Line
               type="monotone"
               dataKey="target"
               stroke={colors.inkMuted}
               strokeWidth={2}
+              strokeDasharray="4 4"
               dot={{ r: 3, fill: colors.inkMuted }}
             />
           </ComposedChart>

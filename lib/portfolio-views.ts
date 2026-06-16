@@ -54,17 +54,16 @@ const ASSET_CLASS_ORDER: AssetClassLabel[] = [
   "Other",
 ];
 
-// Static warm-palette fallback (mirrors the accent tokens). Charts that can
-// read CSS vars pass a resolved, theme-aware palette to getSegmentColor.
+// Static Ember data-viz fallback (sage → terra → gold → teal → plum → olive).
+// Charts that can read CSS vars pass a resolved, theme-aware palette to
+// getSegmentColor.
 export const SEGMENT_COLORS = [
-  "#5b8def",
-  "#4fb286",
-  "#e0a23b",
-  "#9b7be0",
-  "#ef9a6a",
-  "#ef7b5a",
-  "#3da776",
-  "#d8593e",
+  "#6e7e55",
+  "#bb6038",
+  "#c99a4e",
+  "#5e8b86",
+  "#9e6b73",
+  "#9a9a5e",
 ];
 
 export function flattenAccounts(data: AccountsApiResponse): AccountListItem[] {

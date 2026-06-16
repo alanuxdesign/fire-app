@@ -9,30 +9,33 @@ export type ChartColors = {
   gain: string;
   loss: string;
   accentBlue: string;
+  olive: string;
+  gold: string;
   inkMuted: string;
   hairline: string;
   segments: string[];
 };
 
-// Light-theme fallbacks (mirror the tokens in app/globals.css) for SSR, where
-// getComputedStyle is unavailable.
+// Ember light-theme fallbacks (mirror the tokens in app/globals.css) for SSR,
+// where getComputedStyle is unavailable. Data palette order: sage → terra →
+// gold → teal → plum → olive (§1).
 const FALLBACK: ChartColors = {
-  primary: "#ef7b5a",
-  primaryStroke: "#e26542",
-  gain: "#3da776",
-  loss: "#d8593e",
-  accentBlue: "#5b8def",
-  inkMuted: "#9a8c7e",
-  hairline: "#ebe0d2",
+  primary: "#bb6038",
+  primaryStroke: "#9c4f30",
+  gain: "#6e7e55",
+  loss: "#7e7765",
+  accentBlue: "#5e8b86",
+  olive: "#9a9a5e",
+  gold: "#c99a4e",
+  inkMuted: "#b3ad9b",
+  hairline: "rgba(45,42,34,0.10)",
   segments: [
-    "#5b8def",
-    "#4fb286",
-    "#e0a23b",
-    "#9b7be0",
-    "#ef9a6a",
-    "#ef7b5a",
-    "#3da776",
-    "#d8593e",
+    "#6e7e55",
+    "#bb6038",
+    "#c99a4e",
+    "#5e8b86",
+    "#9e6b73",
+    "#9a9a5e",
   ],
 };
 
@@ -46,22 +49,22 @@ export function getChartColors(): ChartColors {
     s.getPropertyValue(name).trim() || fallback;
 
   return {
-    primary: read("--primary", FALLBACK.primary),
-    primaryStroke: read("--primary-hover", FALLBACK.primaryStroke),
-    gain: read("--gain", FALLBACK.gain),
-    loss: read("--loss", FALLBACK.loss),
-    accentBlue: read("--accent-blue", FALLBACK.accentBlue),
-    inkMuted: read("--ink-muted", FALLBACK.inkMuted),
-    hairline: read("--hairline", FALLBACK.hairline),
+    primary: read("--ds-terra", FALLBACK.primary),
+    primaryStroke: read("--ds-terra-deep", FALLBACK.primaryStroke),
+    gain: read("--ds-sage", FALLBACK.gain),
+    loss: read("--ds-ink-soft", FALLBACK.loss),
+    accentBlue: read("--ds-data-teal", FALLBACK.accentBlue),
+    olive: read("--ds-data-olive", FALLBACK.olive),
+    gold: read("--ds-data-gold", FALLBACK.gold),
+    inkMuted: read("--ds-ink-faint", FALLBACK.inkMuted),
+    hairline: read("--ds-line", FALLBACK.hairline),
     segments: [
-      read("--accent-blue", FALLBACK.segments[0]),
-      read("--accent-green", FALLBACK.segments[1]),
-      read("--accent-gold", FALLBACK.segments[2]),
-      read("--accent-purple", FALLBACK.segments[3]),
-      read("--accent-peach", FALLBACK.segments[4]),
-      read("--primary", FALLBACK.segments[5]),
-      read("--gain", FALLBACK.segments[6]),
-      read("--loss", FALLBACK.segments[7]),
+      read("--ds-data-sage", FALLBACK.segments[0]),
+      read("--ds-data-terra", FALLBACK.segments[1]),
+      read("--ds-data-gold", FALLBACK.segments[2]),
+      read("--ds-data-teal", FALLBACK.segments[3]),
+      read("--ds-data-plum", FALLBACK.segments[4]),
+      read("--ds-data-olive", FALLBACK.segments[5]),
     ],
   };
 }

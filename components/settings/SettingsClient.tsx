@@ -84,83 +84,69 @@ export function SettingsClient() {
   };
 
   return (
-    <div className="flex flex-1 flex-col px-4 py-8 lg:mx-auto lg:w-full lg:max-w-3xl">
-      <h1 className="text-2xl font-semibold text-ink">
+    <div className="flex flex-1 flex-col bg-paper px-5 py-8 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-8">
+      <h1 className="font-display text-[2rem] leading-tight tracking-[-0.015em] text-ink">
         Settings
       </h1>
 
-      <div className="mt-6 space-y-3">
-        <div className="rounded-2xl border border-hairline/80 bg-surface px-4 py-4 shadow-sm">
-          <p className="font-medium text-ink">
-            Sync transactions
-          </p>
-          <p className="mt-1 text-sm text-ink-secondary">
-            Pull the latest transactions from linked accounts into your budget.
-            New links request up to 2 years of history; sync also backfills older
-            dates when Plaid has them. If you only see a few months, reconnect
-            the bank from Portfolio (Add account) so Plaid can extend history.
+      <div className="mt-7 space-y-8">
+        <div className="border-t border-hairline pt-6">
+          <p className="font-semibold text-ink">Sync transactions</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            Bring in the latest transactions from your linked accounts. New links
+            ask for up to 2 years of history; sync also backfills older dates when
+            it can. If only a few months show up, reconnect the bank from
+            Portfolio so it can reach further back.
           </p>
           <button
             type="button"
             onClick={handleSyncTransactions}
             disabled={txnSyncLoading}
-            className="mt-3 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+            className="mt-4 w-full rounded-full bg-terra-deep px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
           >
             {txnSyncLoading ? "Syncing…" : "Sync transactions"}
           </button>
           {txnSyncMessage ? (
-            <p className="mt-2 text-sm text-gain">
-              {txnSyncMessage}
-            </p>
+            <p className="mt-2 text-sm text-sage">{txnSyncMessage}</p>
           ) : null}
           {txnSyncError ? (
-            <p className="mt-2 text-sm text-loss">
-              {txnSyncError}
-            </p>
+            <p className="mt-2 text-sm text-amber">{txnSyncError}</p>
           ) : null}
         </div>
 
-        <div className="rounded-2xl border border-hairline/80 bg-surface px-4 py-4 shadow-sm">
-          <p className="font-medium text-ink">
-            Backfill history
-          </p>
-          <p className="mt-1 text-sm text-ink-secondary">
-            Rebuild up to 2 years of daily net worth from Plaid transactions.
-            Existing snapshot dates are not overwritten.
+        <div className="border-t border-hairline pt-6">
+          <p className="font-semibold text-ink">Rebuild your history</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            Regrow up to 2 years of daily net worth from your transactions.
+            Dates that already have a snapshot are left untouched.
           </p>
           <button
             type="button"
             onClick={handleBackfillHistory}
             disabled={backfillLoading}
-            className="mt-3 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+            className="mt-4 w-full rounded-full bg-terra-deep px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
           >
-            {backfillLoading ? "Backfilling…" : "Backfill history"}
+            {backfillLoading ? "Rebuilding…" : "Rebuild history"}
           </button>
           {backfillMessage ? (
-            <p className="mt-2 text-sm text-gain">
-              {backfillMessage}
-            </p>
+            <p className="mt-2 text-sm text-sage">{backfillMessage}</p>
           ) : null}
           {backfillError ? (
-            <p className="mt-2 text-sm text-loss">
-              {backfillError}
-            </p>
+            <p className="mt-2 text-sm text-amber">{backfillError}</p>
           ) : null}
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-hairline/80 bg-surface px-4 py-4 shadow-sm">
+        <div className="flex items-center justify-between border-t border-hairline pt-6">
           <div>
-            <p className="font-medium text-ink">
-              Dark mode
-            </p>
-            <p className="text-sm text-ink-secondary">
+            <p className="font-semibold text-ink">Dark mode</p>
+            <p className="text-sm text-ink-soft">
               {theme === "dark" ? "On" : "Off"}
             </p>
           </div>
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex items-center gap-2 rounded-full bg-canvas px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-canvas-sunken"
+            className="inline-flex items-center gap-2 rounded-full border border-hairline px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-sage-wash"
             aria-label="Toggle dark mode"
           >
             {theme === "dark" ? (
@@ -175,9 +161,9 @@ export function SettingsClient() {
         <button
           type="button"
           onClick={() => signOut({ redirectTo: "/login" })}
-          className="w-full rounded-2xl border border-loss/40 bg-surface px-4 py-3 text-sm font-medium text-loss transition-colors hover:bg-red-50"
+          className="w-full rounded-full border border-hairline px-4 py-3 text-sm font-semibold text-ink-soft transition-colors hover:bg-sage-wash"
         >
-          Log out
+          Sign out
         </button>
       </div>
     </div>

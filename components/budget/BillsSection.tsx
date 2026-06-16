@@ -153,7 +153,7 @@ export function BillsSection({
             type="button"
             disabled={saving}
             onClick={() => void addBill()}
-            className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover"
+            className="w-full rounded-full bg-terra-deep py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-terra"
           >
             {saving ? "Adding…" : "Add bill"}
           </button>

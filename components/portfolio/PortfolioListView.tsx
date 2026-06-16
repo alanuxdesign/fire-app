@@ -22,8 +22,8 @@ export function PortfolioListView({
     const accounts = groups[0]?.accounts ?? [];
 
     return (
-      <section className="overflow-hidden rounded-2xl border border-hairline/80 bg-surface shadow-sm">
-        <div className="divide-y divide-hairline px-4">
+      <section className="border-t border-hairline">
+        <div className="divide-y divide-line-soft px-2">
           {accounts.map((account) => (
             <AccountRow
               key={account.id}

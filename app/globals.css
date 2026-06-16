@@ -3,107 +3,165 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * "The Sunrise Trail" — warm, coral-on-cream design tokens.
- * Raw values live on :root (light) and .dark (warm-dark); the semantic
- * tokens in @theme inline point at these vars so every utility
- * (bg-surface, text-ink, bg-primary, ...) is automatically theme-aware.
+ * EMBER DESIGN SYSTEM — single source of truth: EMBER-DESIGN-SYSTEM.md
+ *
+ * §1–§3 Ember tokens (--ds-*) are the source of truth. The app's existing
+ * semantic utility tokens (--primary, --ink, --gain, --surface, …) are
+ * remapped onto the Ember tokens so every Tailwind utility (bg-primary,
+ * text-ink, text-gain, …) renders Ember automatically. Never hard-code a
+ * hex, font, or radius in a component — always consume a token.
  */
+
 :root {
-  --canvas: #fbf6ef;
-  --canvas-sunken: #f4ebdf;
-  --surface: #fffdf9;
-  --surface-raised: #ffffff;
-  --ink: #2a2420;
-  --ink-secondary: #6b5f55;
-  --ink-muted: #9a8c7e;
-  --hairline: #ebe0d2;
-  --hairline-strong: #dccdb9;
+  /* ─── §1 Color tokens ─────────────────────────────────────────── */
+  /* Surfaces */
+  --ds-paper: #f7f1e5; /* app canvas — warm paper everything sits on */
+  --ds-paper-2: #fbf7ec; /* the rare lifted surface / input fields */
+  --ds-card: #ffffff; /* hero stat card only — use sparingly */
 
-  --primary: #ef7b5a;
-  --primary-hover: #e26542;
-  --primary-soft: #fce6dd;
-  --on-primary: #ffffff;
+  /* Brand / semantic */
+  --ds-terra: #bb6038; /* PRIMARY accent — the one thing that matters now */
+  --ds-terra-soft: #d88c5a;
+  --ds-terra-deep: #9c4f30; /* primary button fill */
+  --ds-clay: #d9b98c; /* warm tan — FI target dots, vessel pot */
+  --ds-sand: #ead9bc;
 
-  --accent-blue: #5b8def;
-  --accent-blue-soft: #e3ecfd;
-  --accent-green: #4fb286;
-  --accent-green-soft: #dcf1e8;
-  --accent-gold: #e0a23b;
-  --accent-gold-soft: #fbefd4;
-  --accent-purple: #9b7be0;
-  --accent-purple-soft: #ece3fb;
-  --accent-peach: #ef9a6a;
-  --accent-peach-soft: #fceadc;
+  /* Growth (replaces "positive green") */
+  --ds-sage: #6e7e55; /* progress, contributions, things taking root */
+  --ds-sage-deep: #3f4a33; /* reflection blocks, full-bleed quote bands */
+  --ds-sage-soft: #a7b187;
+  --ds-sage-wash: #e7e9da; /* tints behind icons / chips / vessels */
 
-  --gain: #3da776;
-  --gain-soft: #dcf1e8;
-  --loss: #d8593e;
-  --loss-soft: #fbe3dc;
-  --warn: #d89a2e;
-  --warn-soft: #fbefd4;
+  /* Caution — gentle, never alarm */
+  --ds-amber: #c8913e;
 
-  /* Hero band gradient (read as arbitrary values, not @theme tokens). */
-  --hero-from: #fff4ec;
-  --hero-via: #fcead9;
-  --hero-to: #fbf6ef;
+  /* Text */
+  --ds-ink: #2d2a22; /* reading text — soft espresso, never #000 */
+  --ds-ink-soft: #7e7765; /* labels, captions, supporting detail */
+  --ds-ink-faint: #b3ad9b; /* inactive nav, faint captions */
+  --ds-on-terra: #fcf6ec; /* text on terra fills */
 
-  /* Warm-tinted shadows; -raw vars let them flip per theme. */
-  --shadow-soft-raw: 0 1px 2px rgba(120, 90, 60, 0.04),
-    0 8px 24px -12px rgba(120, 90, 60, 0.12);
-  --shadow-card-raw: 0 2px 4px rgba(120, 90, 60, 0.05),
-    0 16px 40px -16px rgba(120, 90, 60, 0.16);
-  --shadow-float-raw: 0 4px 8px rgba(120, 90, 60, 0.06),
-    0 24px 56px -20px rgba(120, 90, 60, 0.22);
+  /* Structure */
+  --ds-line: rgba(45, 42, 34, 0.1); /* hairline rule */
+  --ds-line-soft: rgba(45, 42, 34, 0.06); /* inner dividers */
+  --ds-line-strong: rgba(45, 42, 34, 0.16); /* input borders */
+  --ds-track: rgba(45, 42, 34, 0.08); /* progress / bar tracks */
 
-  /* Back-compat aliases used by body + a few stray utilities. */
+  /* Sky (illustration only) */
+  --ds-sky-0: #f3ecdd;
+  --ds-sky-1: #e7e0cc;
+
+  /* §1 Data-viz palette — order matters (sage → terra → gold → teal → plum → olive) */
+  --ds-data-sage: #6e7e55;
+  --ds-data-terra: #bb6038;
+  --ds-data-gold: #c99a4e;
+  --ds-data-teal: #5e8b86;
+  --ds-data-plum: #9e6b73;
+  --ds-data-olive: #9a9a5e;
+
+  /* ─── §2 Typography ───────────────────────────────────────────── */
+  --ds-font-display: "Newsreader", Georgia, serif; /* life, reflection, headlines */
+  --ds-font-ui: "Hanken Grotesk", system-ui, sans-serif; /* data + interface */
+
+  /* ─── §3 Shape, spacing & elevation ───────────────────────────── */
+  --ds-radius-pill: 999px; /* actions & toggles ONLY */
+  --ds-radius: 18px; /* the rare lifted surface (cards, inputs, chips) 16–22px */
+  --ds-radius-tile: 14px; /* small icon tiles behind vessels */
+  --ds-shadow: 0 8px 24px -16px rgba(45, 42, 34, 0.4); /* the ONLY shadow */
+
+  /* ─── App semantic tokens, remapped onto Ember ────────────────── */
+  --canvas: var(--ds-paper);
+  --canvas-sunken: var(--ds-sky-1);
+  --surface: var(--ds-paper-2);
+  --surface-raised: var(--ds-card);
+  --ink: var(--ds-ink);
+  --ink-secondary: var(--ds-ink-soft);
+  --ink-muted: var(--ds-ink-faint);
+  --hairline: var(--ds-line);
+  --hairline-strong: var(--ds-line-strong);
+
+  --primary: var(--ds-terra);
+  --primary-hover: var(--ds-terra-deep);
+  --primary-soft: var(--ds-sand);
+  --on-primary: var(--ds-on-terra);
+
+  /* Accents now draw from the earthy data palette; soft tints unify on sage-wash. */
+  --accent-blue: var(--ds-data-teal);
+  --accent-blue-soft: var(--ds-sage-wash);
+  --accent-green: var(--ds-sage);
+  --accent-green-soft: var(--ds-sage-wash);
+  --accent-gold: var(--ds-data-gold);
+  --accent-gold-soft: var(--ds-sage-wash);
+  --accent-purple: var(--ds-data-plum);
+  --accent-purple-soft: var(--ds-sage-wash);
+  --accent-peach: var(--ds-terra-soft);
+  --accent-peach-soft: var(--ds-sage-wash);
+
+  /* Growth, not stoplight: gains = sage; "loss" is noticed calmly, never alarmed. */
+  --gain: var(--ds-sage);
+  --gain-soft: var(--ds-sage-wash);
+  --loss: var(--ds-ink-soft);
+  --loss-soft: var(--ds-line-soft);
+  --warn: var(--ds-amber);
+  --warn-soft: var(--ds-sand);
+
+  /* Hero wash — warm paper bloom, not peach. */
+  --hero-from: var(--ds-sky-0);
+  --hero-via: var(--ds-sky-1);
+  --hero-to: var(--ds-paper);
+
+  /* One soft shadow only; legacy aliases collapse onto it. */
+  --shadow-soft-raw: var(--ds-shadow);
+  --shadow-card-raw: var(--ds-shadow);
+  --shadow-float-raw: var(--ds-shadow);
+
   --background: var(--canvas);
   --foreground: var(--ink);
 }
 
+/*
+ * Dark variant — a derived warm-espresso reading of Ember (not in the spec;
+ * kept disciplined: same hues, lifted for legibility, never pure black).
+ */
 .dark {
-  --canvas: #1c1714;
-  --canvas-sunken: #16110f;
-  --surface: #26201c;
-  --surface-raised: #2f2723;
-  --ink: #f6eee6;
-  --ink-secondary: #c9bcb0;
-  --ink-muted: #9a8b7d;
-  --hairline: #3a302b;
-  --hairline-strong: #4a3e37;
+  --ds-paper: #211e18;
+  --ds-paper-2: #2a261f;
+  --ds-card: #2f2a22;
 
-  --primary: #f2876a;
-  --primary-hover: #f59b82;
-  --primary-soft: #3d2b24;
-  --on-primary: #231613;
+  --ds-terra: #cd7048;
+  --ds-terra-soft: #d88c5a;
+  --ds-terra-deep: #b85d38;
+  --ds-clay: #c7a87e;
+  --ds-sand: #4a4231;
 
-  --accent-blue: #7fa8f2;
-  --accent-blue-soft: #23303f;
-  --accent-green: #6fc8a0;
-  --accent-green-soft: #1e342b;
-  --accent-gold: #e9b65c;
-  --accent-gold-soft: #3a2f1a;
-  --accent-purple: #b79bee;
-  --accent-purple-soft: #2e2640;
-  --accent-peach: #f2a87e;
-  --accent-peach-soft: #3a2a1f;
+  --ds-sage: #97a578;
+  --ds-sage-deep: #2c3422;
+  --ds-sage-soft: #8b986e;
+  --ds-sage-wash: #2e3326;
 
-  --gain: #5fc79a;
-  --gain-soft: #1e342b;
-  --loss: #ee7c62;
-  --loss-soft: #3a211a;
-  --warn: #e9b65c;
-  --warn-soft: #3a2f1a;
+  --ds-amber: #d8a857;
 
-  --hero-from: #2a1f1a;
-  --hero-via: #2a1b2a;
-  --hero-to: #1c1714;
+  --ds-ink: #f2eee0;
+  --ds-ink-soft: #c2b8a6;
+  --ds-ink-faint: #8f886f;
+  --ds-on-terra: #1c1813;
 
-  --shadow-soft-raw: 0 1px 2px rgba(0, 0, 0, 0.25),
-    0 8px 24px -12px rgba(0, 0, 0, 0.5);
-  --shadow-card-raw: 0 2px 4px rgba(0, 0, 0, 0.3),
-    0 16px 40px -16px rgba(0, 0, 0, 0.55);
-  --shadow-float-raw: 0 4px 8px rgba(0, 0, 0, 0.35),
-    0 24px 56px -20px rgba(0, 0, 0, 0.6);
+  --ds-line: rgba(242, 238, 224, 0.12);
+  --ds-line-soft: rgba(242, 238, 224, 0.07);
+  --ds-line-strong: rgba(242, 238, 224, 0.2);
+  --ds-track: rgba(242, 238, 224, 0.1);
+
+  --ds-sky-0: #2a261f;
+  --ds-sky-1: #242019;
+
+  --ds-data-sage: #97a578;
+  --ds-data-terra: #cd7048;
+  --ds-data-gold: #d3a85f;
+  --ds-data-teal: #6fa39d;
+  --ds-data-plum: #b3838b;
+  --ds-data-olive: #aeae72;
+
+  --ds-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {
@@ -121,6 +179,22 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-on-primary: var(--on-primary);
+
+  /* Ember-native utilities (preferred for new work) */
+  --color-terra: var(--ds-terra);
+  --color-terra-deep: var(--ds-terra-deep);
+  --color-clay: var(--ds-clay);
+  --color-sand: var(--ds-sand);
+  --color-sage: var(--ds-sage);
+  --color-sage-deep: var(--ds-sage-deep);
+  --color-sage-soft: var(--ds-sage-soft);
+  --color-sage-wash: var(--ds-sage-wash);
+  --color-amber: var(--ds-amber);
+  --color-paper: var(--ds-paper);
+  --color-paper-2: var(--ds-paper-2);
+  --color-line: var(--ds-line);
+  --color-line-soft: var(--ds-line-soft);
+  --color-track: var(--ds-track);
 
   --color-accent-blue: var(--accent-blue);
   --color-accent-blue-soft: var(--accent-blue-soft);
@@ -143,21 +217,80 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.125rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+  /* Radii kept inside the 14–22px Ember range; pills use rounded-full. */
+  --radius-lg: 14px; /* small tiles */
+  --radius-xl: 18px; /* the rare lifted surface */
+  --radius-2xl: 18px;
+  --radius-3xl: 22px;
 
   --shadow-soft: var(--shadow-soft-raw);
   --shadow-card: var(--shadow-card-raw);
   --shadow-float: var(--shadow-float-raw);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--ds-font-ui);
+  --font-display: var(--ds-font-display);
+  --font-mono: var(--ds-font-ui);
 }
 
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--ds-font-ui);
+  font-feature-settings: "ss01";
+}
+
+/* All money / figures use tabular figures (§2). */
+.tabular-nums,
+.tabular-nums * {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── §4 Texture: the deep-green watercolor band (quotes & reflection) ─── */
+.ff-green {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  color: #f2eee0;
+  background:
+    radial-gradient(72% 80% at 16% 10%, #57664c 0%, rgba(87, 102, 76, 0) 56%),
+    radial-gradient(76% 72% at 90% 26%, #36432a 0%, rgba(54, 67, 42, 0) 52%),
+    radial-gradient(96% 95% at 56% 108%, #2e3925 0%, rgba(46, 57, 37, 0) 60%),
+    linear-gradient(158deg, #46543c 0%, #3a4830 68%, #333f29 100%);
+}
+/* Watercolor wash: low-frequency fractal bloom, multiplied. */
+.ff-green::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' seed='7'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>");
+  background-size: cover;
+  pointer-events: none;
+}
+/* Soft vignette to seat the band on paper. */
+.ff-green::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(20, 26, 16, 0.35) 100%);
+  pointer-events: none;
+}
+.ff-green > * {
+  position: relative;
+  z-index: 1;
+}
+.ff-green .ff-eyebrow {
+  color: rgba(242, 238, 224, 0.7);
+}
+
+/* ─── §4 Grain overlay (apply to a positioned ancestor) ─── */
+.ff-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.36;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.05'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
+  pointer-events: none;
 }

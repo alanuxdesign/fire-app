@@ -152,17 +152,17 @@ export function TransactionSplitEditor({
             <Plus className="h-3.5 w-3.5" /> Add line
           </button>
           <p
-            className={`text-xs ${sumOk ? "text-ink-secondary" : "text-loss"}`}
+            className={`text-xs ${sumOk ? "text-ink-secondary" : "text-amber"}`}
           >
             Total {formatCurrency(lineSum)} / {formatCurrency(parentAmount)}
           </p>
-          {error ? <p className="text-xs text-loss">{error}</p> : null}
+          {error ? <p className="text-xs text-amber">{error}</p> : null}
           <div className="flex gap-2">
             <button
               type="button"
               disabled={saving}
               onClick={() => void save()}
-              className="flex-1 rounded-xl bg-primary py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover"
+              className="flex-1 rounded-full bg-terra-deep py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-terra"
             >
               {saving ? "Saving…" : "Save split"}
             </button>

@@ -1,7 +1,10 @@
 /**
- * Full-bleed sunrise scene that sits behind the net-worth number in the hero.
- * Themeable: sun/rays/hills read from design tokens, so it flips with the theme.
- * Decorative only (aria-hidden); animation is gated behind prefers-reduced-motion.
+ * HeroBand — a soft watercolor scene behind the hero number: layered hills, a
+ * gentle low sun, grass tufts and leaf sprigs. All colors read from Ember
+ * tokens so the band flips with the theme. Decorative only (aria-hidden);
+ * motion is gated behind prefers-reduced-motion.
+ *
+ * Kept under the SunriseHero name for existing imports.
  */
 export function SunriseHero({ className }: { className?: string }) {
   return (
@@ -13,30 +16,41 @@ export function SunriseHero({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <style>{`
-        @media (prefers-reduced-motion: no-preference) {
-          .sun-rays { transform-box: fill-box; transform-origin: center; animation: sun-spin 60s linear infinite; }
-        }
-        @keyframes sun-spin { to { transform: rotate(360deg); } }
-      `}</style>
+      <defs>
+        {/* Soft watercolor sun glow — no harsh disc, no rays */}
+        <radialGradient id="ember-sun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="var(--ds-terra-soft)" stopOpacity="0.55" />
+          <stop offset="55%" stopColor="var(--ds-clay)" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="var(--ds-clay)" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="ember-bloom" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="var(--ds-sage-soft)" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="var(--ds-sage-soft)" stopOpacity="0" />
+        </radialGradient>
+      </defs>
 
-      {/* Sun */}
-      <circle cx="300" cy="150" r="46" fill="var(--primary)" opacity="0.85" />
-      <g className="sun-rays" stroke="var(--accent-gold)" strokeWidth="3" strokeLinecap="round" opacity="0.7">
-        {Array.from({ length: 12 }).map((_, i) => {
-          const angle = (i * 30 * Math.PI) / 180;
-          const x1 = 300 + Math.cos(angle) * 58;
-          const y1 = 150 + Math.sin(angle) * 58;
-          const x2 = 300 + Math.cos(angle) * 72;
-          const y2 = 150 + Math.sin(angle) * 72;
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />;
-        })}
+      {/* Low sun, seated in the hills */}
+      <circle cx="306" cy="150" r="92" fill="url(#ember-sun)" />
+      <circle cx="306" cy="150" r="30" fill="var(--ds-terra-soft)" opacity="0.4" />
+      <circle cx="90" cy="60" r="80" fill="url(#ember-bloom)" />
+
+      {/* Layered watercolor hills */}
+      <path d="M0 170 Q110 138 230 164 T400 154 V220 H0 Z" fill="var(--ds-sky-1)" opacity="0.7" />
+      <path d="M0 188 Q140 160 280 184 T400 178 V220 H0 Z" fill="var(--ds-sage-soft)" opacity="0.4" />
+      <path d="M0 206 Q120 188 260 204 T400 198 V220 H0 Z" fill="var(--ds-sage)" opacity="0.34" />
+
+      {/* Grass tufts + leaf sprigs along the near hill */}
+      <g stroke="var(--ds-sage)" strokeWidth="2" strokeLinecap="round" opacity="0.5">
+        <path d="M44 206 q-3 -12 -8 -16" />
+        <path d="M48 206 q1 -14 6 -19" />
+        <path d="M52 206 q5 -10 12 -12" />
+        <path d="M330 200 q-2 -12 -7 -16" />
+        <path d="M335 200 q2 -13 8 -16" />
       </g>
-
-      {/* Hill bands */}
-      <path d="M0 168 Q120 132 240 162 T400 150 V220 H0 Z" fill="var(--accent-peach)" opacity="0.25" />
-      <path d="M0 188 Q140 158 280 184 T400 176 V220 H0 Z" fill="var(--accent-purple)" opacity="0.2" />
-      <path d="M0 204 Q120 184 260 202 T400 196 V220 H0 Z" fill="var(--accent-green)" opacity="0.22" />
+      <g fill="var(--ds-sage)" opacity="0.45">
+        <path d="M196 200 q-9 -3 -12 -11 q9 0 12 8Z" />
+        <path d="M200 200 q9 -3 12 -11 q-9 0 -12 8Z" />
+      </g>
     </svg>
   );
 }

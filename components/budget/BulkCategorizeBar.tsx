@@ -27,7 +27,7 @@ export function BulkCategorizeBar({
 
   return (
     <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-lg px-4 lg:bottom-6 lg:left-60">
-      <div className="rounded-2xl border border-hairline bg-surface p-3 shadow-lg">
+      <div className="rounded-[18px] border border-hairline bg-paper-2 p-3 shadow-card">
         <p className="text-sm font-medium text-ink">
           {selectedCount} selected
         </p>
@@ -48,7 +48,7 @@ export function BulkCategorizeBar({
             type="button"
             disabled={!categoryId || applying}
             onClick={onApply}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+            className="rounded-full bg-terra-deep px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
           >
             {applying ? "…" : "Apply"}
           </button>

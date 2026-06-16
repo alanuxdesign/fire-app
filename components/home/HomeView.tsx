@@ -2,9 +2,10 @@
 
 import { DemoBanner } from "@/components/portfolio/DemoBanner";
 import { SunriseHero } from "@/components/illustrations/SunriseHero";
-import { MountainMilestone } from "@/components/illustrations/MountainMilestone";
+import { SproutVessel, stageForPct } from "@/components/illustrations/SproutVessel";
+import { Sprig } from "@/components/illustrations/Sprig";
 import { EmptyAccounts, EmptyBudget } from "@/components/illustrations/EmptyStates";
-import { FLOATING_CARD } from "@/components/ui/cardStyles";
+import { PRIMARY_BUTTON } from "@/components/ui/cardStyles";
 import type { AccountsApiResponse } from "@/lib/account-groups";
 import type { BudgetSummary } from "@/lib/budget-types";
 import { getChangeHorizonLabel } from "@/lib/chart-data";
@@ -18,14 +19,10 @@ import {
 } from "@/lib/home-journey";
 import {
   ArrowRight,
-  CalendarDays,
   ClipboardList,
   LayoutGrid,
   PieChart,
   RefreshCw,
-  Sparkles,
-  TrendingUp,
-  Trophy,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -35,49 +32,21 @@ type HomeViewProps = {
   isDemo?: boolean;
 };
 
-// Flat pastel chips: soft tinted background + saturated icon (no gradients).
-const ICON_ACCENTS = {
-  gold: "bg-accent-gold-soft text-accent-gold",
-  green: "bg-accent-green-soft text-accent-green",
-  purple: "bg-accent-purple-soft text-accent-purple",
-  blue: "bg-accent-blue-soft text-accent-blue",
-} as const;
-
-type IconAccent = keyof typeof ICON_ACCENTS;
+const EYEBROW = "text-[11.5px] font-bold uppercase tracking-[0.16em]";
 
 function HomeSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col animate-pulse">
-      <section className="shrink-0 bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) px-4 pb-16 pt-8">
+      <section className="shrink-0 bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) px-4 pb-16 pt-10">
         <div className="mx-auto h-3 w-24 rounded-full bg-ink/5" />
         <div className="mx-auto mt-5 h-14 w-56 rounded-xl bg-ink/5" />
-        <div className="mx-auto mt-2 h-3 w-28 rounded-full bg-ink/5" />
+        <div className="mx-auto mt-3 h-3 w-40 rounded-full bg-ink/5" />
       </section>
-      <div className="-mt-10 space-y-4 px-4 pb-6">
-        <div className="h-32 rounded-3xl bg-surface-raised shadow-card" />
-        <div className="h-24 rounded-3xl bg-surface-raised shadow-soft" />
+      <div className="mt-8 space-y-8 px-5">
+        <div className="h-12 w-full rounded-xl bg-ink/5" />
+        <div className="h-28 w-full rounded-[22px] bg-ink/5" />
       </div>
     </div>
-  );
-}
-
-function GradientIcon({
-  icon: Icon,
-  gradient,
-  size = "md",
-}: {
-  icon: LucideIcon;
-  gradient: IconAccent;
-  size?: "md" | "lg";
-}) {
-  const dim = size === "lg" ? "h-14 w-14" : "h-11 w-11";
-  const iconDim = size === "lg" ? "h-7 w-7" : "h-5 w-5";
-  return (
-    <span
-      className={`flex ${dim} shrink-0 items-center justify-center rounded-2xl ${ICON_ACCENTS[gradient]}`}
-    >
-      <Icon className={iconDim} strokeWidth={2} aria-hidden />
-    </span>
   );
 }
 
@@ -86,148 +55,87 @@ function HomeHero({
   changeAmount,
   changePercent,
   encouragement,
-  nextMilestone,
   hasAccounts,
 }: {
   netWorth: number;
   changeAmount: number;
   changePercent: number;
   encouragement: { headline: string; subline: string };
-  nextMilestone: ReturnType<typeof getNextMilestone>;
   hasAccounts: boolean;
 }) {
   const isPositive = changePercent >= 0;
 
   return (
     <section
-      className="relative shrink-0 overflow-hidden bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) pb-20 pt-8 text-ink"
-      aria-label="Net worth and journey progress"
+      className="relative shrink-0 overflow-hidden bg-gradient-to-b from-(--hero-from) via-(--hero-via) to-(--hero-to) pb-14 pt-10 text-ink"
+      aria-label="Net worth and reflection"
     >
-      <SunriseHero className="pointer-events-none absolute inset-0 h-full w-full opacity-60" />
-      <div
-        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl lg:h-72 lg:w-72"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-10 top-32 h-40 w-40 rounded-full bg-accent-gold/10 blur-3xl lg:h-56 lg:w-56"
-        aria-hidden
-      />
+      <SunriseHero className="pointer-events-none absolute inset-0 h-full w-full opacity-70" />
 
-      <div className="relative lg:mx-auto lg:w-full lg:max-w-5xl">
-      <div className="relative px-4 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          {hasAccounts ? "Your path" : "Net worth"}
+      <div className="relative px-5 text-center lg:mx-auto lg:w-full lg:max-w-5xl">
+        <p className={`${EYEBROW} text-terra`}>
+          {hasAccounts ? "Your garden" : "Net worth"}
         </p>
 
-        <p className="mt-3 text-[clamp(2.75rem,14vw,3.5rem)] font-bold leading-none tracking-tight tabular-nums text-ink">
+        <p className="mt-3 text-[clamp(2.75rem,13vw,3.4rem)] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
           {formatCurrency(netWorth)}
         </p>
 
         {hasAccounts ? (
-          <p className="mt-2 text-xs font-medium tabular-nums text-ink-muted">
-            <span className={isPositive ? "text-gain" : "text-loss"}>
+          <p className="mt-2.5 text-[13px] font-medium tabular-nums text-ink-soft">
+            <span className={isPositive ? "text-sage" : "text-ink-soft"}>
               {formatSignedCurrency(changeAmount)}
               {Number.isFinite(changePercent) ? (
                 <> ({formatPercent(changePercent)})</>
               ) : null}
             </span>
-            <span className="text-ink-muted">
-              {" "}
-              · {getChangeHorizonLabel("YTD")}
-            </span>
+            <span className="text-ink-faint"> · {getChangeHorizonLabel("YTD")}</span>
           </p>
         ) : null}
 
-        <p className="mt-5 text-base font-semibold text-ink">
+        <p className="mx-auto mt-6 max-w-[20rem] font-display text-[1.6rem] leading-[1.15] tracking-[-0.015em] text-ink">
           {encouragement.headline}
         </p>
-        <p className="mx-auto mt-1.5 max-w-[18rem] text-sm leading-relaxed text-ink-secondary">
+        <p className="mx-auto mt-2 max-w-[22rem] text-[15px] leading-relaxed text-ink-soft">
           {encouragement.subline}
         </p>
-      </div>
-
-      {nextMilestone && hasAccounts ? (
-        <div className="relative mx-4 mt-6 overflow-hidden rounded-2xl bg-surface/70 p-4 shadow-card ring-1 ring-hairline backdrop-blur-sm lg:mx-auto lg:max-w-xl">
-          <MountainMilestone className="pointer-events-none absolute -right-2 -top-1 h-20 w-24 text-accent-purple opacity-40" />
-          <div className="relative flex items-end justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-                Next milestone
-              </p>
-              <p className="mt-0.5 text-2xl font-bold tabular-nums text-ink">
-                {nextMilestone.label}
-              </p>
-            </div>
-            <p className="text-right text-[11px] tabular-nums text-ink-muted">
-              <span className="block text-sm font-semibold text-primary">
-                {formatCurrency(nextMilestone.remaining)}
-              </span>
-              to go
-            </p>
-          </div>
-          <div
-            className="relative mt-3 h-3 overflow-hidden rounded-full bg-canvas-sunken"
-            role="progressbar"
-            aria-valuenow={Math.round(nextMilestone.progress * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Progress toward ${nextMilestone.label}`}
-          >
-            <div
-              className="h-full rounded-full bg-primary motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out"
-              style={{ width: `${nextMilestone.progress * 100}%` }}
-            />
-          </div>
-        </div>
-      ) : null}
       </div>
     </section>
   );
 }
 
-function FloatingCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+/** Flat section header: eyebrow + hairline rule, no box. */
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${FLOATING_CARD} p-5 ${className}`}>
-      {children}
-    </div>
+    <p className={`${EYEBROW} mb-4 text-ink-faint`}>{children}</p>
   );
 }
 
-function ActionCard({
+function ActionRow({
   href,
   title,
   description,
   icon: Icon,
-  gradient,
 }: {
   href: string;
   title: string;
   description: string;
   icon: LucideIcon;
-  gradient: IconAccent;
 }) {
   return (
     <Link
       href={href}
-      className="group flex min-h-[4.5rem] items-center gap-4 rounded-3xl bg-surface-raised p-4 shadow-card ring-1 ring-hairline transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+      className="group flex items-center gap-4 border-b border-line-soft py-4 transition-colors last:border-b-0 hover:bg-sage-wash/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terra"
     >
-      <GradientIcon icon={Icon} gradient={gradient} />
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-sage-wash text-sage-deep">
+        <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+      </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold text-ink">
-          {title}
-        </span>
-        <span className="block text-xs text-ink-muted">
-          {description}
-        </span>
+        <span className="block text-[15px] font-semibold text-ink">{title}</span>
+        <span className="block text-[13px] text-ink-soft">{description}</span>
       </span>
       <ArrowRight
-        className="h-4 w-4 shrink-0 text-ink-muted transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
+        className="h-4 w-4 shrink-0 text-ink-faint transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-terra"
         strokeWidth={2}
         aria-hidden
       />
@@ -235,33 +143,14 @@ function ActionCard({
   );
 }
 
-const WIN_ICONS: Record<string, LucideIcon> = {
-  "savings-rate": TrendingUp,
-  "green-month": CalendarDays,
-  "four-percent": Sparkles,
-};
-
-function WinChip({
-  label,
-  detail,
-  id,
-}: {
-  label: string;
-  detail: string;
-  id: string;
-}) {
-  const Icon = WIN_ICONS[id] ?? Trophy;
+function WinChip({ label, detail }: { label: string; detail: string }) {
   return (
-    <li className="flex min-w-[9.5rem] shrink-0 flex-col gap-2 rounded-2xl bg-gain-soft p-3.5 shadow-soft ring-1 ring-hairline">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gain text-on-primary">
-        <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
-      </span>
-      <span className="text-sm font-semibold leading-tight text-ink">
+    <li className="flex min-w-[10.5rem] shrink-0 flex-col gap-1.5 rounded-[18px] bg-sage-wash p-4">
+      <SproutVessel stage={2} tile={false} className="h-6 w-6" />
+      <span className="mt-1 text-[14px] font-semibold leading-tight text-sage-deep">
         {label}
       </span>
-      <span className="text-[11px] leading-snug text-ink-secondary">
-        {detail}
-      </span>
+      <span className="text-[12px] leading-snug text-ink-soft">{detail}</span>
     </li>
   );
 }
@@ -282,7 +171,7 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
 
       if (!accountsRes.ok) {
         const body = (await accountsRes.json()) as { error?: string };
-        throw new Error(body.error ?? "Failed to load accounts");
+        throw new Error(body.error ?? "We couldn't gather your accounts");
       }
 
       const accountsData = (await accountsRes.json()) as AccountsApiResponse;
@@ -294,7 +183,7 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
         setBudget(null);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load home");
+      setError(err instanceof Error ? err.message : "We couldn't open your garden");
     } finally {
       setLoading(false);
     }
@@ -324,9 +213,12 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
     budget != null && (budget.totalTarget > 0 || budget.income > 0);
   const showBudgetSetup =
     hasAccounts && budget != null && budget.totalTarget <= 0 && budget.income <= 0;
+  const milestonePct = nextMilestone
+    ? Math.round(nextMilestone.progress * 100)
+    : 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col bg-paper">
       {isDemo ? <DemoBanner /> : null}
 
       <HomeHero
@@ -334,108 +226,155 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
         changeAmount={changeAmount}
         changePercent={changePercent}
         encouragement={encouragement}
-        nextMilestone={nextMilestone}
         hasAccounts={hasAccounts}
       />
 
-      <div className="relative z-10 -mt-12 flex min-h-0 flex-1 flex-col overflow-y-auto bg-canvas">
-        <div className="space-y-5 px-4 pb-8 pt-2 lg:mx-auto lg:grid lg:w-full lg:max-w-5xl lg:grid-cols-2 lg:items-start lg:gap-5 lg:space-y-0 lg:px-6">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="mx-auto w-full max-w-5xl space-y-12 px-5 pb-12 pt-10 lg:px-8">
           {error ? (
-            <FloatingCard className="lg:col-span-2">
-              <p className="text-sm text-loss">{error}</p>
+            <div>
+              <p className="text-[15px] text-ink">{error}</p>
               <button
                 type="button"
                 onClick={() => {
                   setLoading(true);
                   void load();
                 }}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-loss-soft px-3 py-2 text-sm font-medium text-loss transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-loss"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-hairline px-4 py-2 text-sm font-semibold text-terra transition-colors hover:bg-sage-wash focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terra"
               >
                 <RefreshCw className="h-4 w-4" strokeWidth={2} aria-hidden />
-                Try again
+                Try once more
               </button>
-            </FloatingCard>
+            </div>
           ) : null}
 
           {!hasAccounts ? (
-            <FloatingCard className="text-center lg:col-span-2">
+            <div className="text-center">
               <EmptyAccounts className="mx-auto h-28 w-32" />
-              <p className="mt-4 text-lg font-semibold text-ink">
-                Ready when you are
+              <p className="mt-5 font-display text-[1.6rem] leading-tight text-ink">
+                Nothing to tend just yet
               </p>
-              <p className="mx-auto mt-1.5 max-w-xs text-sm text-ink-secondary">
-                Link your first account on Portfolio to start tracking progress
-                toward freedom.
+              <p className="mx-auto mt-2 max-w-xs text-[15px] text-ink-soft">
+                And that&apos;s a fine place to begin. Link your first account to
+                watch your progress take root.
               </p>
-              <Link
-                href="/portfolio"
-                className="mt-5 inline-flex h-12 min-w-[11rem] items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-on-primary shadow-soft transition-[transform,box-shadow] hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                Go to Portfolio
+              <Link href="/portfolio" className={`mt-6 inline-flex ${PRIMARY_BUTTON}`}>
+                Plant the first seed
               </Link>
-            </FloatingCard>
+            </div>
+          ) : null}
+
+          {/* Next milestone — goal row with the growth vessel (§6) */}
+          {nextMilestone && hasAccounts ? (
+            <section aria-label="Next milestone">
+              <SectionLabel>Toward freedom</SectionLabel>
+              <div className="flex items-center gap-4">
+                <SproutVessel stage={stageForPct(milestonePct)} className="h-12 w-12" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="font-display text-[1.35rem] leading-tight text-ink">
+                      {nextMilestone.label}
+                    </p>
+                    <p className="text-[15px] font-bold tabular-nums text-sage">
+                      {milestonePct}%
+                    </p>
+                  </div>
+                  <div
+                    className="mt-2.5 h-2 overflow-hidden rounded-full bg-[var(--ds-track)]"
+                    role="progressbar"
+                    aria-valuenow={milestonePct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Progress toward ${nextMilestone.label}`}
+                  >
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-sage to-sage-soft motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out"
+                      style={{ width: `${Math.max(milestonePct, 2)}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-[13px] tabular-nums text-ink-soft">
+                    {formatCurrency(nextMilestone.remaining)} still to grow
+                  </p>
+                </div>
+              </div>
+            </section>
           ) : null}
 
           {showBudgetSetup ? (
-            <FloatingCard className="lg:col-span-2">
-              <div className="flex items-start gap-3">
-                <EmptyBudget className="h-12 w-14 shrink-0" />
-                <div>
-                  <p className="font-semibold text-ink">
-                    Set up your budget
-                  </p>
-                  <p className="mt-1 text-sm text-ink-secondary">
-                    Add bucket targets to see monthly progress and savings rate
-                    here.
-                  </p>
-                  <Link
-                    href="/budget"
-                    className="mt-3 inline-flex text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
-                  >
-                    Open Budget →
-                  </Link>
-                </div>
+            <section className="flex items-start gap-4 border-t border-hairline pt-8">
+              <EmptyBudget className="h-12 w-14 shrink-0" />
+              <div>
+                <p className="font-display text-[1.35rem] leading-tight text-ink">
+                  Shape this month&apos;s plan
+                </p>
+                <p className="mt-1.5 text-[15px] text-ink-soft">
+                  Set a few bucket targets and we&apos;ll show how this month is
+                  growing.
+                </p>
+                <Link
+                  href="/budget"
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-terra transition-colors hover:text-terra-deep"
+                >
+                  Open Budget
+                  <ArrowRight className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </Link>
               </div>
-            </FloatingCard>
+            </section>
           ) : null}
 
-          {hasBudgetPulse ? (
-            <Link
-              href="/budget"
-              className="block rounded-3xl bg-surface-raised p-5 shadow-card ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:order-1 lg:self-stretch"
+          {/* The 4% rule — the signature deep-green reflection band */}
+          {showFourPercentCard ? (
+            <section
+              className="ff-green p-7"
+              aria-label="What your portfolio could provide"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-                {budget?.month
-                  ? formatBudgetMonthLabel(budget.month)
-                  : "This month"}
+              <Sprig className="pointer-events-none absolute -bottom-3 -right-3 h-28 w-28" />
+              <p className={`${EYEBROW} ff-eyebrow`}>The 4% rule</p>
+              <p className="mt-4 text-[2.6rem] font-semibold leading-none tabular-nums tracking-[-0.02em]">
+                {formatCurrency(fourPercentMonthly)}
+                <span className="ml-2 align-baseline text-[15px] font-medium opacity-80">
+                  / month
+                </span>
               </p>
-              <div
-                className={`mt-4 grid gap-4 ${
-                  leftToSpend != null &&
-                  budget.totalTarget > 0 &&
-                  savingsRate != null
-                    ? "grid-cols-2"
-                    : "grid-cols-1"
-                }`}
-              >
+              <p className="mt-4 max-w-[24rem] font-display text-[1.05rem] italic leading-[1.42]">
+                What your garden could quietly provide each month — real progress,
+                even with the path still ahead.
+              </p>
+            </section>
+          ) : null}
+
+          {/* This month's pulse — flat, hairline-framed */}
+          {hasBudgetPulse ? (
+            <section className="border-t border-hairline pt-8" aria-label="This month">
+              <div className="flex items-center justify-between">
+                <SectionLabel>
+                  {budget?.month
+                    ? formatBudgetMonthLabel(budget.month)
+                    : "This month"}
+                </SectionLabel>
+                <Link
+                  href="/budget"
+                  className="mb-4 inline-flex items-center gap-1 text-[13px] font-semibold text-terra transition-colors hover:text-terra-deep"
+                >
+                  Open Budget
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
                 {leftToSpend != null && budget.totalTarget > 0 ? (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
-                      Left to spend
-                    </p>
-                    <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight text-ink">
+                    <p className="text-[13px] text-ink-soft">Room left to spend</p>
+                    <p className="mt-1 text-[2rem] font-semibold tabular-nums tracking-[-0.02em] text-ink">
                       {formatCurrency(Math.max(0, leftToSpend))}
                     </p>
                   </div>
                 ) : null}
                 {savingsRate != null ? (
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
-                      Savings rate
-                    </p>
+                    <p className="text-[13px] text-ink-soft">Set aside to grow</p>
                     <p
-                      className={`mt-1 text-3xl font-bold tabular-nums tracking-tight ${
-                        savingsRate >= 0 ? "text-gain" : "text-loss"
+                      className={`mt-1 text-[2rem] font-semibold tabular-nums tracking-[-0.02em] ${
+                        savingsRate >= 0 ? "text-sage" : "text-ink-soft"
                       }`}
                     >
                       {savingsRate.toFixed(0)}%
@@ -443,71 +382,44 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
                   </div>
                 ) : null}
               </div>
-            </Link>
+            </section>
           ) : null}
 
           {wins.length > 0 ? (
-            <div className="lg:order-3 lg:col-span-2">
-              <p className="mb-3 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-ink-muted">
-                Wins along the way
-              </p>
+            <section aria-label="Wins along the way">
+              <SectionLabel>Growing along the way</SectionLabel>
               <ul className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
                 {wins.map((win) => (
-                  <WinChip
-                    key={win.id}
-                    id={win.id}
-                    label={win.label}
-                    detail={win.detail}
-                  />
+                  <WinChip key={win.id} label={win.label} detail={win.detail} />
                 ))}
               </ul>
-            </div>
-          ) : null}
-
-          {showFourPercentCard ? (
-            <div className="relative overflow-hidden rounded-3xl bg-primary p-5 text-on-primary shadow-card lg:order-2 lg:self-stretch">
-              <MountainMilestone className="pointer-events-none absolute -bottom-2 -right-2 h-24 w-28 text-on-primary opacity-25" />
-              <p className="relative text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary/80">
-                The 4% rule
-              </p>
-              <p className="relative mt-3 text-4xl font-bold tabular-nums tracking-tight">
-                {formatCurrency(fourPercentMonthly)}
-              </p>
-              <p className="relative text-xs font-medium text-on-primary/90">per month</p>
-              <p className="relative mt-3 max-w-[20rem] text-sm leading-relaxed text-on-primary/90">
-                Your portfolio could sustainably cover this much spending. Real
-                progress, even if full independence is still ahead.
-              </p>
-            </div>
+            </section>
           ) : null}
 
           {hasAccounts ? (
             <nav
-              className="space-y-3 pt-1 lg:order-4 lg:col-span-2 lg:grid lg:grid-cols-3 lg:gap-3 lg:space-y-0"
+              className="border-t border-hairline pt-2"
               aria-label="Quick links"
             >
               {reviewCount > 0 ? (
-                <ActionCard
+                <ActionRow
                   href="/budget"
-                  title={`Review ${reviewCount} transaction${reviewCount === 1 ? "" : "s"}`}
-                  description="Clear the queue so your budget stays accurate"
+                  title={`${reviewCount} to look over`}
+                  description="A slow look keeps your plan in step with life"
                   icon={ClipboardList}
-                  gradient="gold"
                 />
               ) : null}
-              <ActionCard
+              <ActionRow
                 href="/budget"
                 title="Budget"
                 description="Buckets, spending, and what's left"
                 icon={LayoutGrid}
-                gradient="green"
               />
-              <ActionCard
+              <ActionRow
                 href="/portfolio"
                 title="Portfolio"
                 description="Accounts and how your assets are growing"
                 icon={PieChart}
-                gradient="purple"
               />
             </nav>
           ) : null}

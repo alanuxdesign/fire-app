@@ -102,7 +102,7 @@ export function BucketEditorSheet({
         </div>
 
         {error ? (
-          <p className="mt-3 text-sm text-loss">{error}</p>
+          <p className="mt-3 text-sm text-amber">{error}</p>
         ) : null}
 
         <label className="mt-4 block text-sm font-medium">Name</label>
@@ -143,7 +143,7 @@ export function BucketEditorSheet({
           type="button"
           disabled={saving}
           onClick={() => void save()}
-          className="mt-6 w-full rounded-2xl bg-primary py-3 font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+          className="mt-6 w-full rounded-full bg-terra-deep py-3 font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save changes"}
         </button>
@@ -152,7 +152,7 @@ export function BucketEditorSheet({
           type="button"
           disabled={saving}
           onClick={() => void remove()}
-          className="mt-3 w-full rounded-2xl border border-loss/40 py-3 text-sm font-medium text-loss"
+          className="mt-3 w-full rounded-full border border-amber/50 py-3 text-sm font-semibold text-amber"
         >
           Delete bucket
         </button>

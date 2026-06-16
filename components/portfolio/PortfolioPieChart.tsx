@@ -1,7 +1,6 @@
 "use client";
 
 import { AccountRow } from "@/components/portfolio/AccountRow";
-import { PORTFOLIO_FLOATING_CARD } from "@/components/portfolio/portfolioStyles";
 import type {
   AccountGroupResponse,
   AccountListItem,
@@ -53,17 +52,17 @@ export function PortfolioPieChart({
 
   if (pieData.length === 0) {
     return (
-      <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-12 text-center`}>
-        <p className="text-sm text-ink-secondary">
-          No holdings to chart yet.
+      <div className="border-t border-hairline px-4 py-12 text-center">
+        <p className="text-sm text-ink-soft">
+          Nothing to chart yet — link an account to see how it&apos;s spread.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:space-y-0">
-      <div className={`relative overflow-hidden ${PORTFOLIO_FLOATING_CARD} px-2 py-4`}>
+    <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
+      <div className="relative overflow-hidden px-2 py-4">
         <div className="relative mx-auto h-64 w-full max-w-sm">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -88,8 +87,8 @@ export function PortfolioPieChart({
                   <Cell
                     key={entry.name}
                     fill={entry.color}
-                    stroke={activeIndex === index ? "var(--ink)" : "var(--surface-raised)"}
-                    strokeWidth={activeIndex === index ? 2 : 1}
+                    stroke={activeIndex === index ? "var(--ds-ink)" : "var(--ds-paper)"}
+                    strokeWidth={activeIndex === index ? 2 : 1.5}
                     className="cursor-pointer outline-none"
                   />
                 ))}
@@ -106,10 +105,10 @@ export function PortfolioPieChart({
           </ResponsiveContainer>
 
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-ink-secondary">
-              Net Worth
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+              Net worth
             </p>
-            <p className="mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-ink">
+            <p className="mt-0.5 font-display text-[1.9rem] leading-none tracking-[-0.015em] tabular-nums text-ink">
               {formatCurrency(data.netWorth)}
             </p>
           </div>
@@ -138,21 +137,21 @@ export function PortfolioPieChart({
       </div>
 
       {selected ? (
-        <section className={`overflow-hidden ${PORTFOLIO_FLOATING_CARD}`}>
-          <div className="border-b border-hairline px-4 py-3">
+        <section className="overflow-hidden">
+          <div className="border-b border-hairline px-2 pb-3">
             <div className="flex items-baseline justify-between gap-3">
-              <h3 className="text-base font-bold text-ink">
+              <h3 className="font-display text-[1.35rem] leading-tight text-ink">
                 {selected.name}
               </h3>
-              <p className="text-base font-bold tabular-nums text-ink">
+              <p className="text-base font-semibold tabular-nums text-ink">
                 {formatCurrency(selected.value)}
               </p>
             </div>
-            <p className="mt-0.5 text-sm text-ink-secondary">
-              {formatPercent(selected.percent, { signed: false })} of portfolio
+            <p className="mt-0.5 text-sm text-ink-soft">
+              {formatPercent(selected.percent, { signed: false })} of your garden
             </p>
           </div>
-          <div className="divide-y divide-hairline px-4">
+          <div className="divide-y divide-line-soft px-2">
             {selected.accounts.map((account) => (
               <AccountRow
                 key={account.id}

@@ -1,7 +1,6 @@
 "use client";
 
 import { AccountDetailModal } from "@/components/portfolio/AccountDetailModal";
-import { PORTFOLIO_FLOATING_CARD } from "@/components/portfolio/portfolioStyles";
 import { PortfolioControls } from "@/components/portfolio/PortfolioControls";
 import { PortfolioListView } from "@/components/portfolio/PortfolioListView";
 import { PortfolioPieChart } from "@/components/portfolio/PortfolioPieChart";
@@ -71,12 +70,13 @@ export function PortfolioHoldings({
       />
 
       {!hasHoldings ? (
-        <div className={`${PORTFOLIO_FLOATING_CARD} px-4 py-10 text-center`}>
-          <p className="text-base font-semibold text-ink">
-            No accounts yet
+        <div className="border-t border-hairline px-4 py-10 text-center">
+          <p className="font-display text-[1.35rem] leading-tight text-ink">
+            Nothing planted here yet
           </p>
-          <p className="mt-1 text-sm text-ink-secondary">
-            Connect a bank or add an asset manually below.
+          <p className="mx-auto mt-1.5 max-w-xs text-sm text-ink-soft">
+            Link a bank or add an asset below, and it&apos;ll start showing its
+            growth.
           </p>
         </div>
       ) : null}

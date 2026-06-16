@@ -2,7 +2,6 @@
 
 import { ChangeLabel } from "@/components/portfolio/ChangeLabel";
 import { AccountRow } from "@/components/portfolio/AccountRow";
-import { PORTFOLIO_FLOATING_CARD } from "@/components/portfolio/portfolioStyles";
 import type {
   AccountGroupResponse,
   AccountListItem,
@@ -23,54 +22,50 @@ export function AccountGroup({ group, onAccountClick }: AccountGroupProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <section className={`overflow-hidden ${PORTFOLIO_FLOATING_CARD}`}>
-      <div className="bg-gradient-to-r from-canvas-sunken/60 to-surface px-4 pb-3 pt-4">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-ink-secondary">
-              {group.type}
-            </h2>
-            <p
-              className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${
-                liability
-                  ? "text-loss"
-                  : "text-ink"
-              }`}
-            >
-              {formatGroupTotal(group.total, {
-                isLiabilityGroup: liability,
-              })}
-            </p>
-          </div>
-          <div className="flex items-end gap-2">
-            <p className="text-right text-[11px] tabular-nums">
-              <ChangeLabel
-                amount={group.monthlyChange}
-                percent={group.monthlyChangePercent}
-                showPercent
-                size="xs"
-              />
-              <span className="mt-0.5 block text-ink-muted">This month</span>
-            </p>
-            <button
-              type="button"
-              onClick={() => setCollapsed((c) => !c)}
-              className="hidden rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-canvas-sunken hover:text-ink-secondary lg:inline-flex"
-              aria-expanded={!collapsed}
-              aria-label={`${collapsed ? "Expand" : "Collapse"} ${group.type}`}
-            >
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : ""}`}
-                strokeWidth={2}
-                aria-hidden
-              />
-            </button>
-          </div>
+    <section className="border-t border-hairline pt-5">
+      <div className="flex items-end justify-between gap-3 px-2">
+        <div>
+          <h2 className="text-[11.5px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+            {group.type}
+          </h2>
+          <p
+            className={`mt-1.5 text-[1.6rem] font-semibold tabular-nums tracking-[-0.02em] ${
+              liability ? "text-ink-soft" : "text-ink"
+            }`}
+          >
+            {formatGroupTotal(group.total, {
+              isLiabilityGroup: liability,
+            })}
+          </p>
+        </div>
+        <div className="flex items-end gap-2">
+          <p className="text-right text-[11px] tabular-nums">
+            <ChangeLabel
+              amount={group.monthlyChange}
+              percent={group.monthlyChangePercent}
+              showPercent
+              size="xs"
+            />
+            <span className="mt-0.5 block text-ink-faint">This month</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            className="hidden rounded-full p-1.5 text-ink-faint transition-colors hover:bg-sage-wash hover:text-ink-secondary lg:inline-flex"
+            aria-expanded={!collapsed}
+            aria-label={`${collapsed ? "Expand" : "Collapse"} ${group.type}`}
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : ""}`}
+              strokeWidth={2}
+              aria-hidden
+            />
+          </button>
         </div>
       </div>
 
       <div
-        className={`divide-y divide-hairline/80 px-2 ${
+        className={`mt-2 divide-y divide-line-soft px-2 ${
           collapsed ? "lg:hidden" : ""
         }`}
       >

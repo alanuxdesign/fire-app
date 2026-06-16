@@ -117,7 +117,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-[rgba(45,42,34,0.5)]"
         aria-label="Close"
         onClick={handleClose}
       />
@@ -126,19 +126,19 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
         role="dialog"
         aria-modal="true"
         aria-labelledby="manual-asset-title"
-        className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl sm:rounded-2xl"
+        className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[18px] bg-paper shadow-card ring-1 ring-hairline sm:rounded-[18px]"
       >
         <div className="flex items-center justify-between border-b border-hairline px-4 py-4">
           <h2
             id="manual-asset-title"
-            className="text-lg font-semibold text-ink"
+            className="font-display text-[1.5rem] leading-tight text-ink"
           >
-            Add asset manually
+            Add an asset by hand
           </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg p-1.5 text-ink-secondary transition-colors hover:bg-canvas-sunken"
+            className="rounded-full p-1.5 text-ink-soft transition-colors hover:bg-sage-wash"
             aria-label="Close form"
           >
             <X className="h-5 w-5" />
@@ -270,7 +270,7 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           </label>
 
           {error ? (
-            <p className="rounded-lg bg-loss-soft px-3 py-2 text-sm text-loss">
+            <p className="rounded-[14px] bg-sage-wash px-3 py-2 text-sm text-sage-deep">
               {error}
             </p>
           ) : null}
@@ -278,9 +278,9 @@ export function ManualAssetSheet({ open, onClose, onSaved }: ManualAssetSheetPro
           <button
             type="submit"
             disabled={submitting}
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-[15px] font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+            className="flex w-full items-center justify-center rounded-full bg-terra-deep py-3 text-[14.5px] font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
           >
-            {submitting ? "Saving…" : "Add asset"}
+            {submitting ? "Saving…" : "Add this asset"}
           </button>
         </form>
       </div>

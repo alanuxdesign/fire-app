@@ -1,6 +1,7 @@
 "use client";
 
 import { ManualAssetSheet } from "@/components/portfolio/ManualAssetSheet";
+import { PRIMARY_BUTTON } from "@/components/ui/cardStyles";
 import { setBackfillPending } from "@/lib/backfill-pending";
 import { Building2, PenLine } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -145,28 +146,28 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
         type="button"
         onClick={() => setPanel("chooser")}
         disabled={disabled || plaidLoading}
-        className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-[15px] font-semibold text-on-primary shadow-soft transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-card disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+        className={`flex w-full items-center justify-center ${PRIMARY_BUTTON} disabled:cursor-not-allowed disabled:opacity-50`}
       >
-        {plaidLoading ? "Linking account…" : "+ Add account"}
+        {plaidLoading ? "Linking account…" : "Add an account"}
       </button>
 
-      {error ? <p className="text-center text-sm text-loss">{error}</p> : null}
+      {error ? <p className="text-center text-sm text-ink-soft">{error}</p> : null}
 
       {panel === "chooser" ? (
         <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-[rgba(45,42,34,0.5)]"
             aria-label="Close"
             onClick={() => setPanel("closed")}
           />
 
-          <div className="relative z-10 w-full max-w-lg rounded-t-2xl bg-surface px-4 pb-6 pt-5 shadow-xl sm:rounded-2xl">
-            <h3 className="text-center text-lg font-semibold text-ink">
-              Add account
+          <div className="relative z-10 w-full max-w-lg rounded-t-[18px] bg-paper px-4 pb-6 pt-5 shadow-card ring-1 ring-hairline sm:rounded-[18px]">
+            <h3 className="text-center font-display text-[1.5rem] leading-tight text-ink">
+              Add an account
             </h3>
-            <p className="mt-1 text-center text-sm text-ink-secondary">
-              Connect an institution or enter an asset manually
+            <p className="mt-1 text-center text-sm text-ink-soft">
+              Link an institution or enter an asset by hand
             </p>
 
             <div className="mt-5 space-y-3">
@@ -174,17 +175,17 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
                 type="button"
                 onClick={handleConnectBank}
                 disabled={plaidLoading}
-                className="flex w-full items-center gap-3 rounded-2xl bg-canvas-sunken px-4 py-3.5 text-left shadow-soft ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-[18px] border border-hairline bg-paper-2 px-4 py-3.5 text-left transition-colors hover:bg-sage-wash/60 disabled:opacity-50"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-green-soft text-accent-green">
-                  <Building2 className="h-5 w-5" strokeWidth={2} />
+                <span className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-sage-wash text-sage-deep">
+                  <Building2 className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <span>
-                  <span className="block text-[15px] font-medium text-ink">
-                    Connect Bank/Brokerage
+                  <span className="block text-[15px] font-semibold text-ink">
+                    Connect a bank or brokerage
                   </span>
-                  <span className="block text-sm text-ink-secondary">
-                    Securely link via Plaid
+                  <span className="block text-sm text-ink-soft">
+                    Securely linked through Plaid
                   </span>
                 </span>
               </button>
@@ -192,16 +193,16 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
               <button
                 type="button"
                 onClick={() => setPanel("manual")}
-                className="flex w-full items-center gap-3 rounded-2xl bg-canvas-sunken px-4 py-3.5 text-left shadow-soft ring-1 ring-hairline transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
+                className="flex w-full items-center gap-3 rounded-[18px] border border-hairline bg-paper-2 px-4 py-3.5 text-left transition-colors hover:bg-sage-wash/60"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-purple-soft text-accent-purple">
-                  <PenLine className="h-5 w-5" strokeWidth={2} />
+                <span className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-sage-wash text-sage-deep">
+                  <PenLine className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <span>
-                  <span className="block text-[15px] font-medium text-ink">
-                    Add Manually
+                  <span className="block text-[15px] font-semibold text-ink">
+                    Add one by hand
                   </span>
-                  <span className="block text-sm text-ink-secondary">
+                  <span className="block text-sm text-ink-soft">
                     Real estate, vehicles, crypto, and more
                   </span>
                 </span>
@@ -211,9 +212,9 @@ export function AddAccountButton({ onLinked, disabled }: AddAccountButtonProps) 
             <button
               type="button"
               onClick={() => setPanel("closed")}
-              className="mt-4 w-full py-2 text-sm font-medium text-ink-secondary"
+              className="mt-4 w-full py-2 text-sm font-medium text-ink-soft"
             >
-              Cancel
+              Maybe later
             </button>
           </div>
         </div>

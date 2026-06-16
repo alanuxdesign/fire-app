@@ -35,9 +35,9 @@ export function CashFlowChart({ series }: CashFlowChartProps) {
   }));
 
   return (
-    <div className="rounded-2xl border border-hairline bg-surface p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-secondary">
-        Cash flow
+    <div className="border-t border-hairline pt-5">
+      <p className="text-[11.5px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+        How the seasons flow
       </p>
       <div className="mt-3 h-48 w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -74,8 +74,8 @@ export function CashFlowChart({ series }: CashFlowChartProps) {
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="income" fill={colors.gain} radius={[4, 4, 0, 0]} maxBarSize={20} />
-            <Bar dataKey="expense" fill={colors.loss} radius={[4, 4, 0, 0]} maxBarSize={20} />
-            <Line type="monotone" dataKey="net" stroke={colors.accentBlue} strokeWidth={2} dot={{ r: 2 }} />
+            <Bar dataKey="expense" fill={colors.olive} radius={[4, 4, 0, 0]} maxBarSize={20} />
+            <Line type="monotone" dataKey="net" stroke={colors.primary} strokeWidth={2} dot={{ r: 2, fill: colors.primary }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

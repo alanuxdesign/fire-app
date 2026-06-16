@@ -362,7 +362,7 @@ export function AccountDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-black/50 lg:items-center lg:justify-center"
+      className="fixed inset-0 z-[60] flex flex-col bg-[rgba(45,42,34,0.5)] lg:items-center lg:justify-center"
       role="presentation"
       onClick={onClose}
     >
@@ -370,7 +370,7 @@ export function AccountDetailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-detail-title"
-        className="flex h-[100dvh] w-full flex-col bg-surface lg:h-auto lg:max-h-[85dvh] lg:max-w-2xl lg:rounded-2xl lg:shadow-xl"
+        className="flex h-[100dvh] w-full flex-col bg-paper lg:h-auto lg:max-h-[85dvh] lg:max-w-2xl lg:rounded-[18px] lg:shadow-card lg:ring-1 lg:ring-hairline"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-start gap-3 border-b border-hairline px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
@@ -384,7 +384,7 @@ export function AccountDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-ink-secondary hover:bg-canvas-sunken"
+            className="rounded-full p-1.5 text-ink-soft hover:bg-sage-wash"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -416,7 +416,7 @@ export function AccountDetailModal({
                   type="button"
                   onClick={handleSaveDisplayName}
                   disabled={saving}
-                  className="shrink-0 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+                  className="shrink-0 rounded-full bg-terra-deep px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
                 >
                   Save
                 </button>
@@ -529,7 +529,7 @@ export function AccountDetailModal({
                   type="button"
                   onClick={handleSaveAssetClass}
                   disabled={saving}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+                  className="rounded-full bg-terra-deep px-4 py-1.5 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
                 >
                   Save class
                 </button>
@@ -601,7 +601,7 @@ export function AccountDetailModal({
                   type="button"
                   onClick={handleSaveAcquisition}
                   disabled={saving}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+                  className="rounded-full bg-terra-deep px-4 py-1.5 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
                 >
                   Save acquisition details
                 </button>
@@ -661,7 +661,7 @@ export function AccountDetailModal({
                   type="button"
                   onClick={handleSaveMarket}
                   disabled={saving}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover disabled:opacity-50"
+                  className="rounded-full bg-terra-deep px-4 py-1.5 text-sm font-semibold text-on-primary transition-colors hover:bg-terra disabled:opacity-50"
                 >
                   Save market link
                 </button>
@@ -703,7 +703,7 @@ export function AccountDetailModal({
                 type="button"
                 onClick={handleSync}
                 disabled={syncing || saving}
-                className="w-full rounded-lg border border-hairline-strong px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
+                className="w-full rounded-full border border-hairline px-3 py-2 text-sm font-semibold text-ink disabled:opacity-50"
               >
                 {syncing ? "Syncing…" : "Sync now"}
               </button>
@@ -711,7 +711,7 @@ export function AccountDetailModal({
                 type="button"
                 onClick={handleDisconnect}
                 disabled={saving}
-                className="w-full rounded-lg border border-loss/40 px-3 py-2 text-sm font-medium text-loss disabled:opacity-50"
+                className="w-full rounded-full border border-amber/50 px-3 py-2 text-sm font-semibold text-amber disabled:opacity-50"
               >
                 Disconnect institution
               </button>
@@ -719,7 +719,7 @@ export function AccountDetailModal({
           ) : null}
 
           {error ? (
-            <p className="rounded-lg bg-loss-soft px-3 py-2 text-sm text-loss">
+            <p className="rounded-[14px] bg-sage-wash px-3 py-2 text-sm text-sage-deep">
               {error}
             </p>
           ) : null}
@@ -729,7 +729,7 @@ export function AccountDetailModal({
               type="button"
               onClick={handleRemove}
               disabled={saving}
-              className="w-full rounded-lg bg-loss px-3 py-2.5 text-sm font-medium text-on-primary transition-colors hover:opacity-90 disabled:opacity-50"
+              className="w-full rounded-full border border-amber/50 px-3 py-2.5 text-sm font-semibold text-amber transition-colors hover:bg-[color:var(--ds-sand)] disabled:opacity-50"
             >
               Remove account
             </button>

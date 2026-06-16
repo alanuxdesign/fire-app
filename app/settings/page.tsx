@@ -7,12 +7,16 @@ export default async function SettingsPage() {
 
   if (isDemo) {
     return (
-      <div className="flex flex-1 flex-col px-4 py-8 lg:mx-auto lg:w-full lg:max-w-3xl">
-        <h1 className="text-2xl font-semibold text-ink">
+      <div className="flex flex-1 flex-col bg-paper px-5 py-8 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-8">
+        <h1 className="font-display text-[2rem] leading-tight tracking-[-0.015em] text-ink">
           Settings
         </h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          You&apos;re exploring the demo garden. Sign in with your own account to
+          start growing your real one.
+        </p>
         <form
-          className="mt-6"
+          className="mt-7 border-t border-hairline pt-6"
           action={async () => {
             "use server";
             await signOut({ redirectTo: "/login" });
@@ -20,7 +24,7 @@ export default async function SettingsPage() {
         >
           <button
             type="submit"
-            className="w-full rounded-2xl border border-loss/40 bg-surface px-4 py-3 text-sm font-medium text-loss transition-colors hover:bg-loss-soft"
+            className="w-full rounded-full border border-hairline px-4 py-3 text-sm font-semibold text-ink-soft transition-colors hover:bg-sage-wash"
           >
             Sign out
           </button>

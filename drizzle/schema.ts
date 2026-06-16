@@ -22,6 +22,20 @@ export const assetTypeEnum = pgEnum("asset_type", [
   "other",
 ]);
 
+export const accountAccessibilityEnum = pgEnum("account_accessibility", [
+  "immediate",
+  "reachable",
+  "locked",
+]);
+
+export const milestoneTypeEnum = pgEnum("milestone_type", ["category", "tier"]);
+
+export const contingencyScenarioEnum = pgEnum("contingency_scenario", [
+  "job_loss",
+  "big_expense",
+  "downturn",
+]);
+
 export const users = pgTable("users", {
   id: text("id")
     .primaryKey()
@@ -118,6 +132,7 @@ export const financialAccounts = pgTable("financial_accounts", {
   isManual: boolean("is_manual").notNull().default(false),
   excludeFromBudget: boolean("exclude_from_budget").notNull().default(false),
   assetClass: text("asset_class"),
+  accessibility: accountAccessibilityEnum("accessibility"),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
     .defaultNow()
@@ -139,6 +154,7 @@ export const manualAssets = pgTable("manual_assets", {
   assetClassOverride: text("asset_class_override"),
   marketSymbol: text("market_symbol"),
   marketQuantity: numeric("market_quantity", { precision: 19, scale: 4 }),
+  accessibility: accountAccessibilityEnum("accessibility"),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
     .defaultNow()
@@ -367,6 +383,84 @@ export const balanceSnapshots = pgTable("balance_snapshots", {
   snapshotData: jsonb("snapshot_data"),
 });
 
+export const lifePlans = pgTable("life_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  swr: numeric("swr", { precision: 6, scale: 4 }).notNull().default("0.0400"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const lifePhases = pgTable("life_phases", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  lifePlanId: uuid("life_plan_id")
+    .notNull()
+    .references(() => lifePlans.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const lifeExpenseCategories = pgTable("life_expense_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  lifePlanId: uuid("life_plan_id")
+    .notNull()
+    .references(() => lifePlans.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  annualAmount: numeric("annual_amount", { precision: 19, scale: 4 })
+    .notNull()
+    .default("0"),
+  isEssential: boolean("is_essential").notNull().default(true),
+  phaseId: uuid("phase_id").references(() => lifePhases.id, {
+    onDelete: "set null",
+  }),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const tierAssumptions = pgTable("tier_assumptions", {
+  lifePlanId: uuid("life_plan_id")
+    .primaryKey()
+    .references(() => lifePlans.id, { onDelete: "cascade" }),
+  swr: numeric("swr", { precision: 6, scale: 4 }).notNull().default("0.0400"),
+  expectedReturn: numeric("expected_return", { precision: 6, scale: 4 })
+    .notNull()
+    .default("0.0700"),
+  targetYear: integer("target_year"),
+  partTimeIncome: numeric("part_time_income", { precision: 19, scale: 4 })
+    .notNull()
+    .default("12000"),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const milestoneEvents = pgTable("milestone_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  lifePlanId: uuid("life_plan_id")
+    .notNull()
+    .references(() => lifePlans.id, { onDelete: "cascade" }),
+  type: milestoneTypeEnum("type").notNull(),
+  ref: text("ref").notNull(),
+  securedAt: timestamp("secured_at", { mode: "date" }).notNull().defaultNow(),
+  bufferClearAt: timestamp("buffer_clear_at", { mode: "date" }),
+});
+
+export const contingencyPlans = pgTable("contingency_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  lifePlanId: uuid("life_plan_id")
+    .notNull()
+    .references(() => lifePlans.id, { onDelete: "cascade" }),
+  scenario: contingencyScenarioEnum("scenario").notNull(),
+  levers: jsonb("levers")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
+  savedAt: timestamp("saved_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
@@ -379,6 +473,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   transactions: many(transactions),
   merchantRules: many(merchantRules),
   budgetSettings: one(budgetUserSettings),
+  lifePlan: one(lifePlans),
 }));
 
 export const plaidItemsRelations = relations(plaidItems, ({ one, many }) => ({
@@ -462,3 +557,61 @@ export const recurringBillsRelations = relations(recurringBills, ({ one }) => ({
     references: [budgetCategories.id],
   }),
 }));
+
+export const lifePlansRelations = relations(lifePlans, ({ one, many }) => ({
+  user: one(users, {
+    fields: [lifePlans.userId],
+    references: [users.id],
+  }),
+  phases: many(lifePhases),
+  expenseCategories: many(lifeExpenseCategories),
+  tierAssumptions: one(tierAssumptions),
+  milestoneEvents: many(milestoneEvents),
+  contingencyPlans: many(contingencyPlans),
+}));
+
+export const lifePhasesRelations = relations(lifePhases, ({ one, many }) => ({
+  lifePlan: one(lifePlans, {
+    fields: [lifePhases.lifePlanId],
+    references: [lifePlans.id],
+  }),
+  expenseCategories: many(lifeExpenseCategories),
+}));
+
+export const lifeExpenseCategoriesRelations = relations(
+  lifeExpenseCategories,
+  ({ one }) => ({
+    lifePlan: one(lifePlans, {
+      fields: [lifeExpenseCategories.lifePlanId],
+      references: [lifePlans.id],
+    }),
+    phase: one(lifePhases, {
+      fields: [lifeExpenseCategories.phaseId],
+      references: [lifePhases.id],
+    }),
+  }),
+);
+
+export const tierAssumptionsRelations = relations(tierAssumptions, ({ one }) => ({
+  lifePlan: one(lifePlans, {
+    fields: [tierAssumptions.lifePlanId],
+    references: [lifePlans.id],
+  }),
+}));
+
+export const milestoneEventsRelations = relations(milestoneEvents, ({ one }) => ({
+  lifePlan: one(lifePlans, {
+    fields: [milestoneEvents.lifePlanId],
+    references: [lifePlans.id],
+  }),
+}));
+
+export const contingencyPlansRelations = relations(
+  contingencyPlans,
+  ({ one }) => ({
+    lifePlan: one(lifePlans, {
+      fields: [contingencyPlans.lifePlanId],
+      references: [lifePlans.id],
+    }),
+  }),
+);

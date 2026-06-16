@@ -21,11 +21,8 @@ import {
   dismissBudgetAlert,
   isBudgetAlertDismissed,
 } from "@/lib/budget-alert-dismissals";
-import {
-  fetchSubscriptions,
-  toSubscriptionsSummary,
-  type SubscriptionsSummary,
-} from "@/lib/budget-subscriptions";
+import { useBudgetData } from "@/hooks/useBudgetData";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { shouldAutoSyncTransactions } from "@/lib/budget-sync-policy";
 import { shiftBudgetMonth, getCurrentBudgetMonth } from "@/lib/budget-month";
 import { syncTransactionsWithProgress } from "@/lib/sync-transactions-client";
@@ -37,7 +34,6 @@ import type {
   BudgetSummaryBucket,
   CashFlowPoint,
   DuplicateGroup,
-  RecurringBill,
   SerializedTransaction,
 } from "@/lib/budget-types";
 import { formatCurrency } from "@/lib/format";
@@ -222,14 +218,25 @@ function BucketRow({
 
 export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const [month, setMonth] = useState(getCurrentBudgetMonth);
-  const [summary, setSummary] = useState<BudgetSummary | null>(null);
-  const [categories, setCategories] = useState<BudgetCategoryOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    summary,
+    billsDue,
+    categories,
+    tags,
+    subscriptionsSummary,
+    loading,
+    revalidating,
+    error,
+    setError,
+    setTags,
+    refreshMonth,
+    refreshAll,
+    refreshSubscriptions,
+  } = useBudgetData(month);
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<TransactionSyncProgress | null>(
     null,
   );
-  const [error, setError] = useState<string | null>(null);
   const [screen, setScreen] = useState<
     | "home"
     | "review"
@@ -243,7 +250,6 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const [transactions, setTransactions] = useState<SerializedTransaction[]>([]);
   const [selectedTxn, setSelectedTxn] = useState<SerializedTransaction | null>(null);
   const [targetInput, setTargetInput] = useState("");
-  const [tags, setTags] = useState<BudgetTag[]>([]);
   const [trends, setTrends] = useState<
     { month: string; spent: number; target: number }[]
   >([]);
@@ -260,55 +266,11 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   const [bulkApplying, setBulkApplying] = useState(false);
   const [bulkMessage, setBulkMessage] = useState<string | null>(null);
   const [subscriptionsRefreshKey, setSubscriptionsRefreshKey] = useState(0);
-  const [subscriptionsSummary, setSubscriptionsSummary] =
-    useState<SubscriptionsSummary | null>(null);
   const [cashFlowSeries, setCashFlowSeries] = useState<CashFlowPoint[]>([]);
-  const [billsDue, setBillsDue] = useState<RecurringBill[]>([]);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
 
   const currentMonth = getCurrentBudgetMonth();
   const showBackToToday = month !== currentMonth;
-
-  const loadSummary = useCallback(async (m: string) => {
-    const res = await fetch(`/api/budget/summary?month=${encodeURIComponent(m)}`);
-    if (!res.ok) {
-      const body = (await res.json()) as { error?: string };
-      throw new Error(body.error ?? "Failed to load budget");
-    }
-    return (await res.json()) as BudgetSummary;
-  }, []);
-
-  const loadCategories = useCallback(async () => {
-    const res = await fetch("/api/budget/categories?forPicker=1");
-    if (!res.ok) return [];
-    const body = (await res.json()) as { categories: BudgetCategoryOption[] };
-    return body.categories;
-  }, []);
-
-  const loadSubscriptionsSummary = useCallback(async () => {
-    const data = await fetchSubscriptions();
-    if (!data || data.subscriptions.length === 0) {
-      setSubscriptionsSummary(null);
-      return;
-    }
-    setSubscriptionsSummary(toSubscriptionsSummary(data));
-  }, []);
-
-  const loadBillsDue = useCallback(async (m: string) => {
-    const res = await fetch(
-      `/api/budget/bills?month=${encodeURIComponent(m)}`,
-    );
-    if (!res.ok) return [];
-    const body = (await res.json()) as { bills: RecurringBill[] };
-    return body.bills;
-  }, []);
-
-  const loadTags = useCallback(async () => {
-    const res = await fetch("/api/budget/tags");
-    if (!res.ok) return [];
-    const body = (await res.json()) as { tags: BudgetTag[] };
-    return body.tags;
-  }, []);
 
   const loadTransactions = useCallback(
     async (params: Record<string, string>) => {
@@ -320,30 +282,6 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     },
     [],
   );
-
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      const [sum, cats, tagList, , bills] = await Promise.all([
-        loadSummary(month),
-        loadCategories(),
-        loadTags(),
-        loadSubscriptionsSummary(),
-        loadBillsDue(month),
-      ]);
-      setSummary(sum);
-      setCategories(cats);
-      setTags(tagList);
-      setBillsDue(bills);
-      if (sum.includePendingInBudget !== undefined) {
-        setIncludePendingInBudget(sum.includePendingInBudget);
-      }
-      window.dispatchEvent(new CustomEvent("budget-review-count", { detail: sum.unreviewedCount }));
-      setSubscriptionsRefreshKey((k) => k + 1);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load");
-    }
-  }, [loadSummary, loadCategories, loadTags, loadBillsDue, loadSubscriptionsSummary, month]);
 
   const openInsights = async () => {
     setScreen("insights");
@@ -376,7 +314,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       body: JSON.stringify({ duplicateOfTransactionId: keepId }),
     });
     await openDuplicates();
-    await refresh();
+    await refreshMonth();
   };
 
   const toggleBucketRollover = async (categoryId: string, enabled: boolean) => {
@@ -386,7 +324,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rolloverEnabled: enabled }),
     });
-    await refresh();
+    await refreshMonth();
     const updated = summary?.buckets.find((b) => b.id === categoryId);
     if (updated) setActiveBucket(updated);
   };
@@ -418,7 +356,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       if ("error" in result) {
         setError(result.error);
       } else {
-        await refresh();
+        await refreshAll();
         const status = await fetchSyncStatus();
         if (status?.lastSyncAt) {
           setLastSyncLabel(
@@ -437,29 +375,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       setSyncing(false);
       setTimeout(() => setSyncProgress(null), 2500);
     }
-  }, [isDemo, refresh, fetchSyncStatus]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    (async () => {
-      try {
-        await refresh();
-        if (!cancelled) setLoading(false);
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load");
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [month, refresh]);
+  }, [isDemo, refreshAll, fetchSyncStatus, setError]);
 
   useEffect(() => {
     if (isDemo) return;
@@ -589,7 +505,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     }
 
     setSelectedTxn(null);
-    await refresh();
+    await refreshMonth();
     if (screen === "review") {
       setTransactions(
         await loadTransactions({
@@ -627,7 +543,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     });
     if (!res.ok) throw new Error("Failed to update settings");
     setIncludePendingInBudget(next);
-    await refresh();
+    await refreshMonth();
   };
 
   const supportsBulkMode =
@@ -663,7 +579,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       setBulkMessage(`Updated ${body.updated ?? 0} transactions`);
       setSelectedTxnIds(new Set());
       setBulkMode(false);
-      await refresh();
+      await refreshMonth();
       if (screen === "review") {
         setTransactions(
           await loadTransactions({
@@ -695,7 +611,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       });
       if (!res.ok) throw new Error("Bulk review failed");
       setTransactions([]);
-      await refresh();
+      await refreshMonth();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Bulk review failed");
     } finally {
@@ -713,7 +629,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
 
   const handleSubscriptionsUpdated = () => {
     setSubscriptionsRefreshKey((k) => k + 1);
-    void loadSubscriptionsSummary();
+    void refreshSubscriptions();
   };
 
   const openAllTransactions = async (search: string) => {
@@ -736,6 +652,29 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);
 
+  useEffect(() => {
+    if (summary?.includePendingInBudget !== undefined) {
+      setIncludePendingInBudget(summary.includePendingInBudget);
+    }
+  }, [summary?.includePendingInBudget]);
+
+  const handlePullRefresh = useCallback(async () => {
+    if (isDemo) {
+      await refreshAll();
+      return;
+    }
+    await runTransactionSync();
+  }, [isDemo, refreshAll, runTransactionSync]);
+
+  const {
+    bind: pullBind,
+    pullDistance,
+    refreshing: pullRefreshing,
+  } = usePullToRefresh({
+    onRefresh: handlePullRefresh,
+    enabled: screen === "home",
+  });
+
   const saveBucketTarget = async () => {
     if (!activeBucket?.id || isDemo) return;
     const amount = Number(targetInput);
@@ -749,7 +688,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
         amount,
       }),
     });
-    await refresh();
+    await refreshMonth();
     setActiveBucket((b) =>
       b ? { ...b, target: amount, progress: amount > 0 ? b.spent / amount : 0 } : b,
     );
@@ -764,6 +703,18 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
   }
 
   return (
+    <div className="flex flex-1 flex-col" {...pullBind}>
+      {(pullDistance > 0 || pullRefreshing) && screen === "home" ? (
+        <div
+          className="flex items-center justify-center overflow-hidden transition-[height] duration-150"
+          style={{ height: pullRefreshing ? 32 : pullDistance }}
+          aria-hidden
+        >
+          <RefreshCw
+            className={`h-4 w-4 text-ink-soft ${pullRefreshing ? "animate-spin" : ""}`}
+          />
+        </div>
+      ) : null}
     <div className="flex flex-1 flex-col px-4 py-4 lg:mx-auto lg:w-full lg:max-w-6xl lg:px-6">
       <div className="flex items-center justify-between gap-2">
         {screen !== "home" ? (
@@ -814,6 +765,8 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           </div>
           {showBackToToday ? (
             <p className="text-[10px] text-ink-secondary">Not current month</p>
+          ) : revalidating && !syncing ? (
+            <p className="text-[10px] text-ink-secondary">Updating…</p>
           ) : lastSyncLabel && !syncing ? (
             <p className="text-[10px] text-ink-secondary">Synced {lastSyncLabel}</p>
           ) : null}
@@ -899,7 +852,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               bills={billsDue}
               categories={categories}
               isDemo={isDemo}
-              onChanged={refresh}
+              onChanged={() => refreshMonth()}
             />
           </div>
 
@@ -1281,7 +1234,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
               bills={billsDue}
               categories={categories}
               isDemo={isDemo}
-              onChanged={refresh}
+              onChanged={() => refreshMonth()}
             />
           </>
         ) : null}
@@ -1305,7 +1258,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           }}
           onCreateTag={createTag}
           onSplitsSaved={async () => {
-            await refresh();
+            await refreshMonth();
             if (activeBucket) await openBucket(activeBucket);
           }}
         />
@@ -1327,7 +1280,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
       {showCreateBucket ? (
         <CreateBucketSheet
           onClose={() => setShowCreateBucket(false)}
-          onCreated={refresh}
+          onCreated={() => refreshAll()}
         />
       ) : null}
 
@@ -1342,7 +1295,7 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
           }
           onClose={() => setShowBucketEditor(false)}
           onSaved={async () => {
-            await refresh();
+            await refreshMonth();
             const updated = summary?.buckets.find((b) => b.id === activeBucket.id);
             if (updated) setActiveBucket(updated);
           }}
@@ -1351,10 +1304,11 @@ export function BudgetView({ isDemo = false }: BudgetViewProps) {
             setScreen("home");
             setActiveBucket(null);
             setTransactions([]);
-            await refresh();
+            await refreshAll();
           }}
         />
       ) : null}
+    </div>
     </div>
   );
 }

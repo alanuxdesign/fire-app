@@ -70,19 +70,15 @@ export function ShockPlaybook({
     return initial;
   });
 
-  const engineInput = {
-    accessibleAssets,
-    totalAssets,
-    swr,
-    fullMonthlySpend,
-    essentialMonthlySpend,
-    partTimeIncomeAnnual,
-  };
-
   const runwayFor = useCallback(
     (levers: ContingencyLevers) => {
       const result = computeRunwayWithLevers({
-        ...engineInput,
+        accessibleAssets,
+        totalAssets,
+        swr,
+        fullMonthlySpend,
+        essentialMonthlySpend,
+        partTimeIncomeAnnual,
         levers: {
           cutToEssentials: levers.cutToEssentials,
           partTime: levers.partTime,

@@ -3,6 +3,9 @@
 import { CoverageMap } from "@/components/planner/CoverageMap";
 import { RunwayMeter } from "@/components/planner/RunwayMeter";
 import { ShockPlaybook } from "@/components/planner/ShockPlaybook";
+import { DownMarketReassurance } from "@/components/planner/DownMarketReassurance";
+import { getChangeHorizonLabel } from "@/lib/chart-data";
+import type { AccountsApiResponse } from "@/lib/account-groups";
 import { GrowthRing } from "@/components/illustrations/GrowthRing";
 import { SproutVessel } from "@/components/illustrations/SproutVessel";
 import { GHOST_BUTTON, PRIMARY_BUTTON } from "@/components/ui/cardStyles";
@@ -14,7 +17,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import { Plus, Star, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const SCENARIO_STARTERS = [
@@ -70,6 +73,9 @@ export function PlannerView() {
 
   const [bundle, setBundle] = useState<LifePlanBundle | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [netWorthChangePercent, setNetWorthChangePercent] = useState<number | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,11 +86,19 @@ export function PlannerView() {
     setError(null);
     try {
       const qs = planId ? `?planId=${encodeURIComponent(planId)}` : "";
-      const res = await fetch(`/api/life-plan${qs}`);
+      const [res, accountsRes] = await Promise.all([
+        fetch(`/api/life-plan${qs}`),
+        fetch("/api/accounts"),
+      ]);
       if (!res.ok) throw new Error("Failed to load planner");
       const body = (await res.json()) as LifePlanBundle;
       setBundle(body);
       setSelectedPlanId(body.viewedPlanId);
+
+      if (accountsRes.ok) {
+        const accounts = (await accountsRes.json()) as AccountsApiResponse;
+        setNetWorthChangePercent(accounts.netWorthChangePercent ?? null);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load");
     } finally {
@@ -318,6 +332,18 @@ export function PlannerView() {
         swr={plan.swr}
         partTimeIncome={plan.tierAssumptions.partTimeIncome}
       />
+
+      {netWorthChangePercent != null ? (
+        <DownMarketReassurance
+          derived={derived}
+          accessibleAssets={snapshot.assets.totalAccessible}
+          totalAssets={snapshot.assets.totalInvestedLiquid}
+          swr={plan.swr}
+          partTimeIncomeAnnual={plan.tierAssumptions.partTimeIncome}
+          changePercent={netWorthChangePercent}
+          changeWindowLabel={getChangeHorizonLabel("1M")}
+        />
+      ) : null}
 
       <RunwayMeter
         accessibleAssets={snapshot.assets.totalAccessible}

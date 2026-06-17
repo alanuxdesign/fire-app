@@ -12,6 +12,7 @@ import { getChangeHorizonLabel } from "@/lib/chart-data";
 import { formatCurrency, formatPercent, formatSignedCurrency } from "@/lib/format";
 import { CoverageTeaser } from "@/components/planner/CoverageTeaser";
 import { RunwayTeaser } from "@/components/planner/RunwayTeaser";
+import { DownMarketReassurance } from "@/components/planner/DownMarketReassurance";
 import type { LifePlanSnapshot } from "@/lib/life-plan-types";
 import {
   computeFourPercentMonthly,
@@ -324,6 +325,15 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
                   </div>
                 </div>
               </section>
+              <DownMarketReassurance
+                derived={lifePlan.derived}
+                accessibleAssets={lifePlan.assets.totalAccessible}
+                totalAssets={lifePlan.assets.totalInvestedLiquid}
+                swr={lifePlan.plan.swr}
+                partTimeIncomeAnnual={lifePlan.plan.tierAssumptions.partTimeIncome}
+                changePercent={changePercent}
+                changeWindowLabel={getChangeHorizonLabel("1M")}
+              />
               <CoverageTeaser
                 derived={lifePlan.derived}
                 milestoneEvents={lifePlan.plan.milestoneEvents}

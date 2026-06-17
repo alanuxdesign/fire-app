@@ -48,7 +48,11 @@ export function ShockPlaybook({
   const savedByScenario = useMemo(() => {
     const map = new Map<string, SerializedContingencyPlan>();
     for (const plan of savedPlans) {
-      if (plan.scenario === "job_loss" || plan.scenario === "big_expense") {
+      if (
+        plan.scenario === "job_loss" ||
+        plan.scenario === "big_expense" ||
+        plan.scenario === "downturn"
+      ) {
         map.set(plan.scenario, plan);
       }
     }

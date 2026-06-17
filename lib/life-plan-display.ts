@@ -1,4 +1,10 @@
-import type { FreedomTierId, RunwayLevers, TierStatusRow } from "@/lib/life-plan";
+import type {
+  CoverageHeadroom,
+  FreedomTierId,
+  ProjectionBand,
+  RunwayLevers,
+  TierStatusRow,
+} from "@/lib/life-plan";
 import type { SproutStage } from "@/components/illustrations/SproutVessel";
 
 /** SproutVessel stage from freedom tiers reached (M2). */
@@ -151,6 +157,109 @@ export function runwayMeterFill(
   const floored = Math.max(0, months ?? 0);
   if (capMonths <= 0) return 0;
   return Math.min(1, floored / capMonths);
+}
+
+/* ─── M4: weather, not verdict ──────────────────────────────────── */
+
+/** Round a drop fraction to a friendly whole-percent string. */
+export function formatDropPct(dropPct: number): string {
+  return `${Math.round(Math.max(0, dropPct) * 100)}%`;
+}
+
+/** Headroom line for a single secured row (coverage map tooltip). */
+export function rowHeadroomCopy(
+  label: string,
+  dropPct: number | null | undefined,
+): string | null {
+  if (dropPct == null) return null;
+  if (dropPct < 0.02) {
+    return `${label} just cleared — it won't un-secure on an ordinary dip.`;
+  }
+  return `Markets would need to fall about ${formatDropPct(dropPct)} before ${label} would wobble.`;
+}
+
+/** Summary headroom reassurance for the whole secured floor. */
+export function coverageHeadroomCopy(
+  headroom: CoverageHeadroom | null,
+): string | null {
+  if (!headroom || headroom.securedCount === 0) return null;
+  if (headroom.bindingDropPct < 0.02) {
+    return "Your secured floor just cleared — and it won't flip back on an ordinary dip.";
+  }
+  return `Your secured floor has room: markets would need to fall about ${formatDropPct(
+    headroom.bindingDropPct,
+  )} before any of it would wobble — and it won't un-secure on ordinary swings.`;
+}
+
+/** Honest band copy for the freedom timeline (Coast projection). */
+export function projectionBandCopy(band: ProjectionBand | null): string | null {
+  if (!band) return null;
+  if (band.alreadyMet) {
+    return "You're already there — this life is fully funded.";
+  }
+  if (band.beyondHorizon || band.expectedYear == null) {
+    return "On a rougher path this needs more than time alone — a little more added moves it within reach. Not a closed door.";
+  }
+  if (
+    band.pessimisticYear == null ||
+    band.pessimisticYear === band.expectedYear
+  ) {
+    return `On a steady path, you'd arrive around ${band.expectedYear}.`;
+  }
+  return `On a steady path you'd arrive around ${band.expectedYear}; through rougher weather, closer to ${band.pessimisticYear}. Either way, you're moving toward it.`;
+}
+
+/** Short range label, e.g. "2041–2045" or "~2041". */
+export function projectionBandLabel(band: ProjectionBand | null): string | null {
+  if (!band) return null;
+  if (band.alreadyMet) return "Now";
+  if (band.beyondHorizon || band.expectedYear == null) return "Beyond the horizon";
+  if (
+    band.pessimisticYear == null ||
+    band.pessimisticYear === band.expectedYear
+  ) {
+    return `~${band.expectedYear}`;
+  }
+  return `${band.expectedYear}–${band.pessimisticYear}`;
+}
+
+/**
+ * Down-market composition: pairs an honest dip with what held + the levers.
+ * `changePct` is the net-worth change over the recent window (negative = down).
+ */
+export function downMarketReassuranceCopy(input: {
+  changePct: number;
+  securedCount: number;
+  headroom: CoverageHeadroom | null;
+  runwayMonths: number | null;
+  runwayIndefinite: boolean;
+}): string | null {
+  if (input.changePct >= -0.005) return null;
+
+  const parts: string[] = ["This is weather, not a verdict."];
+
+  if (input.securedCount > 0) {
+    parts.push(
+      `Your secured floor held — that doesn't move with the market${
+        input.headroom && input.headroom.bindingDropPct >= 0.02
+          ? `, and it has about ${formatDropPct(input.headroom.bindingDropPct)} of room before it would wobble`
+          : ""
+      }.`,
+    );
+  }
+
+  if (!input.runwayIndefinite && input.runwayMonths != null) {
+    const months = Math.max(0, Math.floor(input.runwayMonths));
+    parts.push(
+      `Runway flexes with markets — it's about ${months} ${
+        months === 1 ? "month" : "months"
+      } today, and the levers below are yours.`,
+    );
+  } else if (input.runwayIndefinite) {
+    parts.push("Your breathing room is still open-ended.");
+  }
+
+  return parts.join(" ");
 }
 
 export function formatCoverageDate(iso: string): string {

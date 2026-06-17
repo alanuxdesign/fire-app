@@ -1,7 +1,7 @@
 import type { RunwayLevers } from "@/lib/life-plan";
 import { formatRunwayHeadline } from "@/lib/life-plan-display";
 
-export type ContingencyScenario = "job_loss" | "big_expense";
+export type ContingencyScenario = "job_loss" | "big_expense" | "downturn";
 
 export type ContingencyLevers = RunwayLevers & {
   notes?: string;
@@ -23,6 +23,12 @@ export const CONTINGENCY_SCENARIOS: Array<{
     title: "If a big expense hits",
     prompt:
       "A sudden cost lands — health, home, family. How would you trim and bridge?",
+  },
+  {
+    id: "downturn",
+    title: "If the market drops hard",
+    prompt:
+      "A sharp downturn. Your secured floor holds — what would you do with the cushion while it recovers?",
   },
 ];
 
@@ -54,7 +60,11 @@ export function buildContingencyPlanSummary(input: {
   const { levers, runwayMonths, runwayIndefinite } = input;
   const runwayLabel = formatRunwayHeadline(runwayMonths, runwayIndefinite);
   const scenarioLabel =
-    input.scenario === "job_loss" ? "I lose my job" : "a big expense hits";
+    input.scenario === "job_loss"
+      ? "I lose my job"
+      : input.scenario === "downturn"
+        ? "the market drops hard"
+        : "a big expense hits";
 
   const steps: string[] = [];
   if (levers.cutToEssentials) {

@@ -2,7 +2,13 @@
 
 import { SegmentedCoverageTrack } from "@/components/planner/SegmentedCoverageTrack";
 import { SproutVessel } from "@/components/illustrations/SproutVessel";
-import { stageForFreedomTiers, tierMarkerLayouts } from "@/lib/life-plan-display";
+import {
+  coverageHeadroomCopy,
+  projectionBandCopy,
+  projectionBandLabel,
+  stageForFreedomTiers,
+  tierMarkerLayouts,
+} from "@/lib/life-plan-display";
 import type { LifePlanDerived } from "@/lib/life-plan";
 import type { SerializedMilestoneEvent } from "@/lib/life-plan-types";
 
@@ -28,6 +34,11 @@ export function CoverageMap({
     annualLifeCost: derived.annualLifeCost,
     partTimeIncome,
   }).some((m) => m.clustered);
+  const headroomCopy = coverageHeadroomCopy(derived.coverageHeadroom);
+  const band = derived.projectionBand;
+  const showBand = band != null && (band.alreadyMet || band.expectedYear != null);
+  const bandCopy = showBand ? projectionBandCopy(band) : null;
+  const bandLabel = showBand ? projectionBandLabel(band) : null;
 
   return (
     <section className={embedded ? "mt-6 border-t border-hairline pt-6" : "mt-8 border-t border-hairline pt-8"}>
@@ -58,6 +69,30 @@ export function CoverageMap({
         annualLifeCost={derived.annualLifeCost}
         partTimeIncome={partTimeIncome}
       />
+
+      {headroomCopy ? (
+        <p className="mt-4 text-sm leading-relaxed text-ink-soft">
+          {headroomCopy}
+        </p>
+      ) : null}
+
+      {bandCopy ? (
+        <div className="mt-4 flex items-baseline gap-2">
+          <p className="text-[11.5px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+            Freedom timeline
+          </p>
+          {bandLabel ? (
+            <span className="text-sm font-semibold tabular-nums text-sage-deep">
+              {bandLabel}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {bandCopy ? (
+        <p className="mt-1 font-display text-[1.05rem] italic leading-[1.42] text-ink-soft">
+          {bandCopy}
+        </p>
+      ) : null}
     </section>
   );
 }

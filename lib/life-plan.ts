@@ -4,6 +4,15 @@ export const DEFAULT_INFLATION_RATE = 0.03;
 export const DEFAULT_PART_TIME_INCOME = 12_000;
 /** Buffer above cumulative cost before a category is marked secured (M2 hysteresis seed). */
 export const COVERAGE_SECURE_BUFFER = 0.05;
+/**
+ * How far below the expected return the "rougher weather" projection path sits
+ * (M4 honest bands). Deterministic, not a probability — a framing device.
+ */
+export const CONSERVATIVE_RETURN_SPREAD = 0.03;
+/** Floor for the conservative return so the band stays meaningful. */
+export const CONSERVATIVE_RETURN_FLOOR = 0.01;
+/** Horizon cap (years) before a projection is framed as "needs more than time." */
+export const PROJECTION_HORIZON_CAP = 50;
 
 export type LifeExpenseCategoryInput = {
   id?: string;
@@ -74,6 +83,11 @@ export type CategoryCoverageRow = {
   cumulativeCost: number;
   secured: boolean;
   progressToSecure: number;
+  /**
+   * M4 headroom: fraction assets could fall before this secured row would
+   * wobble (`1 − cost / passiveIncome`). Null when not yet secured.
+   */
+  headroomDropPct?: number | null;
 };
 
 export type FreedomTierId = "lean" | "coast" | "barista" | "full";
@@ -86,6 +100,33 @@ export type TierStatusRow = {
   met: boolean;
   plainWords: string;
   isProjection?: boolean;
+  /** M4 headroom for already-secured tiers (drop fraction before wobble). */
+  headroomDropPct?: number | null;
+  /** M4 honest band — only populated for the Coast/timeline projection. */
+  projectionBand?: ProjectionBand | null;
+};
+
+/**
+ * M4 honest projection band — deterministic low/expected arrival, NOT a
+ * confidence interval. Years are absolute calendar years.
+ */
+export type ProjectionBand = {
+  expectedYear: number | null;
+  pessimisticYear: number | null;
+  /** True when assets already meet the target (band collapses to "now"). */
+  alreadyMet: boolean;
+  /** True when even the expected path can't reach target within the horizon. */
+  beyondHorizon: boolean;
+};
+
+/** M4 coverage stability — how much weather the secured floor can absorb. */
+export type CoverageHeadroom = {
+  /** Smallest drop fraction among secured rows (the binding constraint). */
+  bindingDropPct: number;
+  /** Label of the binding (most-recently-secured) row. */
+  bindingLabel: string;
+  /** Count of secured category rows the headroom protects. */
+  securedCount: number;
 };
 
 export type RunwayScenario = "baseline" | "essentials" | "part_time";
@@ -111,7 +152,109 @@ export type LifePlanDerived = {
   nextCoverageLabel: string | null;
   tiers: TierStatusRow[];
   runway: RunwayResult[];
+  /** M4 — how much markets could fall before the secured floor wobbles. */
+  coverageHeadroom: CoverageHeadroom | null;
+  /** M4 — honest low/expected band for the freedom timeline (Coast). */
+  projectionBand: ProjectionBand | null;
 };
+
+/** M4 conservative ("rougher weather") return derived from the expected one. */
+export function conservativeReturnFrom(expectedReturn: number): number {
+  return Math.max(
+    CONSERVATIVE_RETURN_FLOOR,
+    expectedReturn - CONSERVATIVE_RETURN_SPREAD,
+  );
+}
+
+/** Years until `assets` compounds to `target` at `rate`, or null if never/capped. */
+function yearsToCompoundTarget(
+  assets: number,
+  target: number,
+  rate: number,
+  horizonCap = PROJECTION_HORIZON_CAP,
+): number | null {
+  if (assets <= 0 || target <= 0) return null;
+  if (assets >= target) return 0;
+  if (rate <= 0) return null;
+  const years = Math.log(target / assets) / Math.log(1 + rate);
+  if (!Number.isFinite(years) || years > horizonCap) return null;
+  return Math.ceil(years);
+}
+
+/**
+ * M4 honest band: when the user would arrive at `target` on the expected vs.
+ * conservative return path. Deterministic framing, not a probability.
+ */
+export function computeProjectionBand(input: {
+  assets: number;
+  target: number;
+  expectedReturn: number;
+  conservativeReturn?: number;
+  currentYear?: number;
+  horizonCap?: number;
+}): ProjectionBand {
+  const currentYear = input.currentYear ?? new Date().getFullYear();
+  const horizonCap = input.horizonCap ?? PROJECTION_HORIZON_CAP;
+  const conservative =
+    input.conservativeReturn ?? conservativeReturnFrom(input.expectedReturn);
+
+  if (input.assets > 0 && input.target > 0 && input.assets >= input.target) {
+    return {
+      expectedYear: currentYear,
+      pessimisticYear: currentYear,
+      alreadyMet: true,
+      beyondHorizon: false,
+    };
+  }
+
+  const expectedYears = yearsToCompoundTarget(
+    input.assets,
+    input.target,
+    input.expectedReturn,
+    horizonCap,
+  );
+  const pessimisticYears = yearsToCompoundTarget(
+    input.assets,
+    input.target,
+    conservative,
+    horizonCap,
+  );
+
+  return {
+    expectedYear: expectedYears == null ? null : currentYear + expectedYears,
+    pessimisticYear:
+      pessimisticYears == null ? null : currentYear + pessimisticYears,
+    alreadyMet: false,
+    beyondHorizon: expectedYears == null,
+  };
+}
+
+/**
+ * M4 binding coverage headroom: the smallest drop fraction among secured
+ * category rows (the most-recently-secured row is the constraint).
+ */
+export function computeCoverageHeadroom(
+  rows: CategoryCoverageRow[],
+): CoverageHeadroom | null {
+  const secured = rows.filter((r) => r.secured);
+  if (secured.length === 0) return null;
+
+  let binding = secured[0];
+  let bindingDrop = binding.headroomDropPct ?? 0;
+  for (const row of secured) {
+    const drop = row.headroomDropPct ?? 0;
+    if (drop <= bindingDrop) {
+      bindingDrop = drop;
+      binding = row;
+    }
+  }
+
+  return {
+    bindingDropPct: Math.max(0, bindingDrop),
+    bindingLabel: binding.label,
+    securedCount: secured.length,
+  };
+}
 
 function sortCategoriesCheapestFirst(
   categories: LifeExpenseCategoryInput[],
@@ -180,6 +323,11 @@ export function computeCategoryCoverage(
     const progressToSecure =
       threshold <= 0 ? 1 : Math.min(1, passiveAnnual / threshold);
 
+    const headroomDropPct =
+      secured && passiveAnnual > 0
+        ? Math.max(0, 1 - cumulative / passiveAnnual)
+        : null;
+
     return {
       id: category.id,
       label: category.label,
@@ -189,6 +337,7 @@ export function computeCategoryCoverage(
       cumulativeCost: cumulative,
       secured,
       progressToSecure,
+      headroomDropPct,
     };
   });
 }
@@ -225,6 +374,16 @@ export function computeTierStatuses(input: {
   const leanMet = essentialAnnualCost > 0 && passiveAnnual >= essentialAnnualCost;
   const fullMet = annualLifeCost > 0 && passiveAnnual >= annualLifeCost;
 
+  const headroomFor = (cost: number): number | null =>
+    passiveAnnual > 0 ? Math.max(0, 1 - cost / passiveAnnual) : null;
+
+  const coastBand = computeProjectionBand({
+    assets,
+    target: fullTarget,
+    expectedReturn,
+    currentYear,
+  });
+
   return [
     {
       tier: "lean",
@@ -233,6 +392,7 @@ export function computeTierStatuses(input: {
       progress: leanTarget > 0 ? Math.min(1, assets / leanTarget) : 0,
       met: leanMet,
       plainWords: "Your essentials are covered for good",
+      headroomDropPct: leanMet ? headroomFor(essentialAnnualCost) : null,
     },
     {
       tier: "coast",
@@ -242,6 +402,7 @@ export function computeTierStatuses(input: {
       met: coastMet,
       plainWords: "Stop adding and still arrive at your full life",
       isProjection: true,
+      projectionBand: coastBand,
     },
     {
       tier: "barista",
@@ -261,6 +422,7 @@ export function computeTierStatuses(input: {
       progress: computeProgressPct(assets, fullTarget),
       met: fullMet,
       plainWords: "The whole life is covered — work is optional",
+      headroomDropPct: fullMet ? headroomFor(annualLifeCost) : null,
     },
   ];
 }
@@ -407,12 +569,19 @@ export function computeLifePlanDerived(input: {
 
   const securedCategoryCount = categoryCoverage.filter((c) => c.secured).length;
   const nextCoverage = categoryCoverage.find((c) => !c.secured);
+  const coverageHeadroom = computeCoverageHeadroom(categoryCoverage);
 
   const tiers = computeTierStatuses({
     assets: input.assets,
     annualLifeCost,
     essentialAnnualCost,
     assumptions: input.assumptions,
+  });
+
+  const projectionBand = computeProjectionBand({
+    assets: input.assets,
+    target,
+    expectedReturn: input.assumptions.expectedReturn,
   });
 
   const runway = computeRunwayScenarios({
@@ -434,6 +603,8 @@ export function computeLifePlanDerived(input: {
     passiveMonthlyIncome,
     categoryCoverage,
     securedCategoryCount,
+    coverageHeadroom,
+    projectionBand,
     nextCoverageLabel: nextCoverage?.label ?? null,
     tiers,
     runway,

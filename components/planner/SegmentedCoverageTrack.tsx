@@ -5,6 +5,8 @@ import { SegmentTooltip } from "@/components/planner/SegmentTooltip";
 import {
   categorySecuredCopy,
   formatCoverageDate,
+  projectionBandCopy,
+  rowHeadroomCopy,
   tierApproachingCopy,
   tierMarkerLayouts,
   tierSecuredCopy,
@@ -66,17 +68,25 @@ function tierTooltipContent(
   const pct = Math.round(tier.progress * 100);
   const approaching = tierApproachingCopy(tier);
   const secured = tierSecuredCopy(tier);
+  const bandCopy = tier.isProjection
+    ? projectionBandCopy(tier.projectionBand ?? null)
+    : null;
 
   if (tier.met) {
+    const headroom = rowHeadroomCopy(tier.label, tier.headroomDropPct);
     return (
       <>
         <p className="font-medium text-ink">{tier.label}</p>
         <p className="mt-1">{secured}</p>
+        {headroom ? (
+          <p className="mt-1.5 text-sage-deep">{headroom}</p>
+        ) : null}
         {milestone ? (
           <p className="mt-1.5 text-ink-faint">
             Reached {formatCoverageDate(milestone.securedAt)}
           </p>
         ) : null}
+        {bandCopy ? <p className="mt-1.5 text-ink-faint">{bandCopy}</p> : null}
         {tier.isProjection ? (
           <p className="mt-1.5 text-ink-faint">
             A projection — assuming markets behave roughly as they have.
@@ -94,6 +104,7 @@ function tierTooltipContent(
         <p className="mt-1.5 tabular-nums text-sage-deep">
           About {formatCurrency(tier.targetAmount)} · {pct}% there
         </p>
+        {bandCopy ? <p className="mt-1.5 text-ink-faint">{bandCopy}</p> : null}
       </>
     );
   }
@@ -106,6 +117,7 @@ function tierTooltipContent(
         About {formatCurrency(tier.targetAmount)} · {(swr * 100).toFixed(1)}%
         withdrawal
       </p>
+      {bandCopy ? <p className="mt-1.5 text-ink-faint">{bandCopy}</p> : null}
     </>
   );
 }
@@ -116,10 +128,14 @@ function categoryTooltip(
   milestone?: SerializedMilestoneEvent,
 ) {
   if (row.secured) {
+    const headroom = rowHeadroomCopy(row.label, row.headroomDropPct);
     return (
       <>
         <p className="font-medium text-ink">{row.label}</p>
         <p className="mt-1">{categorySecuredCopy(row.label)}</p>
+        {headroom ? (
+          <p className="mt-1.5 text-sage-deep">{headroom}</p>
+        ) : null}
         {milestone ? (
           <p className="mt-1.5 text-ink-faint">
             Secured {formatCoverageDate(milestone.securedAt)}

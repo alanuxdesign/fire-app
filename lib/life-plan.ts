@@ -1,5 +1,6 @@
 export const DEFAULT_SWR = 0.04;
 export const DEFAULT_EXPECTED_RETURN = 0.07;
+export const DEFAULT_INFLATION_RATE = 0.03;
 export const DEFAULT_PART_TIME_INCOME = 12_000;
 /** Buffer above cumulative cost before a category is marked secured (M2 hysteresis seed). */
 export const COVERAGE_SECURE_BUFFER = 0.05;
@@ -10,11 +11,56 @@ export type LifeExpenseCategoryInput = {
   annualAmount: number;
   isEssential: boolean;
   sortOrder: number;
+  /** Links to a Budget bucket when synced or added from recommendations. */
+  budgetCategoryId?: string | null;
 };
+
+/** Annual life cost inflated to a future year for FIRE horizon display. */
+export function computeInflatedAnnualCost(
+  annualCost: number,
+  inflationRate: number,
+  years: number,
+): number {
+  if (years <= 0) return annualCost;
+  return annualCost * (1 + inflationRate) ** years;
+}
+
+export function computeFireTargetProjection(input: {
+  annualLifeCost: number;
+  swr: number;
+  inflationRate: number;
+  targetYear: number | null;
+  currentYear?: number;
+}): {
+  yearsToTarget: number;
+  todayTarget: number;
+  futureAnnualCost: number;
+  futureTarget: number;
+} {
+  const currentYear = input.currentYear ?? new Date().getFullYear();
+  const yearsToTarget =
+    input.targetYear && input.targetYear > currentYear
+      ? input.targetYear - currentYear
+      : 0;
+  const todayTarget = computeTarget(input.annualLifeCost, input.swr);
+  const futureAnnualCost = computeInflatedAnnualCost(
+    input.annualLifeCost,
+    input.inflationRate,
+    yearsToTarget,
+  );
+  const futureTarget = computeTarget(futureAnnualCost, input.swr);
+  return {
+    yearsToTarget,
+    todayTarget,
+    futureAnnualCost,
+    futureTarget,
+  };
+}
 
 export type TierAssumptionInput = {
   swr: number;
   expectedReturn: number;
+  inflationRate: number;
   targetYear: number | null;
   partTimeIncome: number;
 };

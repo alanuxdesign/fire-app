@@ -1,14 +1,12 @@
 import type { LifeExpenseCategoryInput } from "@/lib/life-plan";
 
-/** Starter life-cost categories with typical annual ranges (midpoint pre-filled). */
+/** Core life-cost lines — users can add, remove, or sync from Budget buckets. */
 export const DEFAULT_LIFE_EXPENSE_CATEGORIES: LifeExpenseCategoryInput[] = [
   { label: "Housing", annualAmount: 24_000, isEssential: true, sortOrder: 0 },
   { label: "Food", annualAmount: 8_400, isEssential: true, sortOrder: 1 },
   { label: "Healthcare", annualAmount: 6_000, isEssential: true, sortOrder: 2 },
   { label: "Transport", annualAmount: 4_800, isEssential: true, sortOrder: 3 },
-  { label: "Fun & travel", annualAmount: 4_800, isEssential: false, sortOrder: 4 },
-  { label: "Giving", annualAmount: 2_400, isEssential: false, sortOrder: 5 },
-  { label: "Other", annualAmount: 3_600, isEssential: false, sortOrder: 6 },
+  { label: "Personal & fun", annualAmount: 7_200, isEssential: false, sortOrder: 4 },
 ];
 
 export const BORROW_A_LIFE_TEMPLATE = {

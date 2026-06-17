@@ -1,27 +1,35 @@
 import { requireUserId, requireWritableUser } from "@/lib/api-auth";
 import {
+  createLifePlanScenario,
+  deleteLifePlan,
+  getLifePlanBundle,
   getLifePlanSnapshot,
   recordMilestoneCrossings,
+  setPrimaryLifePlan,
   upsertContingencyPlan,
   upsertLifePlan,
   type UpsertLifePlanInput,
 } from "@/lib/life-plan-service";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   const authResult = await requireUserId();
   if ("error" in authResult) {
     return authResult.error;
   }
 
+  const { searchParams } = new URL(request.url);
+  const planId = searchParams.get("planId") ?? undefined;
+
   try {
-    const snapshot = await getLifePlanSnapshot(authResult.userId);
-    if (snapshot) {
-      await recordMilestoneCrossings(authResult.userId);
-      const refreshed = await getLifePlanSnapshot(authResult.userId);
-      return NextResponse.json({ snapshot: refreshed });
+    const bundle = await getLifePlanBundle(authResult.userId, planId);
+    if (bundle.snapshot) {
+      const milestonePlanId = planId ?? bundle.primaryPlanId ?? undefined;
+      await recordMilestoneCrossings(authResult.userId, milestonePlanId);
+      const refreshed = await getLifePlanBundle(authResult.userId, planId);
+      return NextResponse.json(refreshed);
     }
-    return NextResponse.json({ snapshot: null });
+    return NextResponse.json(bundle);
   } catch (error) {
     return NextResponse.json(
       {
@@ -34,6 +42,9 @@ export async function GET() {
 }
 
 type LifePlanBody = UpsertLifePlanInput & {
+  planId?: string;
+  action?: "create_scenario" | "set_primary";
+  cloneFromPlanId?: string;
   contingency?: {
     scenario: "job_loss" | "big_expense" | "downturn";
     levers: Record<string, unknown>;
@@ -48,22 +59,49 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as LifePlanBody;
-    const { contingency, ...planInput } = body;
+    const {
+      contingency,
+      action,
+      cloneFromPlanId,
+      planId,
+      ...planInput
+    } = body;
 
-    const snapshot = await upsertLifePlan(authResult.userId, planInput);
+    if (action === "create_scenario") {
+      const snapshot = await createLifePlanScenario(authResult.userId, {
+        label: planInput.label ?? "Another life",
+        cloneFromPlanId,
+      });
+      const bundle = await getLifePlanBundle(authResult.userId, snapshot.plan.id);
+      return NextResponse.json(bundle);
+    }
+
+    if (action === "set_primary" && planId) {
+      await setPrimaryLifePlan(authResult.userId, planId);
+      const bundle = await getLifePlanBundle(authResult.userId, planId);
+      return NextResponse.json(bundle);
+    }
+
+    const snapshot = await upsertLifePlan(authResult.userId, planInput, {
+      planId,
+    });
 
     if (contingency) {
       await upsertContingencyPlan(
         authResult.userId,
         contingency.scenario,
         contingency.levers,
+        snapshot.plan.id,
       );
     }
 
-    await recordMilestoneCrossings(authResult.userId);
-    const refreshed = await getLifePlanSnapshot(authResult.userId);
+    await recordMilestoneCrossings(authResult.userId, snapshot.plan.id);
+    const bundle = await getLifePlanBundle(
+      authResult.userId,
+      snapshot.plan.id,
+    );
 
-    return NextResponse.json({ snapshot: refreshed ?? snapshot });
+    return NextResponse.json(bundle);
   } catch (error) {
     return NextResponse.json(
       {
@@ -77,4 +115,28 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   return POST(request);
+}
+
+export async function DELETE(request: Request) {
+  const authResult = await requireWritableUser();
+  if ("error" in authResult) {
+    return authResult.error;
+  }
+
+  const { searchParams } = new URL(request.url);
+  const planId = searchParams.get("planId") ?? undefined;
+
+  try {
+    const removed = await deleteLifePlan(authResult.userId, planId);
+    const bundle = await getLifePlanBundle(authResult.userId);
+    return NextResponse.json({ ok: true, removed, ...bundle });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to reset life plan",
+      },
+      { status: 500 },
+    );
+  }
 }

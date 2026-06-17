@@ -541,3 +541,64 @@ export async function getBucketMonthlyTrends(
 
   return results;
 }
+
+export type BudgetCategoryAverage = {
+  budgetCategoryId: string;
+  label: string;
+  slug: string;
+  icon: string;
+  avgMonthly: number;
+  annualAmount: number;
+  monthsSampled: number;
+  monthsWithSpend: number;
+};
+
+export async function getBudgetTwelveMonthAverages(
+  userId: string,
+  months = 12,
+): Promise<BudgetCategoryAverage[]> {
+  const settings = await getBudgetUserSettings(userId);
+  const includePending = settings.includePendingInBudget;
+  const categories = await listBudgetCategoriesForUser(userId);
+  const spendCategories = categories.filter(
+    (c) =>
+      !c.isIncome &&
+      c.slug !== "transfer" &&
+      c.slug !== "income" &&
+      c.slug !== "paychecks" &&
+      c.slug !== "interest",
+  );
+
+  const totals = new Map<string, { sum: number; monthsWithSpend: number }>();
+  let month = getCurrentBudgetMonth();
+  const monthsSampled = Math.min(24, Math.max(1, months));
+
+  for (let i = 0; i < monthsSampled; i++) {
+    const rollup = await aggregateMonth(userId, month, includePending);
+    for (const cat of spendCategories) {
+      const spent = rollup.spentByCategory.get(cat.id) ?? 0;
+      if (spent <= 0) continue;
+      const cur = totals.get(cat.id) ?? { sum: 0, monthsWithSpend: 0 };
+      cur.sum += spent;
+      cur.monthsWithSpend += 1;
+      totals.set(cat.id, cur);
+    }
+    month = shiftBudgetMonth(month, -1);
+  }
+
+  return spendCategories.map((cat) => {
+    const t = totals.get(cat.id);
+    const avgMonthly =
+      t && t.monthsWithSpend > 0 ? t.sum / t.monthsWithSpend : 0;
+    return {
+      budgetCategoryId: cat.id,
+      label: cat.label,
+      slug: cat.slug,
+      icon: cat.icon,
+      avgMonthly,
+      annualAmount: Math.round(avgMonthly * 12),
+      monthsSampled,
+      monthsWithSpend: t?.monthsWithSpend ?? 0,
+    };
+  });
+}

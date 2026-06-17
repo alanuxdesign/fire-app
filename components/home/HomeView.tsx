@@ -10,6 +10,8 @@ import type { AccountsApiResponse } from "@/lib/account-groups";
 import type { BudgetSummary } from "@/lib/budget-types";
 import { getChangeHorizonLabel } from "@/lib/chart-data";
 import { formatCurrency, formatPercent, formatSignedCurrency } from "@/lib/format";
+import { CoverageTeaser } from "@/components/planner/CoverageTeaser";
+import type { LifePlanSnapshot } from "@/lib/life-plan-types";
 import {
   computeFourPercentMonthly,
   formatBudgetMonthLabel,
@@ -20,6 +22,7 @@ import {
 import {
   ArrowRight,
   ClipboardList,
+  Compass,
   LayoutGrid,
   PieChart,
   RefreshCw,
@@ -27,6 +30,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { GrowthRing } from "@/components/illustrations/GrowthRing";
 
 type HomeViewProps = {
   isDemo?: boolean;
@@ -158,15 +162,17 @@ function WinChip({ label, detail }: { label: string; detail: string }) {
 export function HomeView({ isDemo = false }: HomeViewProps) {
   const [accounts, setAccounts] = useState<AccountsApiResponse | null>(null);
   const [budget, setBudget] = useState<BudgetSummary | null>(null);
+  const [lifePlan, setLifePlan] = useState<LifePlanSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [accountsRes, budgetRes] = await Promise.all([
+      const [accountsRes, budgetRes, lifePlanRes] = await Promise.all([
         fetch("/api/accounts"),
         fetch("/api/budget/summary"),
+        fetch("/api/life-plan"),
       ]);
 
       if (!accountsRes.ok) {
@@ -181,6 +187,15 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
         setBudget((await budgetRes.json()) as BudgetSummary);
       } else {
         setBudget(null);
+      }
+
+      if (lifePlanRes.ok) {
+        const body = (await lifePlanRes.json()) as {
+          snapshot: LifePlanSnapshot | null;
+        };
+        setLifePlan(body.snapshot);
+      } else {
+        setLifePlan(null);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "We couldn't open your garden");
@@ -216,6 +231,9 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
   const milestonePct = nextMilestone
     ? Math.round(nextMilestone.progress * 100)
     : 0;
+  const freedomPct = lifePlan
+    ? Math.round(lifePlan.derived.progressPct * 100)
+    : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-paper">
@@ -248,6 +266,27 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
             </div>
           ) : null}
 
+          {!lifePlan ? (
+            <section
+              className="border-t border-hairline pt-8 text-center"
+              aria-label="Start with your life"
+            >
+              <p className="font-display text-[1.5rem] leading-tight text-ink">
+                Before any numbers — name the life
+              </p>
+              <p className="mx-auto mt-2 max-w-sm text-[15px] text-ink-soft">
+                Describe the life you want, price it roughly, and see your freedom
+                target appear as a byproduct — not a starting whistle.
+              </p>
+              <Link
+                href="/name-the-life"
+                className={`mt-6 inline-flex ${PRIMARY_BUTTON}`}
+              >
+                Name your life
+              </Link>
+            </section>
+          ) : null}
+
           {!hasAccounts ? (
             <div className="text-center">
               <EmptyAccounts className="mx-auto h-28 w-32" />
@@ -264,8 +303,37 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
             </div>
           ) : null}
 
-          {/* Next milestone — goal row with the growth vessel (§6) */}
-          {nextMilestone && hasAccounts ? (
+          {lifePlan && hasAccounts ? (
+            <>
+              <section aria-label="Freedom progress">
+                <SectionLabel>Toward your life</SectionLabel>
+                <div className="flex items-center gap-5">
+                  <GrowthRing pct={freedomPct ?? 0} size={88}>
+                    <span className="text-lg font-semibold tabular-nums text-ink">
+                      {freedomPct}%
+                    </span>
+                  </GrowthRing>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-[1.25rem] leading-tight text-ink">
+                      {lifePlan.plan.label}
+                    </p>
+                    <p className="mt-1.5 text-[13px] tabular-nums text-ink-soft">
+                      Growing toward {formatCurrency(lifePlan.derived.target)}
+                    </p>
+                  </div>
+                </div>
+              </section>
+              <CoverageTeaser
+                derived={lifePlan.derived}
+                milestoneEvents={lifePlan.plan.milestoneEvents}
+                swr={lifePlan.plan.swr}
+                partTimeIncome={lifePlan.plan.tierAssumptions.partTimeIncome}
+              />
+            </>
+          ) : null}
+
+          {/* Net-worth milestone fallback when no life plan yet */}
+          {!lifePlan && nextMilestone && hasAccounts ? (
             <section aria-label="Next milestone">
               <SectionLabel>Toward freedom</SectionLabel>
               <div className="flex items-center gap-4">
@@ -414,6 +482,12 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
                 title="Budget"
                 description="Buckets, spending, and what's left"
                 icon={LayoutGrid}
+              />
+              <ActionRow
+                href="/planner"
+                title="Planner"
+                description="Coverage map, lifestyles, and freedom milestones"
+                icon={Compass}
               />
               <ActionRow
                 href="/portfolio"

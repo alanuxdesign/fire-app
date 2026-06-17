@@ -1,5 +1,8 @@
 "use client";
 
+import { LifePlanAssumptionsSection } from "@/components/settings/LifePlanAssumptionsSection";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { setBackfillPending } from "@/lib/backfill-pending";
 import { Moon, Sun } from "lucide-react";
@@ -7,6 +10,7 @@ import { signOut } from "next-auth/react";
 import { useState } from "react";
 
 export function SettingsClient() {
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [backfillLoading, setBackfillLoading] = useState(false);
   const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
@@ -14,6 +18,8 @@ export function SettingsClient() {
   const [txnSyncLoading, setTxnSyncLoading] = useState(false);
   const [txnSyncMessage, setTxnSyncMessage] = useState<string | null>(null);
   const [txnSyncError, setTxnSyncError] = useState<string | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   const handleSyncTransactions = async () => {
     setTxnSyncLoading(true);
@@ -83,6 +89,29 @@ export function SettingsClient() {
     }
   };
 
+  const handleResetLifePlan = async () => {
+    const confirmed = window.confirm(
+      "Clear all lifestyles and start over? Your budget and accounts stay — only planner visions, costs, and milestones are removed.",
+    );
+    if (!confirmed) return;
+
+    setResetLoading(true);
+    setResetError(null);
+    try {
+      const res = await fetch("/api/life-plan", { method: "DELETE" });
+      const body = (await res.json()) as { error?: string; removed?: boolean };
+      if (!res.ok) {
+        throw new Error(body.error ?? "Reset failed");
+      }
+      router.push("/name-the-life");
+      router.refresh();
+    } catch (err: unknown) {
+      setResetError(err instanceof Error ? err.message : "Reset failed");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col bg-paper px-5 py-8 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-8">
       <h1 className="font-display text-[2rem] leading-tight tracking-[-0.015em] text-ink">
@@ -90,6 +119,45 @@ export function SettingsClient() {
       </h1>
 
       <div className="mt-7 space-y-8">
+        <div className="border-t border-hairline pt-6">
+          <p className="font-semibold text-ink">Your life plan</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            Edit your Home target or any what-if lifestyle — vision, costs,
+            essential tags, and target year.
+          </p>
+          <Link
+            href="/life-plan/edit"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-terra-deep px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-terra"
+          >
+            Edit life plan
+          </Link>
+          <button
+            type="button"
+            onClick={() => void handleResetLifePlan()}
+            disabled={resetLoading}
+            className="mt-3 w-full rounded-full border border-hairline px-4 py-2.5 text-sm font-semibold text-ink-soft transition-colors hover:bg-sage-wash disabled:opacity-50"
+          >
+            {resetLoading ? "Clearing…" : "Reset planner & start over"}
+          </button>
+          {resetError ? (
+            <p className="mt-2 text-sm text-amber">{resetError}</p>
+          ) : null}
+        </div>
+
+        <div
+          id="life-plan-assumptions"
+          className="scroll-mt-24 border-t border-hairline pt-6"
+        >
+          <p className="font-semibold text-ink">Honest assumptions</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            Withdrawal rate, inflation, Coast return, and part-time income —
+            the math behind your freedom target.
+          </p>
+          <div className="mt-4">
+            <LifePlanAssumptionsSection />
+          </div>
+        </div>
+
         <div className="border-t border-hairline pt-6">
           <p className="font-semibold text-ink">Sync transactions</p>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">

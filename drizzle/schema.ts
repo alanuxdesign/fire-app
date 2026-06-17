@@ -387,10 +387,14 @@ export const lifePlans = pgTable("life_plans", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
     .notNull()
-    .unique()
     .references(() => users.id, { onDelete: "cascade" }),
   label: text("label").notNull(),
   swr: numeric("swr", { precision: 6, scale: 4 }).notNull().default("0.0400"),
+  zipCode: text("zip_code"),
+  householdSize: integer("household_size").default(1),
+  /** The lifestyle Home and freedom % track — one per user. */
+  isPrimary: boolean("is_primary").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
@@ -413,6 +417,9 @@ export const lifeExpenseCategories = pgTable("life_expense_categories", {
     .notNull()
     .default("0"),
   isEssential: boolean("is_essential").notNull().default(true),
+  budgetCategoryId: uuid("budget_category_id").references(() => budgetCategories.id, {
+    onDelete: "set null",
+  }),
   phaseId: uuid("phase_id").references(() => lifePhases.id, {
     onDelete: "set null",
   }),
@@ -427,6 +434,9 @@ export const tierAssumptions = pgTable("tier_assumptions", {
   expectedReturn: numeric("expected_return", { precision: 6, scale: 4 })
     .notNull()
     .default("0.0700"),
+  inflationRate: numeric("inflation_rate", { precision: 6, scale: 4 })
+    .notNull()
+    .default("0.0300"),
   targetYear: integer("target_year"),
   partTimeIncome: numeric("part_time_income", { precision: 19, scale: 4 })
     .notNull()

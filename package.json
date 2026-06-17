@@ -17,6 +17,9 @@
     "db:migrate-budget-v2": "npx tsx scripts/apply-budget-v2-migration.ts",
     "db:migrate-category-prefs": "npx tsx scripts/apply-budget-category-prefs.ts",
     "db:migrate-life-plan": "npx tsx scripts/apply-life-plan-migration.ts",
+    "db:migrate-life-plan-v2": "npx tsx scripts/apply-life-plan-v2-migration.ts",
+    "db:migrate-life-plan-v3": "npx tsx scripts/apply-life-plan-v3-migration.ts",
+    "db:migrate-life-plan-v4": "npx tsx scripts/apply-life-plan-v4-migration.ts",
     "recategorize": "npx tsx scripts/recategorize-transactions.ts"
   },
   "dependencies": {

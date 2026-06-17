@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
 type LifePlanBody = UpsertLifePlanInput & {
   planId?: string;
-  action?: "create_scenario" | "set_primary";
+  action?: "create_scenario" | "set_primary" | "save_contingency";
   cloneFromPlanId?: string;
   contingency?: {
     scenario: "job_loss" | "big_expense" | "downturn";
@@ -78,6 +78,17 @@ export async function POST(request: Request) {
 
     if (action === "set_primary" && planId) {
       await setPrimaryLifePlan(authResult.userId, planId);
+      const bundle = await getLifePlanBundle(authResult.userId, planId);
+      return NextResponse.json(bundle);
+    }
+
+    if (action === "save_contingency" && planId && contingency) {
+      await upsertContingencyPlan(
+        authResult.userId,
+        contingency.scenario,
+        contingency.levers,
+        planId,
+      );
       const bundle = await getLifePlanBundle(authResult.userId, planId);
       return NextResponse.json(bundle);
     }

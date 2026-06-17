@@ -283,6 +283,51 @@ export function computeRunwayMonths(input: {
   return input.accessibleAssets / netBurn;
 }
 
+export type RunwayLevers = {
+  cutToEssentials: boolean;
+  partTime: boolean;
+};
+
+export function computeRunwayWithLevers(input: {
+  accessibleAssets: number;
+  totalAssets: number;
+  swr: number;
+  fullMonthlySpend: number;
+  essentialMonthlySpend: number;
+  partTimeIncomeAnnual: number;
+  levers: RunwayLevers;
+}): RunwayResult {
+  const spend = input.levers.cutToEssentials
+    ? input.essentialMonthlySpend
+    : input.fullMonthlySpend;
+  const partTimeMonthly = input.levers.partTime
+    ? input.partTimeIncomeAnnual / 12
+    : 0;
+  const passiveMonthly = computePassiveMonthlyIncome(
+    input.totalAssets,
+    input.swr,
+  );
+  const netBurn = spend - passiveMonthly - partTimeMonthly;
+  const indefinite = netBurn <= 0;
+  const months = indefinite
+    ? null
+    : input.accessibleAssets <= 0
+      ? 0
+      : input.accessibleAssets / netBurn;
+
+  return {
+    scenario: input.levers.partTime
+      ? "part_time"
+      : input.levers.cutToEssentials
+        ? "essentials"
+        : "baseline",
+    label: "Current levers",
+    months,
+    indefinite,
+    netBurnMonthly: netBurn,
+  };
+}
+
 export function computeRunwayScenarios(input: {
   accessibleAssets: number;
   totalAssets: number;

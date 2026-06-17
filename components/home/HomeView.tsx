@@ -11,6 +11,7 @@ import type { BudgetSummary } from "@/lib/budget-types";
 import { getChangeHorizonLabel } from "@/lib/chart-data";
 import { formatCurrency, formatPercent, formatSignedCurrency } from "@/lib/format";
 import { CoverageTeaser } from "@/components/planner/CoverageTeaser";
+import { RunwayTeaser } from "@/components/planner/RunwayTeaser";
 import type { LifePlanSnapshot } from "@/lib/life-plan-types";
 import {
   computeFourPercentMonthly,
@@ -328,6 +329,13 @@ export function HomeView({ isDemo = false }: HomeViewProps) {
                 milestoneEvents={lifePlan.plan.milestoneEvents}
                 swr={lifePlan.plan.swr}
                 partTimeIncome={lifePlan.plan.tierAssumptions.partTimeIncome}
+              />
+              <RunwayTeaser
+                derived={lifePlan.derived}
+                accessibleAssets={lifePlan.assets.totalAccessible}
+                totalAssets={lifePlan.assets.totalInvestedLiquid}
+                swr={lifePlan.plan.swr}
+                partTimeIncomeAnnual={lifePlan.plan.tierAssumptions.partTimeIncome}
               />
             </>
           ) : null}

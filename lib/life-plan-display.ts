@@ -1,4 +1,4 @@
-import type { FreedomTierId, TierStatusRow } from "@/lib/life-plan";
+import type { FreedomTierId, RunwayLevers, TierStatusRow } from "@/lib/life-plan";
 import type { SproutStage } from "@/components/illustrations/SproutVessel";
 
 /** SproutVessel stage from freedom tiers reached (M2). */
@@ -56,6 +56,101 @@ export function tierSecuredCopy(tier: TierStatusRow): string | null {
 
 export function categorySecuredCopy(label: string): string {
   return `${label} is handled — permanently part of what your savings can carry.`;
+}
+
+/** Human runway figure — breathing room, never a countdown tone. */
+export function formatRunwayHeadline(
+  months: number | null,
+  indefinite: boolean,
+): string {
+  if (indefinite) return "Open-ended";
+  const floored = Math.max(0, Math.floor(months ?? 0));
+  if (floored === 0) return "Under a month";
+  if (floored === 1) return "1 month";
+  return `${floored} months`;
+}
+
+export function formatRunwayUnit(
+  months: number | null,
+  indefinite: boolean,
+): { value: string; unit: string } {
+  if (indefinite) return { value: "∞", unit: "breathing room" };
+  const floored = Math.max(0, Math.floor(months ?? 0));
+  if (floored === 0) return { value: "<1", unit: "month" };
+  return { value: String(floored), unit: floored === 1 ? "month" : "months" };
+}
+
+/** Gentle reassurance copy for the runway hero (M3 voice). */
+export function runwayReassuranceCopy(
+  months: number | null,
+  indefinite: boolean,
+  accessibleAssets: number,
+): string {
+  if (accessibleAssets <= 0) {
+    return "The floor you're building from — every dollar of buffer adds noticeably to it.";
+  }
+  if (indefinite) {
+    return "Your essentials are covered — the clock stops. That's real breathing room.";
+  }
+  const floored = Math.max(0, Math.floor(months ?? 0));
+  if (floored < 3) {
+    return "Right now that's a real floor — and the one we'll grow first. Even a little buffer adds noticeably to it.";
+  }
+  if (floored < 12) {
+    return `If everything stopped today, you'd float for ${floored} months. That's breathing room — not nothing.`;
+  }
+  return `If everything stopped today, you'd be okay for ${floored} months. That's more than a year of breathing room — not nothing.`;
+}
+
+/** Agency copy when levers change the figure (baseline → current). */
+export function runwayAgencyCopy(input: {
+  baselineMonths: number | null;
+  baselineIndefinite: boolean;
+  currentMonths: number | null;
+  currentIndefinite: boolean;
+  levers: RunwayLevers;
+}): string | null {
+  const { levers, baselineIndefinite, currentIndefinite } = input;
+  if (!levers.cutToEssentials && !levers.partTime) return null;
+
+  if (currentIndefinite) {
+    return "With these levers, the clock stops entirely — work becomes optional in practice.";
+  }
+
+  const current = Math.max(0, Math.floor(input.currentMonths ?? 0));
+  const parts: string[] = [];
+
+  if (levers.cutToEssentials) {
+    parts.push(`trim to essentials (${current} months)`);
+  }
+  if (levers.partTime) {
+    parts.push("add a little part-time");
+  }
+
+  if (parts.length === 0) return null;
+
+  if (baselineIndefinite) {
+    return `You're already open-ended at baseline — these levers add even more margin.`;
+  }
+
+  const baseline = Math.max(0, Math.floor(input.baselineMonths ?? 0));
+  if (current > baseline) {
+    return `From ${baseline} months at baseline — ${parts.join(" and ")} stretches that cushion.`;
+  }
+
+  return `With ${parts.join(" and ")}, you'd have about ${current} months.`;
+}
+
+/** Meter fill 0–1 for a soft visual (caps at 24 months for display). */
+export function runwayMeterFill(
+  months: number | null,
+  indefinite: boolean,
+  capMonths = 24,
+): number {
+  if (indefinite) return 1;
+  const floored = Math.max(0, months ?? 0);
+  if (capMonths <= 0) return 0;
+  return Math.min(1, floored / capMonths);
 }
 
 export function formatCoverageDate(iso: string): string {

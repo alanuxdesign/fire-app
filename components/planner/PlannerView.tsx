@@ -1,6 +1,8 @@
 "use client";
 
 import { CoverageMap } from "@/components/planner/CoverageMap";
+import { RunwayMeter } from "@/components/planner/RunwayMeter";
+import { ShockPlaybook } from "@/components/planner/ShockPlaybook";
 import { GrowthRing } from "@/components/illustrations/GrowthRing";
 import { SproutVessel } from "@/components/illustrations/SproutVessel";
 import { GHOST_BUTTON, PRIMARY_BUTTON } from "@/components/ui/cardStyles";
@@ -218,8 +220,8 @@ export function PlannerView() {
         Planner
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-        See what&apos;s taken care of, compare lifestyles, and track freedom
-        milestones.
+        See what&apos;s taken care of, explore runway levers, and write shock
+        playbooks for future-you.
       </p>
 
       {bundle.plans.length > 1 ? (
@@ -315,6 +317,27 @@ export function PlannerView() {
         milestoneEvents={plan.milestoneEvents}
         swr={plan.swr}
         partTimeIncome={plan.tierAssumptions.partTimeIncome}
+      />
+
+      <RunwayMeter
+        accessibleAssets={snapshot.assets.totalAccessible}
+        totalAssets={snapshot.assets.totalInvestedLiquid}
+        swr={plan.swr}
+        fullMonthlySpend={derived.fullMonthlySpend}
+        essentialMonthlySpend={derived.essentialMonthlyBurn}
+        partTimeIncomeAnnual={plan.tierAssumptions.partTimeIncome}
+      />
+
+      <ShockPlaybook
+        planId={plan.id}
+        accessibleAssets={snapshot.assets.totalAccessible}
+        totalAssets={snapshot.assets.totalInvestedLiquid}
+        swr={plan.swr}
+        fullMonthlySpend={derived.fullMonthlySpend}
+        essentialMonthlySpend={derived.essentialMonthlyBurn}
+        partTimeIncomeAnnual={plan.tierAssumptions.partTimeIncome}
+        savedPlans={plan.contingencyPlans}
+        onSaved={() => void load(selectedPlanId)}
       />
 
       <div className="mt-8 border-t border-hairline pt-8">

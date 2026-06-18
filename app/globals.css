@@ -284,6 +284,23 @@ body {
   color: rgba(242, 238, 224, 0.7);
 }
 
+/* ─── M4 runway figure: a gentle rise as the number updates (lever flips) ─── */
+@keyframes ember-value-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.18em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ember-value-rise {
+    animation: ember-value-rise 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
 /* ─── §4 Grain overlay (apply to a positioned ancestor) ─── */
 .ff-grain::after {
   content: "";

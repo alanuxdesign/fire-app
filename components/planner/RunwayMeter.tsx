@@ -74,15 +74,15 @@ function LeverToggle({
             aria-hidden
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-paper shadow-sm transition-[left] ${
-                active ? "left-[22px]" : "left-0.5"
+              className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-paper ring-1 ring-hairline motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out ${
+                active ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </span>
         </span>
         <span className="mt-0.5 block text-sm text-ink-soft">{detail}</span>
         {hint ? (
-          <span className="mt-1 block text-xs text-ink-faint">{hint}</span>
+          <span className="mt-1 block text-xs text-ink-soft">{hint}</span>
         ) : null}
       </span>
     </button>
@@ -113,33 +113,43 @@ export function RunwayMeter({
     else setInternalLevers(next);
   };
 
-  const engineInput = {
-    accessibleAssets,
-    totalAssets,
-    swr,
-    fullMonthlySpend,
-    essentialMonthlySpend,
-    partTimeIncomeAnnual,
-  };
-
   const baseline = useMemo(
     () =>
       computeRunwayWithLevers({
-        ...engineInput,
+        accessibleAssets,
+        totalAssets,
+        swr,
+        fullMonthlySpend,
+        essentialMonthlySpend,
+        partTimeIncomeAnnual,
         levers: { cutToEssentials: false, partTime: false },
       }),
     [accessibleAssets, totalAssets, swr, fullMonthlySpend, essentialMonthlySpend, partTimeIncomeAnnual],
   );
 
   const current = useMemo(
-    () => computeRunwayWithLevers({ ...engineInput, levers }),
+    () =>
+      computeRunwayWithLevers({
+        accessibleAssets,
+        totalAssets,
+        swr,
+        fullMonthlySpend,
+        essentialMonthlySpend,
+        partTimeIncomeAnnual,
+        levers,
+      }),
     [accessibleAssets, totalAssets, swr, fullMonthlySpend, essentialMonthlySpend, partTimeIncomeAnnual, levers],
   );
 
   const essentialsOnly = useMemo(
     () =>
       computeRunwayWithLevers({
-        ...engineInput,
+        accessibleAssets,
+        totalAssets,
+        swr,
+        fullMonthlySpend,
+        essentialMonthlySpend,
+        partTimeIncomeAnnual,
         levers: { cutToEssentials: true, partTime: false },
       }),
     [accessibleAssets, totalAssets, swr, fullMonthlySpend, essentialMonthlySpend, partTimeIncomeAnnual],
@@ -199,7 +209,7 @@ export function RunwayMeter({
           </p>
           <div className="mt-3 flex items-baseline gap-2">
             <span
-              className="text-[clamp(2.5rem,8vw,3.25rem)] font-semibold tabular-nums tracking-[-0.02em] text-ink motion-safe:transition-opacity"
+              className="ember-value-rise text-[clamp(2.5rem,8vw,3.25rem)] font-semibold tabular-nums tracking-[-0.02em] text-ink"
               key={`${value}-${unit}`}
             >
               {value}
@@ -228,7 +238,7 @@ export function RunwayMeter({
       ) : null}
 
       <div className={`${compact || leversOnly ? "mt-0" : "mt-5"} space-y-1`}>
-        <div className="flex items-center gap-3 rounded-[18px] px-4 py-3.5 opacity-80">
+        <div className="flex items-center gap-3 rounded-[18px] px-4 py-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-paper-2 text-ink-soft">
             <Wallet className="h-4 w-4" strokeWidth={2} aria-hidden />
           </span>

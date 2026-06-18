@@ -237,7 +237,7 @@ export function ShockPlaybook({
                       }
                       placeholder={summary}
                       rows={3}
-                      className="mt-2 w-full resize-y rounded-[14px] border border-hairline bg-paper px-3 py-2.5 text-[15px] leading-relaxed text-ink placeholder:text-ink-faint"
+                      className="mt-2 w-full resize-y rounded-[14px] border border-hairline bg-paper px-3 py-2.5 text-[15px] leading-relaxed text-ink placeholder:text-ink-soft"
                     />
                     <p className="mt-2 text-sm text-ink-soft">
                       <span className="font-medium text-ink">Draft:</span>{" "}
